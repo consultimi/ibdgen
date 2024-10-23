@@ -92,17 +92,54 @@ fn permute_b(a: &mut Vec<u8>, n: u8) -> Result<(), String> {
     Ok(())
 }
 
-fn initialize_b(b: &mut DMatrix<f64>, rows: &mut Vec<u8>, irows: Vec<u8>, n: u8, n_xb: u8, n_b: u8, 
-    block_sizes: Vec<u8>, n_repeat_counts: u8, init_rows: bool, first_repeat: bool, max_n: u8) -> Result<(), String> {
-
-    /*	int i;
+fn no_dup_permute_b(b: &mut DMatrix<f64>, rows: &mut Vec<u8>, n: u8, i: u8, bs: u8) -> Result<(), String> {
+/*bool nodup=true;
+	int i;
 	int j;
-	int l;
-	int bs;
-	int iBlock=nB*MAXN;
-	int t;
-	int Nt=(initRows)?Nxb:N; */
-    
+	int curVal;
+
+	repeat
+		nodup=true;
+		PermuteB(rows,N);
+		for (i=0;i<n;i++) {
+			curVal=B[i];
+			for (j=0;j<bs-n;j++) {
+				if (rows[j]==curVal) {
+					nodup=false;
+					break;
+				}
+			}
+			if (!nodup)
+				break;
+		}
+	until(nodup); */
+    let mut nodup = true;
+    loop {
+        nodup = true;
+        permute_b(rows, n)?;
+        for i in 0..n {
+            let cur_val = b[(i * n + i) as usize];
+            for j in 0..bs-n {
+                if rows[j as usize] as f64 == cur_val {
+                    nodup = false;
+                    break;
+                }
+            }
+            if !nodup {
+                break;
+            }
+        }
+        if nodup {
+            break;
+        }
+    }
+
+    Ok(())
+}
+
+fn initialize_b(b: &mut DMatrix<f64>, rows: &mut Vec<u8>, irows: Vec<u8>, n: u8, n_xb: u8, n_b: u8, 
+    block_sizes: Vec<u8>, n_repeat_counts: u8, init_rows: bool, first_repeat: bool, max_n: u8, extra_block: bool) -> Result<(), String> {
+
     let mut i = 0;
     let mut j = 0;
     let mut l = 0;
@@ -126,6 +163,46 @@ fn initialize_b(b: &mut DMatrix<f64>, rows: &mut Vec<u8>, irows: Vec<u8>, n: u8,
         }
     } else {
         permute_b(rows, n_t)?;
+    }
+
+    /*	for (i=0;i<nB*MAXN;i++)
+		B[i]=-1; */
+    for i in 0..n_b * max_n {
+        b[i as usize] = -1.0;
+    }
+
+    /*l=0;
+	for (i=0;i<nB;i++) {
+		bs=blocksizes[i];
+		for (j=0;j<bs;j++) {
+			if (l>=Nt) {
+				l=0;
+				NoDupPermuteB(rows,N,B+IB(i,0),j,bs);
+			}
+			B[IB(i,j)]=rows[l++];
+		}
+	} */
+    let mut l = 0;
+    for i in 0..n_b {
+        bs = block_sizes[i as usize];
+        for j in 0..bs {
+            if l >= n_t {
+                l = 0;
+                no_dup_permute_b(rows, n, b, i, bs)?;
+            }
+            b[(i * max_n + j) as usize] = rows[l as usize] as f64;
+            l += 1;
+        }
+    }
+
+    /*	if (extraBlock) { /* Put the leftover rows in the extra block */
+		for (i=l;i<Nt;i++)
+			B[iBlock++]=rows[i];
+	} */
+    if extra_block {
+        for i in l..n_t {
+            b[(i_block + i) as usize] = rows[i as usize] as f64;
+        }
     }
 
     Ok(())
