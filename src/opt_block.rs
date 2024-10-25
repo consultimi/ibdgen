@@ -1,5 +1,75 @@
-use nalgebra::{DMatrix, DVector};
+use nalgebra::{DMatrix, DVector, dmatrix};
 
+
+
+
+fn reduce_x_to_t(
+    block_data: &mut BlockData,
+    vec: &mut DVector<f64>,
+    sc: &mut DVector<f64>,
+    do_whole_block: bool,
+) -> (f64, bool) {
+    let mut log_det = 0.0;
+    let mut singular = false;
+
+    let (p_mx, p_mn) = sc.as_mut_slice().split_at_mut(block_data.k as usize);
+    p_mx.fill(f64::NEG_INFINITY);
+    p_mn.fill(f64::INFINITY);
+
+    block_data.t.fill(0.0);
+
+    let mut tvec = DVector::zeros(block_data.k as usize);
+
+    for i in 0..block_data.n_b {
+        let p_b = block_data.b.view((i as usize * block_data.max_n as usize, 0), (block_data.max_n as usize, 1));
+        let x_mi = block_data.block_means.row(i as usize);
+        let deli = if do_whole_block {
+            Some(block_data.block_factors.as_ref().unwrap().view((i as usize * block_data.k as usize, 0), (block_data.k as usize, block_data.k as usize)))
+        } else {
+            None
+        };
+
+        for j in 0..block_data.block_sizes[i as usize] {
+            let row_no = p_b[(j as usize, 0)];
+            let x_ri = block_data.x.row(row_no as usize);
+
+            vec.iter_mut().zip(x_ri.iter().zip(x_mi.iter()))
+                .for_each(|(v, (&x, &m))| *v = x - m);
+
+            if let Some(ref deli) = deli {
+                vec.component_mul_assign(deli);
+            }
+
+            get_range_b(p_mx, p_mn, vec.as_slice(), block_data.k as usize);
+            rotate_b(vec, &mut tvec, &mut block_data.t, 1.0);
+        }
+    }
+
+    for i in 0..block_data.k as usize {
+        let r = (p_mx[i] + p_mn[i]) / 2.0;
+        let t_val = block_data.t[(i, i)];
+        if t_val <= 0.0 || t_val < r * 1e-10 {
+            singular = true;
+            return (0.0, singular);
+        }
+        log_det += t_val.ln();
+    }
+
+    (log_det, singular)
+}
+
+fn get_range_b(p_mx: &mut [f64], p_mn: &mut [f64], vec: &[f64], k: usize) {
+    for i in 0..k {
+        p_mx[i] = p_mx[i].max(vec[i]);
+        p_mn[i] = p_mn[i].min(vec[i]);
+    }
+}
+
+fn rotate_b(vec: &DVector<f64>, tvec: &mut DVector<f64>, matrix_xy: &mut DMatrix<f64>, weight: f64) {
+    // Implementation of RotateB function goes here
+    // This function would need to be implemented using nalgebra operations
+    // It's a complex function and its implementation would depend on the specific requirements of your project
+}
 
 /*/* initializeBlockArray ***********************************************************************
 |   Initialize BlockArray in case all designs are singular.
@@ -45,28 +115,28 @@ void initializeBlockArray(
 	}
 
 } */
-fn initialize_block_array(rows: &mut Vec<u8>, irows: Vec<u8>, n: u8, n_xb: u8, n_b: u8, block_sizes: Vec<u8>, block_array: &mut Vec<u8>, init_rows: bool) -> Result<(), String> {
+fn initialize_block_array(block_data: &mut BlockData, block_array: &mut Vec<u8>) -> Result<(), String> {
 
-    if init_rows {
-        for i in 0..n_xb {
-            rows[i as usize] = irows[i as usize];
+    if block_data.init_rows {
+        for i in 0..block_data.n_xb {
+            block_data.rows[i as usize] = block_data.irows[i as usize];
         }
     } else {
-        for i in 0..n {
-            rows[i as usize] = i;
+        for i in 0..block_data.n {
+            block_data.rows[i as usize] = i;
         }
     }
 
     let mut l = 0;
     let mut m = 0;
-    let n_t = if init_rows { n_xb } else { n };
-    for i in 0..n_b {
-        let bs = block_sizes[i as usize];
+    let n_t = if block_data.init_rows { block_data.n_xb } else { block_data.n };
+    for i in 0..block_data.n_b {
+        let bs = block_data.block_sizes[i as usize];
         for _ in 0..bs {
             if l >= n_t {
                 l = 0;
             }
-            block_array[m as usize] = rows[l as usize] + 1;
+            block_array[m as usize] = block_data.rows[l as usize] + 1;
             m += 1;
             l += 1;
         }
@@ -79,7 +149,7 @@ fn initialize_block_array(rows: &mut Vec<u8>, irows: Vec<u8>, n: u8, n_xb: u8, n
 |	algorithm.  See Fike, "A permutation generation method"  The Computer
 |	Journal, 18-1, Feb 75, 21-22.
 */
-fn permute_b(a: &mut Vec<u8>, n: u8) -> Result<(), String> {
+fn permute_b(a: &mut DVector<u8>, n: u8) -> Result<(), String> {
 
     let rnd = rand::random::<f64>();
     for i in 1..n {
@@ -92,35 +162,14 @@ fn permute_b(a: &mut Vec<u8>, n: u8) -> Result<(), String> {
     Ok(())
 }
 
-fn no_dup_permute_b(b: &mut DMatrix<f64>, rows: &mut Vec<u8>, n: u8, i: u8, bs: u8) -> Result<(), String> {
-/*bool nodup=true;
-	int i;
-	int j;
-	int curVal;
-
-	repeat
-		nodup=true;
-		PermuteB(rows,N);
-		for (i=0;i<n;i++) {
-			curVal=B[i];
-			for (j=0;j<bs-n;j++) {
-				if (rows[j]==curVal) {
-					nodup=false;
-					break;
-				}
-			}
-			if (!nodup)
-				break;
-		}
-	until(nodup); */
-    let mut nodup = true;
+fn no_dup_permute_b(block_data: &mut BlockData, bs: u8) -> Result<(), String> {
     loop {
-        nodup = true;
-        permute_b(rows, n)?;
-        for i in 0..n {
-            let cur_val = b[(i * n + i) as usize];
-            for j in 0..bs-n {
-                if rows[j as usize] as f64 == cur_val {
+        let mut nodup = true;
+        permute_b(&mut block_data.rows, block_data.n_t)?;
+        for i in 0..block_data.n_t {
+            let cur_val = block_data.b[(i * block_data.n_t + i) as usize];
+            for j in 0..bs-block_data.n_t {
+                if block_data.rows[j as usize] as f64 == cur_val {
                     nodup = false;
                     break;
                 }
@@ -137,38 +186,62 @@ fn no_dup_permute_b(b: &mut DMatrix<f64>, rows: &mut Vec<u8>, n: u8, i: u8, bs: 
     Ok(())
 }
 
-fn initialize_b(b: &mut DMatrix<f64>, rows: &mut Vec<u8>, irows: Vec<u8>, n: u8, n_xb: u8, n_b: u8, 
-    block_sizes: Vec<u8>, n_repeat_counts: u8, init_rows: bool, first_repeat: bool, max_n: u8, extra_block: bool) -> Result<(), String> {
+fn form_block_means(block_data: &mut BlockData) {
+    let mut new_means = DVector::zeros((block_data.n_b as usize) * (block_data.k as usize));
 
-    let mut i = 0;
+    for i in 0..block_data.n_b as usize {
+        let pb_start = i * block_data.max_n as usize;
+        let xmi_start = i * (block_data.k as usize);
+
+        for j in 0..block_data.block_sizes[i] as usize {
+            let row_no = block_data.b[(pb_start + j, 0)] as usize;
+            let px = block_data.x.row(row_no);
+
+            for l in 0..block_data.k as usize {
+                new_means[xmi_start + l] += px[l];
+            }
+        }
+
+        let rn = block_data.block_sizes[i] as f64;
+        for l in 0..block_data.k as usize {
+            new_means[xmi_start + l] /= rn;
+        }
+    }
+
+    block_data.block_means = new_means;
+}
+
+fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<(), String> {
+
+    //let mut i = 0;
     let mut j = 0;
     let mut l = 0;
     let mut bs = 0;
-    let mut i_block = n_b * max_n;
+    let mut i_block = block_data.n_b * block_data.max_n;
     let mut t = 0;
-    let mut n_t = if init_rows { n_xb } else { n };
 
-    for i in 0..n_t {
-        rows[i as usize] = i;
+
+    for i in 0..block_data.n_t {
+        block_data.rows[i as usize] = i;
     }
 
-    if init_rows {
-        for i in 0..n_xb {
-            t = rows[i as usize];
-            rows[i as usize] = irows[i as usize];
-            rows[irows[i as usize] as usize] = t;
+    if block_data.init_rows {
+        for i in 0..block_data.n_xb {
+            t = block_data.rows[i as usize];
+            block_data.rows[i as usize] = block_data.irows[i as usize];
+            block_data.rows[block_data.irows[i as usize] as usize] = t;
         }
         if !first_repeat {
-            permute_b(rows, n_xb)?;
+            permute_b(&mut block_data.rows, block_data.n_xb)?;
         }
     } else {
-        permute_b(rows, n_t)?;
+        permute_b(&mut block_data.rows, block_data.n_t)?;
     }
 
     /*	for (i=0;i<nB*MAXN;i++)
 		B[i]=-1; */
-    for i in 0..n_b * max_n {
-        b[i as usize] = -1.0;
+    for i in 0..block_data.n_b * block_data.max_n {
+        block_data.b[i as usize] = -1.0;
     }
 
     /*l=0;
@@ -183,14 +256,14 @@ fn initialize_b(b: &mut DMatrix<f64>, rows: &mut Vec<u8>, irows: Vec<u8>, n: u8,
 		}
 	} */
     let mut l = 0;
-    for i in 0..n_b {
-        bs = block_sizes[i as usize];
+    for i in 0..block_data.n_b {
+        bs = block_data.block_sizes[i as usize];
         for j in 0..bs {
-            if l >= n_t {
+            if l >= block_data.n_t {
                 l = 0;
-                no_dup_permute_b(rows, n, b, i, bs)?;
+                no_dup_permute_b(block_data, bs)?;
             }
-            b[(i * max_n + j) as usize] = rows[l as usize] as f64;
+            block_data.b[(i * block_data.max_n + j) as usize] = block_data.rows[l as usize] as f64;
             l += 1;
         }
     }
@@ -199,18 +272,18 @@ fn initialize_b(b: &mut DMatrix<f64>, rows: &mut Vec<u8>, irows: Vec<u8>, n: u8,
 		for (i=l;i<Nt;i++)
 			B[iBlock++]=rows[i];
 	} */
-    if extra_block {
-        for i in l..n_t {
-            b[(i_block + i) as usize] = rows[i as usize] as f64;
+    if block_data.extra_block {
+        for i in l..block_data.n_t {
+            block_data.b[(i_block + i) as usize] = block_data.rows[i as usize] as f64;
         }
     }
 
     Ok(())
 
 }
+
 // optimize determinant over all blocks using d-criterion
-fn block_optimize(x: DMatrix<f64>, n_b: u8, block_sizes: Vec<u8>, block_factors: Option<DMatrix<f64>>, n_repeats: u8, 
-        init_rows: bool, rows: &mut Vec<u8>, irows: Vec<u8>, n: u8, n_xb: u8, k: u8) -> Result<(), String> {
+fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), String> {
     /*
 	int		*B, //  an nB x MAXN array of rows of X allocated to the nB blocks, -1 is used to fill blocks up to MAXN. N-nB*MAXN ints are added to hold the extra block when N is greater then the sum of the block sizes.
 	double  *blockMeans, // nB x k matrix of block means
@@ -233,52 +306,135 @@ fn block_optimize(x: DMatrix<f64>, n_b: u8, block_sizes: Vec<u8>, block_factors:
 	int     *error
      */
 
-    let mut b: DMatrix<f64> = DMatrix::zeros(n_b as usize, *block_sizes.iter().max().unwrap() as usize);
-    let mut block_means: DMatrix<f64> = DMatrix::zeros(n_b as usize, k as usize);
-    let mut t_block_means: DMatrix<f64> = DMatrix::zeros(n_b as usize, k as usize);
-    let mut t: DMatrix<f64> = DMatrix::zeros(n as usize, n as usize);
-    let mut tip: DMatrix<f64> = DMatrix::zeros(n as usize, k as usize);
-    let mut w: DMatrix<f64> = DMatrix::zeros(k as usize * (k as usize + 1) / 2, 1);
-    let mut vec: DVector<f64> = DVector::zeros(2 * k as usize);
-    let mut sc: DVector<f64> = DVector::zeros(2 * k as usize);
-    let mut block_array: Vec<u8> = vec![0; n_b as usize * (*block_sizes.iter().max().unwrap()) as usize];
+    let mut tip: DMatrix<f64> = DMatrix::zeros(block_data.n as usize, block_data.k as usize);
+    let mut w: DMatrix<f64> = DMatrix::zeros(block_data.k as usize * (block_data.k as usize + 1) / 2, 1);
+    let mut vec: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
+    let mut sc: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
+    let mut block_array: Vec<u8> = vec![0; block_data.n_b as usize * (*block_data.block_sizes.iter().max().unwrap()) as usize];
 
     // b is a matrix of block factors. ncols is max(blocksizes)
-    let mut b: DMatrix<f64> = DMatrix::zeros(n_b as usize, *block_sizes.iter().max().unwrap() as usize);
-    initialize_block_array(rows, irows, n, n_xb, n_b, block_sizes, &mut block_array, init_rows)?;
+    initialize_block_array(block_data, &mut block_array)?;
 
     for _ in 0..n_repeats {
+        initialize_b(block_data,  false)?;
+        form_block_means(block_data);
 
     }
 
     Ok(())
 }
 
-pub fn opt_block(x_i: DMatrix<f64>, init_rows: bool, rows: Vec<u8>, n_b: u8, block_sizes: Vec<u8>, do_whole_block: bool, 
-    block_factors: Option<DMatrix<f64>>, n_repeats: u8, criterion: u8) -> Result<(), String> {
+#[derive(Debug)]
+struct BlockData {
+    x: DMatrix<f64>,    // x is the input matrix, typically it'll be a dummy coded design matrix (diag is 1, off-diag is 0, first row all 0)
+    b: DMatrix<f64>,    // b is a matrix of block factors. ncols is max(blocksizes)
+    block_means: DVector<f64>, // block_means is a vector of block means
+    t_block_means: DVector<f64>, // t_block_means is a vector of transformed block means
+    t: DMatrix<f64>,    // t is a matrix of transformed data. It's upper triangular and has scale values on the diagonal
+    max_n: u8,          // max_n is the maximum block size
+    n: u8,              // n is the number of rows in x
+    k: u8,              // k is the number of columns in x
+    n_t: u8,            // n_t is the number of rows to use. If init_rows is true, n_t = n_xb, otherwise n_t = n
+    extra_block: bool,   // extra_block is true if there are extra rows in x that are not used in the blocks
+    n_xb: u8,           // n_xb is the number of rows in x that are used in the blocks
+    n_b: u8,            // n_b is the number of blocks
+    block_sizes: Vec<u8>, // block_sizes is a vector of block sizes
+    n_repeat_counts: u8, // n_repeat_counts is the number of repeats
+    init_rows: bool,     // init_rows is true if the rows are initialized from irows
+    rows: DVector<u8>,  // rows is a vector of row indices
+    irows: DVector<u8>,
+    block_factors: Option<DMatrix<f64>>
+}
+
+impl BlockData {
+    fn new() -> Self {
+        BlockData { 
+            x: DMatrix::zeros(0, 0),
+            b: DMatrix::zeros(0, 0), 
+            block_means: DVector::zeros(0), 
+            t_block_means: DVector::zeros(0), 
+            t: DMatrix::zeros(0, 0),
+            max_n: 0,
+            n: 0,
+            k: 0,
+            n_t: 0,
+            extra_block: false,
+            n_xb: 0,
+            n_b: 0,
+            block_sizes: vec![0; 0],
+            n_repeat_counts: 0,
+            init_rows: false,
+            rows: DVector::zeros(0),
+            irows: DVector::zeros(0),
+            block_factors: None }
+    }
+
+    fn rows_vec_length(&self) -> usize {
+        std::cmp::max(self.n, self.n_xb) as usize
+    }
+}
+
+pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes: Vec<u8>, do_whole_block: bool, 
+    block_factors: Option<DMatrix<f64>>, n_repeats: u8, _criterion: u8) -> Result<(), String> {
     
-    let mut x = x_i.clone();
-    let n = x.nrows() as u8;
-    let k = x.ncols() as u8;
-
-    let mut n_xb: u8 = 0;
-    for i in 0..n_b {
-        n_xb += block_sizes[i as usize];
+    let mut block_data = BlockData::new();
+    block_data.x = x_i.clone();
+    block_data.b = DMatrix::zeros(n_b as usize, *block_sizes.iter().max().unwrap() as usize);
+    block_data.block_means = DVector::zeros(n_b as usize * block_data.k as usize);
+    block_data.t_block_means = DVector::zeros(n_b as usize * block_data.k as usize);
+    block_data.t = DMatrix::zeros(block_data.n as usize, block_data.n as usize);
+    block_data.n_repeat_counts = n_repeats;
+    block_data.n = x_i.nrows() as u8;
+    block_data.k = x_i.ncols() as u8;
+    block_data.max_n = *block_sizes.iter().max().unwrap();
+    block_data.n_xb = block_data.block_sizes.iter().sum();
+    block_data.block_sizes = block_sizes;
+    if let Some(rows) = rows {
+        block_data.init_rows = true;
+        block_data.rows = rows.into();
+    } else {
+        block_data.init_rows = false;
+        block_data.rows = DVector::zeros(block_data.rows_vec_length());
     }
 
-    let mut extra_block = false;
-    if n_xb < n {
-        extra_block = true;
-    }
 
-    x = x.transpose();
-
+    block_data.extra_block = if block_data.n_xb < block_data.n { true } else { false };
+    block_data.x = block_data.x.transpose();
+    block_data.n_t = if block_data.init_rows { block_data.n_xb } else { block_data.n };
     if do_whole_block == true {
         if let Some(block_factors) = block_factors {
-            let mut block_factors = block_factors.transpose();
+            block_data.block_factors = Some(block_factors.transpose());
         }
     }
 
+    dbg!(&block_data);
+
+    block_optimize(&mut block_data, n_repeats)?;
+
     Ok(())
 }
 
+
+
+mod tests {
+    use super::*;
+
+    fn dm7choose3() -> DMatrix<u8> {
+        nalgebra::dmatrix![
+            0,0,0,0,0,0,0,
+            0,1,0,0,0,0,0,
+            0,0,1,0,0,0,0,
+            0,0,0,1,0,0,0,
+            0,0,0,0,1,0,0,
+            0,0,0,0,0,1,0,
+            0,0,0,0,0,0,1
+        ]
+    }
+
+    #[test]
+    fn test_opt_block() {
+        let x = dm7choose3();
+        let result = opt_block(x.cast::<f64>(), None, 7, vec![3, 3,3,3,3,3,3], true, None, 1, 0);
+        assert!(result.is_ok());
+    }
+}
