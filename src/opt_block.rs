@@ -12,6 +12,7 @@ fn reduce_x_to_t(
     let mut log_det = 0.0;
     let mut singular = false;
 
+    //dbg!(&block_data.x, &block_data.x.clone().qr().r());
     let (p_mx, p_mn) = sc.as_mut_slice().split_at_mut(block_data.k as usize);
     p_mx.fill(f64::NEG_INFINITY);
     p_mn.fill(f64::INFINITY);
@@ -21,6 +22,7 @@ fn reduce_x_to_t(
     let mut tvec = DVector::zeros(block_data.k as usize);
 
     for i in 0..block_data.n_b {
+        dbg!(&i, &block_data.max_n, &block_data.n_b);
         let p_b = block_data.b.view((i as usize * block_data.max_n as usize, 0), (block_data.max_n as usize, 1));
         let x_mi = block_data.block_means.row(i as usize);
         let deli = if do_whole_block {
@@ -162,13 +164,15 @@ fn permute_b(a: &mut DVector<u8>, n: u8) -> Result<(), String> {
     Ok(())
 }
 
-fn no_dup_permute_b(block_data: &mut BlockData, bs: u8) -> Result<(), String> {
+fn no_dup_permute_b(block_data: &mut BlockData, little_n: u8, bs: u8) -> Result<(), String> {
     loop {
+        dbg!(&block_data.rows);
         let mut nodup = true;
-        permute_b(&mut block_data.rows, block_data.n_t)?;
-        for i in 0..block_data.n_t {
+        permute_b(&mut block_data.rows, block_data.n)?;
+        for i in 0..little_n {
+            dbg!("{:?} {:?}", bs, little_n);
             let cur_val = block_data.b[(i * block_data.n_t + i) as usize];
-            for j in 0..bs-block_data.n_t {
+            for j in 0..(bs - little_n) {
                 if block_data.rows[j as usize] as f64 == cur_val {
                     nodup = false;
                     break;
@@ -187,28 +191,24 @@ fn no_dup_permute_b(block_data: &mut BlockData, bs: u8) -> Result<(), String> {
 }
 
 fn form_block_means(block_data: &mut BlockData) {
-    let mut new_means = DVector::zeros((block_data.n_b as usize) * (block_data.k as usize));
+    // Use iterator to create blocks
+    let blocks: Vec<DMatrix<f64>> = block_data.block_sizes
+        .iter()
+        .scan(0, |start_row, &size| {
+            let end_row = *start_row + size as usize;
+            let block = block_data.b.view((*start_row, 0), (size as usize, block_data.k as usize)).into_owned();
+            *start_row = end_row;
+            Some(block)
+        })
+        .collect();
 
-    for i in 0..block_data.n_b as usize {
-        let pb_start = i * block_data.max_n as usize;
-        let xmi_start = i * (block_data.k as usize);
-
-        for j in 0..block_data.block_sizes[i] as usize {
-            let row_no = block_data.b[(pb_start + j, 0)] as usize;
-            let px = block_data.x.row(row_no);
-
-            for l in 0..block_data.k as usize {
-                new_means[xmi_start + l] += px[l];
-            }
-        }
-
-        let rn = block_data.block_sizes[i] as f64;
-        for l in 0..block_data.k as usize {
-            new_means[xmi_start + l] /= rn;
-        }
+    // Calculate block means
+    block_data.block_means = DMatrix::zeros(block_data.n_b as usize, block_data.k as usize);
+    
+    for (i, block) in blocks.iter().enumerate() {
+        let block_mean = block.column_mean().transpose();
+        block_data.block_means.set_row(i, &block_mean);
     }
-
-    block_data.block_means = new_means;
 }
 
 fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<(), String> {
@@ -261,7 +261,7 @@ fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<(), St
         for j in 0..bs {
             if l >= block_data.n_t {
                 l = 0;
-                no_dup_permute_b(block_data, bs)?;
+                no_dup_permute_b(block_data, j, bs)?;
             }
             block_data.b[(i * block_data.max_n + j) as usize] = block_data.rows[l as usize] as f64;
             l += 1;
@@ -318,7 +318,8 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), Strin
     for _ in 0..n_repeats {
         initialize_b(block_data,  false)?;
         form_block_means(block_data);
-
+        let (log_det, singular) = reduce_x_to_t(block_data, &mut vec, &mut sc, false);
+        dbg!(&log_det, &singular);
     }
 
     Ok(())
@@ -328,8 +329,8 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), Strin
 struct BlockData {
     x: DMatrix<f64>,    // x is the input matrix, typically it'll be a dummy coded design matrix (diag is 1, off-diag is 0, first row all 0)
     b: DMatrix<f64>,    // b is a matrix of block factors. ncols is max(blocksizes)
-    block_means: DVector<f64>, // block_means is a vector of block means
-    t_block_means: DVector<f64>, // t_block_means is a vector of transformed block means
+    block_means: DMatrix<f64>, // block_means is a vector of block means
+    t_block_means: DMatrix<f64>, // t_block_means is a vector of transformed block means
     t: DMatrix<f64>,    // t is a matrix of transformed data. It's upper triangular and has scale values on the diagonal
     max_n: u8,          // max_n is the maximum block size
     n: u8,              // n is the number of rows in x
@@ -351,8 +352,8 @@ impl BlockData {
         BlockData { 
             x: DMatrix::zeros(0, 0),
             b: DMatrix::zeros(0, 0), 
-            block_means: DVector::zeros(0), 
-            t_block_means: DVector::zeros(0), 
+            block_means: DMatrix::zeros(0, 0), 
+            t_block_means: DMatrix::zeros(0, 0), 
             t: DMatrix::zeros(0, 0),
             max_n: 0,
             n: 0,
@@ -379,15 +380,15 @@ pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes:
     
     let mut block_data = BlockData::new();
     block_data.x = x_i.clone();
-    block_data.b = DMatrix::zeros(n_b as usize, *block_sizes.iter().max().unwrap() as usize);
-    block_data.block_means = DVector::zeros(n_b as usize * block_data.k as usize);
-    block_data.t_block_means = DVector::zeros(n_b as usize * block_data.k as usize);
+    block_data.block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
+    block_data.t_block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
     block_data.t = DMatrix::zeros(block_data.n as usize, block_data.n as usize);
     block_data.n_repeat_counts = n_repeats;
     block_data.n = x_i.nrows() as u8;
     block_data.k = x_i.ncols() as u8;
     block_data.max_n = *block_sizes.iter().max().unwrap();
     block_data.n_xb = block_data.block_sizes.iter().sum();
+    block_data.n_b = n_b;
     block_data.block_sizes = block_sizes;
     if let Some(rows) = rows {
         block_data.init_rows = true;
@@ -396,18 +397,21 @@ pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes:
         block_data.init_rows = false;
         block_data.rows = DVector::zeros(block_data.rows_vec_length());
     }
+    block_data.b = DMatrix::zeros(n_b as usize, block_data.max_n as usize);
 
 
     block_data.extra_block = if block_data.n_xb < block_data.n { true } else { false };
-    block_data.x = block_data.x.transpose();
+    //block_data.x = block_data.x.transpose();
     block_data.n_t = if block_data.init_rows { block_data.n_xb } else { block_data.n };
+    
+    /*
     if do_whole_block == true {
         if let Some(block_factors) = block_factors {
             block_data.block_factors = Some(block_factors.transpose());
         }
-    }
+    } */
 
-    dbg!(&block_data);
+    //dbg!(&block_data);
 
     block_optimize(&mut block_data, n_repeats)?;
 
@@ -438,3 +442,4 @@ mod tests {
         assert!(result.is_ok());
     }
 }
+
