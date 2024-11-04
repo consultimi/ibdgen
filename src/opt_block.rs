@@ -191,17 +191,20 @@ fn no_dup_permute_b(block_data: &mut BlockData, little_n: u8, bs: u8) -> Result<
 }
 
 fn form_block_means(block_data: &mut BlockData) {
+
+    // divide block_data.b into block_data.n_b equal sized blocks of max_n rows
+
     // Use iterator to create blocks
     let blocks: Vec<DMatrix<f64>> = block_data.block_sizes
         .iter()
         .scan(0, |start_row, &size| {
+            println!("start_row: {:?}, size: {:?}", start_row, size);
             let end_row = *start_row + size as usize;
             let block = block_data.b.view((*start_row, 0), (size as usize, block_data.k as usize)).into_owned();
             *start_row = end_row;
             Some(block)
         })
         .collect();
-
     // Calculate block means
     block_data.block_means = DMatrix::zeros(block_data.n_b as usize, block_data.k as usize);
     
@@ -317,6 +320,7 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), Strin
 
     for _ in 0..n_repeats {
         initialize_b(block_data,  false)?;
+        dbg!(&block_data.b);
         form_block_means(block_data);
         let (log_det, singular) = reduce_x_to_t(block_data, &mut vec, &mut sc, false);
         dbg!(&log_det, &singular);
