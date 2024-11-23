@@ -191,27 +191,28 @@ fn no_dup_permute_b(block_data: &mut BlockData, little_n: u8, bs: u8) -> Result<
 }
 
 fn form_block_means(block_data: &mut BlockData) {
-
+    println!("block_data.b: {:?}", block_data.b);
     // divide block_data.b into block_data.n_b equal sized blocks of max_n rows
+    // block_data.b is a n_b x max_n matrix of row indices from block_data.x
+    // block_data.block_means is a n_b x k matrix of block means
 
-    // Use iterator to create blocks
-    let blocks: Vec<DMatrix<f64>> = block_data.block_sizes
-        .iter()
-        .scan(0, |start_row, &size| {
-            println!("start_row: {:?}, size: {:?}", start_row, size);
-            let end_row = *start_row + size as usize;
-            let block = block_data.b.view((*start_row, 0), (size as usize, block_data.k as usize)).into_owned();
-            *start_row = end_row;
-            Some(block)
-        })
-        .collect();
-    // Calculate block means
-    block_data.block_means = DMatrix::zeros(block_data.n_b as usize, block_data.k as usize);
-    
-    for (i, block) in blocks.iter().enumerate() {
-        let block_mean = block.column_mean().transpose();
-        block_data.block_means.set_row(i, &block_mean);
-    }
+    //block_data.block_means.fill(0.0);
+
+    let mut i = 0;
+    block_data.block_means.row_iter_mut().for_each(|mut block| {
+        dbg!(&block);
+        let block_row = block_data.b.row(i as usize);
+        let out: Vec<_> = block_row.iter().map(|&row_index| {
+            block_data.x.row(row_index as usize)
+        }).collect();
+        //dbg!(&out_mat.row_sum());
+        
+        dbg!(&DMatrix::from_rows(&out).row_sum());
+        block.copy_from(&(DMatrix::from_rows(&out).row_sum() / block_data.block_sizes[i as usize] as f64));
+        i += 1;
+    });
+    dbg!(&block_data.block_means);
+
 }
 
 fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<(), String> {
@@ -384,12 +385,12 @@ pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes:
     
     let mut block_data = BlockData::new();
     block_data.x = x_i.clone();
+    block_data.n = x_i.nrows() as u8;
+    block_data.k = x_i.ncols() as u8;
     block_data.block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
     block_data.t_block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
     block_data.t = DMatrix::zeros(block_data.n as usize, block_data.n as usize);
     block_data.n_repeat_counts = n_repeats;
-    block_data.n = x_i.nrows() as u8;
-    block_data.k = x_i.ncols() as u8;
     block_data.max_n = *block_sizes.iter().max().unwrap();
     block_data.n_xb = block_data.block_sizes.iter().sum();
     block_data.n_b = n_b;
