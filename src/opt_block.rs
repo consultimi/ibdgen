@@ -30,7 +30,7 @@ fn reduce_x_to_t(
             // do the rotation. 
             rotate_b(block_data, &diff.transpose(), 1.0);
             println!("t not pretty: {:?}", &block_data.t);
-            println!("t: {}", pretty_print!(&block_data.t));
+            println!("t: {}", pretty_print!(&block_data.t.transpose()));
             //diff
         }
         //dbg!(&block);
