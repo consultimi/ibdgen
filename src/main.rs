@@ -17,6 +17,6 @@ fn dm7choose3() -> DMatrix<u8> {
 
 fn main() {
     let x = dm7choose3();
-    let result = opt_block(x.cast::<f64>(), None, 7, vec![3, 3,3,3,3,3,3], true, None, 1, 0);
+    let result = opt_block(x.cast::<f64>(), None, 7, vec![3, 3,3,3,3,3,3], 1);
     assert!(result.is_ok());
 }

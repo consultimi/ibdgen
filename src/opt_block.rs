@@ -1,5 +1,5 @@
 use nalgebra::{DMatrix, DVector, dmatrix};
-
+use pretty_print_nalgebra::*;
 
 
 
@@ -10,67 +10,111 @@ fn reduce_x_to_t(
     do_whole_block: bool,
 ) -> (f64, bool) {
     let mut log_det = 0.0;
-    let mut singular = false;
+    let mut p_mx: Vec<f64> = vec![-1e16; block_data.k as usize];
+    let mut p_mn: Vec<f64> = vec![1e16; block_data.k as usize];
 
-    //dbg!(&block_data.x, &block_data.x.clone().qr().r());
-    let (p_mx, p_mn) = sc.as_mut_slice().split_at_mut(block_data.k as usize);
-    p_mx.fill(f64::NEG_INFINITY);
-    p_mn.fill(f64::INFINITY);
-
-    block_data.t.fill(0.0);
-
-    let mut tvec = DVector::zeros(block_data.k as usize);
-
-    for i in 0..block_data.n_b {
-        dbg!(&i, &block_data.max_n, &block_data.n_b);
-        let p_b = block_data.b.view((i as usize * block_data.max_n as usize, 0), (block_data.max_n as usize, 1));
-        let x_mi = block_data.block_means.row(i as usize);
-        let deli = if do_whole_block {
-            Some(block_data.block_factors.as_ref().unwrap().view((i as usize * block_data.k as usize, 0), (block_data.k as usize, block_data.k as usize)))
-        } else {
-            None
-        };
-
-        for j in 0..block_data.block_sizes[i as usize] {
-            let row_no = p_b[(j as usize, 0)];
-            let x_ri = block_data.x.row(row_no as usize);
-
-            vec.iter_mut().zip(x_ri.iter().zip(x_mi.iter()))
-                .for_each(|(v, (&x, &m))| *v = x - m);
-
-            if let Some(ref deli) = deli {
-                vec.component_mul_assign(deli);
-            }
-
-            get_range_b(p_mx, p_mn, vec.as_slice(), block_data.k as usize);
-            rotate_b(vec, &mut tvec, &mut block_data.t, 1.0);
+    let mut i = 0;
+    let mut block_means = block_data.block_means.clone();
+    let b_matrix = block_data.b.clone();
+    for block in block_means.row_iter_mut() {
+        //dbg!(&block);
+        let block_row = b_matrix.row(i as usize);
+        for &row_index in block_row.iter() {
+            //println!("Calculating diff for row: {:#?} and block: {:#?}", block_data.x.row(row_index as usize), &block );
+            //pretty_print!(&block_data.x.row(row_index as usize));
+            println!("row : {}",pretty_print!(&block_data.x.row(row_index as usize)));
+            println!("block means: {}",pretty_print!(&block));
+            let diff = block_data.x.row(row_index as usize) - &block;
+            println!("diff: {}",pretty_print!(&diff.transpose()));
+            get_range_b(&mut p_mx, &mut p_mn, &diff.transpose(), block_data.k as usize);
+            // do the rotation. 
+            rotate_b(block_data, &diff.transpose(), 1.0);
+            println!("t: {}", pretty_print!(&block_data.t));
+            //diff
         }
+        //dbg!(&block);
+        
+        //dbg!(&DMatrix::from_rows(&out).row_sum());
+        //block.copy_from(&(DMatrix::from_rows(&out).row_sum() / block_data.block_sizes[i as usize] as f64));
+        i += 1;
+        //println!("block_data.t: {:#?}", &block_data.t);
+    };
+    //let upper_tri = block_data.x.clone().lu().u();
+    
+    //println!("upper_tri: {:?}", &upper_tri);
+    //log_det = block_data.t.upper_triangle().determinant().log10();
+    for i in 0..block_data.k {
+        let r = (p_mx[i as usize] + p_mn[i as usize]) / 2.0;
+        let t = block_data.t[(i * block_data.k + i) as usize];
+        if t <= 0.0 || t < r * 1e-10 {
+            return (0.0, true);
+        }
+        log_det += t.log10();
     }
 
-    for i in 0..block_data.k as usize {
-        let r = (p_mx[i] + p_mn[i]) / 2.0;
-        let t_val = block_data.t[(i, i)];
-        if t_val <= 0.0 || t_val < r * 1e-10 {
-            singular = true;
-            return (0.0, singular);
-        }
-        log_det += t_val.ln();
-    }
-
-    (log_det, singular)
+    (log_det, false)
 }
 
-fn get_range_b(p_mx: &mut [f64], p_mn: &mut [f64], vec: &[f64], k: usize) {
+
+fn get_range_b(p_mx: &mut Vec<f64>, p_mn: &mut Vec<f64>, vec: &DVector<f64>, k: usize) {
     for i in 0..k {
         p_mx[i] = p_mx[i].max(vec[i]);
         p_mn[i] = p_mn[i].min(vec[i]);
     }
 }
 
-fn rotate_b(vec: &DVector<f64>, tvec: &mut DVector<f64>, matrix_xy: &mut DMatrix<f64>, weight: f64) {
-    // Implementation of RotateB function goes here
-    // This function would need to be implemented using nalgebra operations
-    // It's a complex function and its implementation would depend on the specific requirements of your project
+const TOLROT: f64 = 1.0e-12;
+
+fn upper_tri_index(i: usize, nc: usize) -> usize {
+    i+i*nc-(i*(i+1))/2
+}
+
+fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64) {
+    let mut skip: bool = false;
+    let mut weight = starting_weight;
+    // clone the diff vector
+    let mut t_vec = vec.clone();
+    //println!("vec: {:?}", &vec);
+    //println!("t_vec: {:?}", &t_vec);
+
+    for i in 0..block_data.k {
+        if skip == true {
+            break;
+        }
+
+        if t_vec[i as usize] == 0.0 {
+            continue;
+        }
+
+        // d points to the corresponding index in the t (upper triangular) matrix
+        let mut k_index = upper_tri_index(i as usize, block_data.k as usize);
+        dbg!(&k_index);
+        let d = block_data.t[(k_index) as usize];
+        let dp = d + weight * t_vec[i as usize] * t_vec[i as usize];
+        if dp.abs() < TOLROT {
+            continue;
+        }
+        block_data.t[(k_index) as usize] = dp;
+
+        let c = d / dp;
+        let s = weight * t_vec[i as usize] / dp;
+
+        if d == 0.0 {
+            skip = true;
+            weight = 0.0;
+            continue;
+        } else {
+            weight *= c;
+        }
+
+        k_index += 1;
+        for j in (i+1)..block_data.k {
+            let r = block_data.t[k_index];
+            block_data.t[k_index] = s * t_vec[j as usize] + c * r;
+            t_vec[j as usize] -= t_vec[i as usize] * r;
+            k_index += 1;
+        }
+    }
 }
 
 /*/* initializeBlockArray ***********************************************************************
@@ -166,11 +210,11 @@ fn permute_b(a: &mut DVector<u8>, n: u8) -> Result<(), String> {
 
 fn no_dup_permute_b(block_data: &mut BlockData, little_n: u8, bs: u8) -> Result<(), String> {
     loop {
-        dbg!(&block_data.rows);
+        //dbg!(&block_data.rows);
         let mut nodup = true;
         permute_b(&mut block_data.rows, block_data.n)?;
         for i in 0..little_n {
-            dbg!("{:?} {:?}", bs, little_n);
+            //dbg!("{:?} {:?}", bs, little_n);
             let cur_val = block_data.b[(i * block_data.n_t + i) as usize];
             for j in 0..(bs - little_n) {
                 if block_data.rows[j as usize] as f64 == cur_val {
@@ -199,18 +243,18 @@ fn form_block_means(block_data: &mut BlockData) {
     //block_data.block_means.fill(0.0);
 
     let mut i = 0;
-    block_data.block_means.row_iter_mut().for_each(|mut block| {
-        dbg!(&block);
+    for mut block in block_data.block_means.row_iter_mut() {
+        //dbg!(&block);
         let block_row = block_data.b.row(i as usize);
         let out: Vec<_> = block_row.iter().map(|&row_index| {
             block_data.x.row(row_index as usize)
         }).collect();
         //dbg!(&out_mat.row_sum());
         
-        dbg!(&DMatrix::from_rows(&out).row_sum());
+        //dbg!(&DMatrix::from_rows(&out).row_sum());
         block.copy_from(&(DMatrix::from_rows(&out).row_sum() / block_data.block_sizes[i as usize] as f64));
         i += 1;
-    });
+    };
     dbg!(&block_data.block_means);
 
 }
@@ -319,9 +363,9 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), Strin
     // b is a matrix of block factors. ncols is max(blocksizes)
     initialize_block_array(block_data, &mut block_array)?;
 
-    for _ in 0..n_repeats {
-        initialize_b(block_data,  false)?;
-        dbg!(&block_data.b);
+    for repeat_num in 0..n_repeats {
+        initialize_b(block_data,  repeat_num == 0)?;
+        //dbg!(&block_data.b);
         form_block_means(block_data);
         let (log_det, singular) = reduce_x_to_t(block_data, &mut vec, &mut sc, false);
         dbg!(&log_det, &singular);
@@ -380,8 +424,7 @@ impl BlockData {
     }
 }
 
-pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes: Vec<u8>, do_whole_block: bool, 
-    block_factors: Option<DMatrix<f64>>, n_repeats: u8, _criterion: u8) -> Result<(), String> {
+pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes: Vec<u8>,  n_repeats: u8) -> Result<(), String> {
     
     let mut block_data = BlockData::new();
     block_data.x = x_i.clone();
