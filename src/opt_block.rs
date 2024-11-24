@@ -29,6 +29,7 @@ fn reduce_x_to_t(
             get_range_b(&mut p_mx, &mut p_mn, &diff.transpose(), block_data.k as usize);
             // do the rotation. 
             rotate_b(block_data, &diff.transpose(), 1.0);
+            println!("t not pretty: {:?}", &block_data.t);
             println!("t: {}", pretty_print!(&block_data.t));
             //diff
         }
@@ -43,13 +44,15 @@ fn reduce_x_to_t(
     
     //println!("upper_tri: {:?}", &upper_tri);
     //log_det = block_data.t.upper_triangle().determinant().log10();
+    let mut t_cnt = 0;
     for i in 0..block_data.k {
         let r = (p_mx[i as usize] + p_mn[i as usize]) / 2.0;
-        let t = block_data.t[(i * block_data.k + i) as usize];
+        let t = block_data.t[t_cnt as usize];
         if t <= 0.0 || t < r * 1e-10 {
             return (0.0, true);
         }
         log_det += t.log10();
+        t_cnt += (block_data.k - i) as usize;
     }
 
     (log_det, false)
@@ -460,6 +463,13 @@ pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes:
     } */
 
     //dbg!(&block_data);
+    let test_matrix: DMatrix<u8> = nalgebra::dmatrix![
+            1,2,3;
+            4,5,6;
+            7,8,9;
+        ];
+    println!("test_matrix: {}", pretty_print!(&test_matrix.upper_triangle()));
+    println!("test_matrix: {:#?}", &test_matrix);
 
     block_optimize(&mut block_data, n_repeats)?;
 
@@ -486,7 +496,7 @@ mod tests {
     #[test]
     fn test_opt_block() {
         let x = dm7choose3();
-        let result = opt_block(x.cast::<f64>(), None, 7, vec![3, 3,3,3,3,3,3], true, None, 1, 0);
+        let result = opt_block(x.cast::<f64>(), None, 7, vec![3, 3,3,3,3,3,3], 1);
         assert!(result.is_ok());
     }
 }
