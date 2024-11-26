@@ -30,7 +30,8 @@ fn reduce_x_to_t(
             // do the rotation. 
             rotate_b(block_data, &diff.transpose(), 1.0);
             println!("t not pretty: {:?}", &block_data.t);
-            println!("t: {}", pretty_print!(&block_data.t.transpose()));
+            
+            
             //diff
         }
         //dbg!(&block);
@@ -41,9 +42,12 @@ fn reduce_x_to_t(
         //println!("block_data.t: {:#?}", &block_data.t);
     };
     //let upper_tri = block_data.x.clone().lu().u();
-    
+    block_data.t = block_data.t.transpose();
+    println!("t: {}", pretty_print!(&block_data.t));
     //println!("upper_tri: {:?}", &upper_tri);
-    //log_det = block_data.t.upper_triangle().determinant().log10();
+    log_det = block_data.t.upper_triangle().determinant().log10();
+    /*
+    println!("log_det: {}", log_det);
     let mut t_cnt = 0;
     for i in 0..block_data.k {
         let r = (p_mx[i as usize] + p_mn[i as usize]) / 2.0;
@@ -53,7 +57,7 @@ fn reduce_x_to_t(
         }
         log_det += t.log10();
         t_cnt += (block_data.k - i) as usize;
-    }
+    } */
 
     (log_det, false)
 }
@@ -68,8 +72,13 @@ fn get_range_b(p_mx: &mut Vec<f64>, p_mn: &mut Vec<f64>, vec: &DVector<f64>, k: 
 
 const TOLROT: f64 = 1.0e-12;
 
-fn upper_tri_index(i: usize, nc: usize) -> usize {
-    i+i*nc-(i*(i+1))/2
+// this function does not map to the diagonal index of the upper triangular matrix
+//fn calc_index(i: usize, nc: usize) -> usize {
+//    i+i*nc-(i*(i+1))/2
+//}
+
+fn calc_index(i: usize, nc: usize) -> usize {
+    i * (nc+1)
 }
 
 fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64) {
@@ -79,7 +88,7 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
     let mut t_vec = vec.clone();
     //println!("vec: {:?}", &vec);
     //println!("t_vec: {:?}", &t_vec);
-
+    let mut k_index = 0;
     for i in 0..block_data.k {
         if skip == true {
             break;
@@ -90,13 +99,14 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
         }
 
         // d points to the corresponding index in the t (upper triangular) matrix
-        let mut k_index = upper_tri_index(i as usize, block_data.k as usize);
-        dbg!(&k_index);
+        k_index = calc_index(i as usize, block_data.k as usize);
+        println!("i: {}, k_index: {}", i, k_index);
         let d = block_data.t[(k_index) as usize];
         let dp = d + weight * t_vec[i as usize] * t_vec[i as usize];
         if dp.abs() < TOLROT {
             continue;
         }
+        //dbg!(&k_index);
         block_data.t[(k_index) as usize] = dp;
 
         let c = d / dp;
@@ -112,12 +122,34 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
 
         k_index += 1;
         for j in (i+1)..block_data.k {
+            dbg!(&k_index);
             let r = block_data.t[k_index];
             block_data.t[k_index] = s * t_vec[j as usize] + c * r;
             t_vec[j as usize] -= t_vec[i as usize] * r;
             k_index += 1;
         }
     }
+}
+
+fn make_ti_from_tb(block_data: &mut BlockData) -> Result<(), String> {
+    println!("block_data.t: {}", pretty_print!(&block_data.t));
+    let mut ti = block_data.t.upper_triangle().clone().try_inverse().ok_or("Failed to invert upper triangular matrix")?;
+    ti.fill_lower_triangle_with_upper_triangle();
+    println!("ti: {}", pretty_print!(&ti));
+    //let tip = ti.lower_triangle();
+    
+    // set the lower triangular part of block_data.t to tip
+    //block_data.t.set_lower_triangle(tip);
+    for i in 0..block_data.k {
+        for j in 0..block_data.k {
+            if j > i {
+                block_data.t[(i * block_data.k + j) as usize] = ti[(i * block_data.k + j) as usize];
+            }
+        }
+    }
+
+    println!("block_data.t: {}", pretty_print!(&block_data.t));
+    Ok(())
 }
 
 /*/* initializeBlockArray ***********************************************************************
@@ -371,6 +403,11 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), Strin
         //dbg!(&block_data.b);
         form_block_means(block_data);
         let (log_det, singular) = reduce_x_to_t(block_data, &mut vec, &mut sc, false);
+        if singular {
+            return Err("Singular matrix".to_string());
+        } else {
+            make_ti_from_tb(block_data)?;
+        }
         dbg!(&log_det, &singular);
     }
 
@@ -435,7 +472,7 @@ pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes:
     block_data.k = x_i.ncols() as u8;
     block_data.block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
     block_data.t_block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
-    block_data.t = DMatrix::zeros(block_data.n as usize, block_data.n as usize);
+    block_data.t = DMatrix::zeros(block_data.k as usize, block_data.k as usize);
     block_data.n_repeat_counts = n_repeats;
     block_data.max_n = *block_sizes.iter().max().unwrap();
     block_data.n_xb = block_data.block_sizes.iter().sum();
