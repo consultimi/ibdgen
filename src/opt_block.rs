@@ -2,6 +2,7 @@ use nalgebra::{DMatrix, DVector, dmatrix};
 use pretty_print_nalgebra::*;
 
 
+const DESIGN_TOL: f64 = 1.0e-10;
 
 fn reduce_x_to_t(
     block_data: &mut BlockData,
@@ -133,9 +134,9 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
 
 fn make_ti_from_tb(block_data: &mut BlockData) -> Result<(), String> {
     println!("block_data.t: {}", pretty_print!(&block_data.t));
-    let mut ti = block_data.t.upper_triangle().clone().try_inverse().ok_or("Failed to invert upper triangular matrix")?;
-    ti.fill_lower_triangle_with_upper_triangle();
-    println!("ti: {}", pretty_print!(&ti));
+    block_data.t_inv = block_data.t.upper_triangle().clone().try_inverse().ok_or("Failed to invert upper triangular matrix")?;
+    block_data.t_inv.fill_lower_triangle_with_upper_triangle();
+    println!("ti: {}", pretty_print!(&block_data.t_inv));
     //let tip = ti.lower_triangle();
     
     // set the lower triangular part of block_data.t to tip
@@ -143,12 +144,14 @@ fn make_ti_from_tb(block_data: &mut BlockData) -> Result<(), String> {
     for i in 0..block_data.k {
         for j in 0..block_data.k {
             if j > i {
-                block_data.t[(i * block_data.k + j) as usize] = ti[(i * block_data.k + j) as usize];
+                block_data.t_inv[(i * block_data.k + j) as usize] = block_data.t_inv[(i * block_data.k + j) as usize];
             }
         }
     }
 
     println!("block_data.t: {}", pretty_print!(&block_data.t));
+    println!("block_data.t_inv: {}", pretty_print!(&block_data.t_inv));
+
     Ok(())
 }
 
@@ -365,6 +368,14 @@ fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<(), St
 
 }
 
+fn find_delta_block(block_data: &mut BlockData, xcur: u8, cur_block: u8) -> Result<f64, String> {
+    Ok(0.0)
+}
+
+fn exchange_block(block_data: &mut BlockData, xcur: u8, cur_block: u8, exchanged: &mut bool) -> Result<(), String> {
+    Ok(())
+}
+
 // optimize determinant over all blocks using d-criterion
 fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), String> {
     /*
@@ -407,8 +418,30 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), Strin
             return Err("Singular matrix".to_string());
         } else {
             make_ti_from_tb(block_data)?;
+            /* transform **********************************************************************
+| transfroms X and blockMeans to tX = X*Ti and tBlockMeans = tBlockMeans * Ti, 
+            |	using Tip which containts Ti'
+            */
+            //transform(block_data)?;
+            block_data.t_x = block_data.x.clone() * block_data.t_inv.clone();
+            block_data.t_block_means = block_data.block_means.clone() * block_data.t_inv.clone();
+
+            //println!("420 block_data.t_x: {}", pretty_print!(&block_data.t_x));
+            //println!("421block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
+            loop {  
+                let mut exchanged = false;
+                let cur_block = 0;
+                loop {
+                    for xcur in 0..block_data.block_sizes[cur_block as usize] {
+                        let delta = find_delta_block(block_data, xcur, cur_block)?;
+                        if delta > 10.0 && delta > DESIGN_TOL {
+                            exchange_block(block_data, xcur, cur_block, &mut exchanged)?;
+                        }
+                    }
+                }
+                dbg!(&log_det, &singular);
+            }
         }
-        dbg!(&log_det, &singular);
     }
 
     Ok(())
@@ -417,10 +450,12 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), Strin
 #[derive(Debug)]
 struct BlockData {
     x: DMatrix<f64>,    // x is the input matrix, typically it'll be a dummy coded design matrix (diag is 1, off-diag is 0, first row all 0)
+    t_x: DMatrix<f64>,  // x_t is the transpose of x
     b: DMatrix<f64>,    // b is a matrix of block factors. ncols is max(blocksizes)
     block_means: DMatrix<f64>, // block_means is a vector of block means
     t_block_means: DMatrix<f64>, // t_block_means is a vector of transformed block means
     t: DMatrix<f64>,    // t is a matrix of transformed data. It's upper triangular and has scale values on the diagonal
+    t_inv: DMatrix<f64>, // t_inv is the inverse of t
     max_n: u8,          // max_n is the maximum block size
     n: u8,              // n is the number of rows in x
     k: u8,              // k is the number of columns in x
@@ -440,10 +475,12 @@ impl BlockData {
     fn new() -> Self {
         BlockData { 
             x: DMatrix::zeros(0, 0),
+            t_x: DMatrix::zeros(0, 0),
             b: DMatrix::zeros(0, 0), 
             block_means: DMatrix::zeros(0, 0), 
             t_block_means: DMatrix::zeros(0, 0), 
             t: DMatrix::zeros(0, 0),
+            t_inv: DMatrix::zeros(0, 0),
             max_n: 0,
             n: 0,
             k: 0,
@@ -473,6 +510,7 @@ pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes:
     block_data.block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
     block_data.t_block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
     block_data.t = DMatrix::zeros(block_data.k as usize, block_data.k as usize);
+    block_data.t_inv = DMatrix::zeros(block_data.k as usize, block_data.k as usize);
     block_data.n_repeat_counts = n_repeats;
     block_data.max_n = *block_sizes.iter().max().unwrap();
     block_data.n_xb = block_data.block_sizes.iter().sum();
