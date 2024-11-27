@@ -132,7 +132,7 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
     }
 }
 
-fn make_ti_from_tb(block_data: &mut BlockData) -> Result<(), String> {
+fn make_ti_from_tb(block_data: &mut BlockData) -> Result<f64, String> {
     println!("block_data.t: {}", pretty_print!(&block_data.t));
     block_data.t_inv = block_data.t.upper_triangle().clone().try_inverse().ok_or("Failed to invert upper triangular matrix")?;
     block_data.t_inv.fill_lower_triangle_with_upper_triangle();
@@ -149,6 +149,7 @@ fn make_ti_from_tb(block_data: &mut BlockData) -> Result<(), String> {
         }
     }
 
+    
     println!("block_data.t: {}", pretty_print!(&block_data.t));
     println!("block_data.t_inv: {}", pretty_print!(&block_data.t_inv));
 
@@ -405,7 +406,7 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), Strin
     let mut vec: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
     let mut sc: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
     let mut block_array: Vec<u8> = vec![0; block_data.n_b as usize * (*block_data.block_sizes.iter().max().unwrap()) as usize];
-
+    let mut var = 0.0;
     // b is a matrix of block factors. ncols is max(blocksizes)
     initialize_block_array(block_data, &mut block_array)?;
 
