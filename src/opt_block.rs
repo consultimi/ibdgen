@@ -370,6 +370,33 @@ fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<(), St
 }
 
 fn find_delta_block(block_data: &mut BlockData, xcur: u8, cur_block: u8) -> Result<f64, String> {
+
+    let mut g_i = [0.0, 1.0, 0.0];
+    let mut m_i = [0.0, 0.0, 0.0];
+    let mut m1_i = [0.0, 0.0, 0.0];
+    let mut g = 0.0;
+    let mut h = 0.0;
+    let mut delta = 0.0;
+
+    let ni = block_data.block_sizes[cur_block as usize];
+    let fi = block_data.t_x.row(block_data.b[(cur_block * block_data.max_n + xcur) as usize] as usize);
+    let fmi = block_data.t_block_means.row(cur_block as usize);
+
+    for i in 0..block_data.n_b {
+        if i != cur_block {
+            let nj = block_data.block_sizes[i as usize];
+            let fmj = block_data.t_block_means.row(i as usize);
+
+            g_i[0] = (ni + nj) as f64 / (ni * nj) as f64;
+            m_i[0] = (fmj - fmi).norm();
+            m1_i[0] = 1.0 / nj as f64;
+            
+
+
+
+
+        }
+    }
     Ok(0.0)
 }
 

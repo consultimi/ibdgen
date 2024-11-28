@@ -1,4 +1,3 @@
-
 /* file OptBlock.c
 | copyright (C) 2002-2004 by Robert E. Wheeler
 */
@@ -1384,48 +1383,57 @@ void exchangeDp(
 }
 
 /* findDeltaBlock ************************************************************************
-| Calculates the delta for exchanging xold in the current block with xnew in a new block
+| Calculates the improvement (delta) in the design criterion when exchanging a point 
+| from the current block with a point from another block.
+| 
+| Parameters:
+| tX - Transformed design points
+| tBlockMeans - Transformed block means
+| B - Block assignments
+| nB - Number of blocks
+| nEx - Number of extra points
+| blocksizes - Array containing size of each block
+| xcur - Current point index to potentially exchange
+| xnew - Will store index of best point to exchange with (output)
+| curBlock - Current block index
+| newBlock - Will store index of best block to exchange with (output)
+| k - Number of dimensions/variables
 */ 
 
-#define deltaTol 1e-12
+#define deltaTol 1e-12  // Minimum improvement threshold
 
 double findDeltaBlock(
 	double *tX,
-	double *tBlockMeans,
-	int		*B,
-	int		nB,
-	int     nEx,
-	int		*blocksizes,
-	int		xcur,
-	int		*xnew,
-	int		curBlock,
-	int		*newBlock,
-	int		k
+	double *tBlockMeans, 
+	int    *B,
+	int    nB,
+	int    nEx,
+	int    *blocksizes,
+	int    xcur,
+	int    *xnew,
+	int    curBlock,
+	int    *newBlock,
+	int    k
 	)
 {
-	double delta=0;
-	double d;
-	double Gi[3];
-	double Mi[3];
-	double M1i[3];
-	double g;
-	double h;
-	double dif;
-	double dif1;
-	double dif2;
-	int    ni;
-	int    nj;
-	double *fi; /* current point */
-	double *fj; /* new point */
-	double *fmi; /* current block mean */
-	double *fmj; /* new block mean */
-	int i;
-	int j;
-	int l;
+	double delta=0;  // Tracks best improvement found
+	double d;        // Current improvement being evaluated
+	double Gi[3];    // Geometric coefficients
+	double Mi[3];    // Moment terms
+	double M1i[3];   // Combined geometric and moment terms
+	double g, h;     // Temporary calculation variables
+	double dif, dif1, dif2;  // Difference terms
+	int    ni, nj;   // Block sizes
+	double *fi;      // Pointer to current point to exchange
+	double *fj;      // Pointer to candidate point to exchange with
+	double *fmi;     // Mean of current block
+	double *fmj;     // Mean of candidate block
+	int i, j, l;
 	int curRowNo;
 	int rowNo;
 	int iBlock=nB*MAXN;
 
+	// Initialize geometric coefficients
 	Gi[1]=1;
 	Gi[2]=0;
 	curRowNo=B[IB(curBlock,xcur)];
@@ -1433,12 +1441,17 @@ double findDeltaBlock(
 
 	fi=tX+curRowNo*k;
 	fmi=tBlockMeans+curBlock*k;
+
+	// Loop through all blocks except current
 	for (i=0;i<nB;i++) {
 		if (i!=curBlock) {
 			nj=blocksizes[i];
+			// Calculate geometric coefficient based on block sizes
 			Gi[0]=(double)(ni+nj)/(double)(ni*nj);
 
 			fmj=tBlockMeans+i*k;
+			
+			// Calculate squared distance between block means
 			g=0;
 			for (l=0;l<k;l++) {
 				dif=fmj[l]-fmi[l];
@@ -1446,11 +1459,14 @@ double findDeltaBlock(
 			}
 			Mi[0]=g;
 
+			// Try exchanging with each point in candidate block
 			for (j=0;j<nj;j++) {
 				rowNo=B[IB(i,j)];
 				fj=tX+rowNo*k;
 				g=0;
 				h=0;
+				
+				// Calculate cross terms between means and points
 				for (l=0;l<k;l++) {
 					dif1=fmj[l]-fmi[l];
 					dif2=fj[l]-fi[l];
@@ -1460,10 +1476,14 @@ double findDeltaBlock(
 				Mi[1]=g;
 				Mi[2]=h;
 			
+				// Combine geometric and moment terms
 				for (l=0;l<3;l++)
 					M1i[l]=Gi[l]+Mi[l];
 
+				// Calculate improvement in criterion
 				d=-(1+M1i[0]*M1i[2]-M1i[1]*M1i[1]); 
+				
+				// Update best exchange if improvement is large enough
 				if ((d-delta)>deltaTol) {
 					delta=d;
 					*newBlock=i;
@@ -1472,16 +1492,23 @@ double findDeltaBlock(
 			}
 		}
 	}
+
+	// Check exchanges with extra block if it exists
 	if (extraBlock) {
+		// Special geometric coefficients for extra block
 		Gi[0]=(double)(ni+1)/(double)ni;
 		Gi[1]=1/(double)ni;
 		Gi[2]=-(double)(ni-1)/(double)ni;
+		
+		// Calculate squared distance to current point
 		g=0;
 		for (l=0;l<k;l++) {
 			dif=fi[l]-fmi[l];
 			g+=dif*dif;
 		}
 		Mi[2]=g;
+
+		// Try exchanging with each extra point
 		for (j=0;j<nEx;j++) {
 			rowNo=B[iBlock+j];
 			fj=tX+rowNo*k;
@@ -1496,8 +1523,8 @@ double findDeltaBlock(
 			Mi[1]=g;
 			for (l=0;l<3;l++)
 				M1i[l]=Gi[l]+Mi[l];
-				
 
+			// Calculate improvement for extra block exchange
 			d=-(1+(M1i[0]*M1i[2]-M1i[1]*M1i[1]));
 			if ((d-delta)>deltaTol) {
 				delta=d;
@@ -1505,7 +1532,6 @@ double findDeltaBlock(
 				*xnew=j;
 			}
 		}
-
 	}
 	return(delta);
 }
