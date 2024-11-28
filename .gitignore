@@ -18,3 +18,11 @@ Cargo.lock
 
 /target
 R/.Rhistory
+
+.zig-cache
+**/*.exe
+**/*.o
+**/*.obj
+~*
+zig-out
+rustoutput.txt

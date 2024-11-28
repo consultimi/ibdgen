@@ -1,32 +1,15 @@
-
 /* file OptBlock.c
 | copyright (C) 2002-2004 by Robert E. Wheeler
 */
 
-
-
 #include "wheeler.h"
-
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
-#include <Rinternals.h>
-#include <Rdefines.h>
-#include <R.h>
-#include <Rmath.h>
-#include <R_ext/RS.h>
-#include <R_ext/Print.h>
-#include <R_ext/Utils.h>
+#include <stdio.h>
+#include <math.h>
+#include "OptBlock.h"
 
-
-/********************************************************************** */
-
-#define Imat(ROW,COL)  (COL)+(ROW)*nColumns-((ROW)*((ROW)+1))/2 /* Upper Triangular */
-#define Iblock(ROW,COL) (COL)+(ROW)*nColumns					/* Index into block means */
-#define IB(ROW,COL) (COL)+(ROW)*MAXN							/* Index into block list */
-
-#define NOINVERSE 0
-#define DOINVERSE 1
-#define INVERSEONLY 2
 
 int		MAXN=0;
 int		nColumns=0;
@@ -35,100 +18,31 @@ bool    extraBlock=false;  /* True when candidate list is in an extra block */
 bool	initRows=false;    /* True when initial design rows are specified */
 bool    obScaled=false;    /* When true orthogonal blocks are scaled */
 
-extern void transposeMatrix(double *X,int N,int k);
+/********************************************************************** */
 
-SEXP BlockOpt(SEXP	Xi,SEXP    initRowsi,SEXP	irowsi,	SEXP	nBi,SEXP	blocksizesi,
-	SEXP    doWholeBlocki,SEXP	blockFactorsi,SEXP	nRepeatsi,SEXP	criterioni);
+void printMatrix(char *name, double *matrix, int rows, int cols) {
+	fprintf(stderr,"\n---------\n");
+	fprintf(stderr,"%s\n", name);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            fprintf(stderr,"%f ", matrix[i * cols + j]);
+        }
+        fprintf(stderr,"\n");
+    }
+	fprintf(stderr,"---------\n");
+}
 
-
-void BacksolveB(double *matrixXY,int	nTerms,int nColumns,int doInverse);
-void Difference(double *vec,double *first,double *second,int	k);
-void FillB(int nB,int *B,int *blocksizes,int *BlockArray);
-void formBlockMeans(double *blockMeans,double *X,int *B,int k,int	nB,int *blocksizes);
-void getRangeB(double *pMx,double *pMn,double *pX,int k);
-void initializeB(int *B,int *rows,int *irows,int N,int Nxb,int nB,int *blocksizes,bool firstRepeat);
-void initializeBlockArray(int *rows,int *irows,int N,int Nxb,int nB,int *blocksizes,int *BlockArray);
-void MakeTi(double *T,double *Tip,int k);
-void NoDupPermuteB(int *rows,int N,int *B,int n,int bs);
-void PermuteB(int *a,int	n);
-void RotateB(double	*vec,double	*tVec,double *matrixXY,int nTerms,int nColumns,
-			double weight);
-void transform(double *Tip,double *X,double *tX,double *blockMeans,double *tBlockMeans,
-	int	N,int k,int	nB);
-void transformVect(double *Tip,double *vec,double *tvec,int	k);
-double transW(double *Tip,double *tVec,double *W,int k); 
-
-int ProgAllocate(int **B,double **blockMeans,double **tBlockMeans,int **BlockArray,double **tX,double **T,		
-	double **Tip,double **W,double **vec,double **Sc,int **rows,int N,int k,int Nxb,int nB,
-	bool criterion,int *blocksize);
-
-/* used only when Calloc() is used. */
-/* void ProgDeallocate(int *B,double *blockMeans,double *tBlockMeans,double *tX,double *T, */
-/*	double *Tip,double *W,double *vec,double *Sc,int *rows); */
-
-
-/* The following are for the D criterion */
-void BlockOptimize(double *X,int nB,int *blocksizes,double *blockFactors,int *B,double *blockMeans,
-	double *tBlockMeans,double *T,double *Tip,double *W,double *tX,double *vec,
-	double *Sc,int *rows, int *irows, int N,int Nxb,int k,int nEx,double *D,double *diagonality,
-	int *BlockArray,int nRepeats,int *iter,int *error);
-double reduceXtoT(double *X,double *T,int *B,double *blockMeans,int	k,int nB,
-	int *blocksizes,double *blockFactors,double *vec,double *Sc,bool *singular);
-void makeTiFromTB(double *Tip,double *T,double *W,double *avVar, int k);
-double findDeltaBlock(double *tX,double *tBlockMeans,int	*B,int nB,int nEx,int *blocksizes,int xcur,
-	int	*xnew,int curBlock,int *newBlock,int k);
-double findDeltaBlockWhole(double *X,double *Tip,double *W,double *blockMeans,int *B,int nB,int nEx,int *blocksizes,
-	double *blockFactors, int xcur,	int	*xnew,int curBlock,int *newBlock,int k);
-void exchangeBlock(double *T,double *X,double *vec,double *blockMeans,
-	int *B,int	*blocksizes,int	xcur,int xnew,int curBlock,int newBlock,int	nB,int k);
-void exchangeBlockWhole(double *T,double *X,double *vec,double *blockMeans,int *B,int *blocksizes,double *blockFactors,
-	int	xcur,int xnew,int curBlock,int newBlock,int	nB,int k);
-
-/* The following are for the OB criterion */
-void BlockOptimizeOB(double	*X,int	nB,int	*blocksizes,double  *blockFactors,int	*B,double  *blockMeans,
-	double  *T,double  *W,double  *vec,double  *Sc,int *rows,
-	int		*irows,int	N,int	Nxb,int	k,int	nEx,double  *D,double  *diagonality,int   *BlockArray,
-	int		nRepeats,int  *iter,int  *error);
-double  formBlockMeansOB(double *blockMeans,double *X,int   *B,int	k,int	nB,int    Nxb,int	*blocksizes,
-	double  *blockFactors,double  *gMean,double *gSS,double *tolerance,double  *blockSS);
-double findDeltaOB(double *X,double *blockMeans,double *vec,double *blockSS,int	*B,int	nB,int	nEx,
-	int		*blocksizes,double  *blockFactors,double *gMean,double *gSS,int	xcur,int *xnew,int	curBlock,int	*newBlock,
-	int		k,int	Nxb,bool   *failure);
-void exchangeOB(double  *X,double  *vec,double  *blockMeans,double  *gMean,double *gSS,double  *blockSS,
-	int		*B,int	*blocksizes,double *blockFactors,int	xcur,int xnew,int	curBlock,
-	int		newBlock,int nB,int	k,int	Nxb);
-void MeanAndSS(double *x,double *mean,double *SS,int n,int k);
-
-
-
-/* The following are for the Dpc criterion */
-void BlockOptimizeDpc(double *X,int nB,int *blocksizes,double *blockFactors,int *B,double *blockMeans,
-	double *tBlockMeans,double *T,double *Tip,double *W,double *tX,double *vec,double *Sc,int *rows,int *irows,
-	int N,int Nxb,int nEx,int k,double *D,double *Dp,int *BlockArray,int nRepeats,int *iter,int *error);
-double reduceXtoTDpc(double *X,double *T,int *B,double *blockMeans,int N,int k,int nB,
-	int *blocksizes,double *blockFactors,double *vec,double *Sc,bool *singular);
-void makeTiFromTDpc(double *Tip,double *T,double	*W,int *blocksizes,int nB,int curBlock,int newBlock,int k);
-double findDeltaDpc(double *Tip,double *X,double *blockMeans,double *tX,double *tBlockMeans,
-	double *vec,int	*B,int nB,int nEx,int *blocksizes,double *blockFactors,int xcur,int *xnew,int curBlock,
-	int	*newBlock,int k,bool *failure);
-void exchangeDpc(double *T,double *X,double *vec,double *blockMeans,int *B,int *blocksizes,double *blockFactors,
-	int	xcur,int xnew,int curBlock,int newBlock,int	nB,int k);
-
-/* The following duplicate the above for the Dp criterion */
-void BlockOptimizeDp(double *X,int nB,int *blocksizes,double *blockFactors,int *B,double *blockMeans,
-	double *T,double *Tip,double *W,double *tX,double *vec,double *Sc,int *rows,int *irows,
-	int N,int Nxb,int nEx,int k,double *D,double *Dp,int *BlockArray,int nRepeats,int *iter,int *error);
-double reduceXtoTDp(double *X,double *T,int *B,int N,int k,int nB,
-	int *blocksizes,double *blockFactors,double *vec,double *Sc,bool *singular);
-void makeTiFromTDp(double *Tip,double *T,double	*W,int *blocksizes,int nB,int curBlock,int newBlock,int k);
-double findDeltaDp(double *Tip,double *X,double *tX,int	*B,int nB,int nEx,int *blocksizes,double *blockFactors,
-		double *vec,int xcur,int *xnew,int curBlock,int *newBlock,int	k,bool *failure);
-void exchangeDp(double *T,double *X,double *vec,int *B,int *blocksizes,double *blockFactors,
-	int	xcur,int xnew,int curBlock,int newBlock,int	nB,int k);
-
-
-
-
+void printMatrixInt(char *name, int *matrix, int rows, int cols) {
+	fprintf(stderr,"\n---------\n");
+	fprintf(stderr,"%s\n", name);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            fprintf(stderr,"%d ", matrix[i * cols + j]);
+        }
+        fprintf(stderr,"\n");
+    }
+	fprintf(stderr,"---------\n");
+}
 /* PermuteB **********************************************************
 |	Randomly pemutes the n integers in a[] using the Fike
 |	algorithm.  See Fike, "A permutation generation method"  The Computer
@@ -144,14 +58,19 @@ int		n
 			j,
 			temp;
 
-   GetRNGstate();
+	
+   //GetRNGstate();
    for (i = 1; i < n; i++) {
-      j =(int)((double)(1+i)*unif_rand());
+	  //double unif_rand = ((float) rand() / (float)(RAND_MAX));
+	  double unif_rand = 0.5;
+	  //printf("unif_rand: %f\n", unif_rand);
+      j =(int)((double)(1+i)*unif_rand);
+	  //printf("j: %d\n", j);
       temp = a[j];
       a[j] = a[i];
       a[i] = temp;
    }
-   PutRNGstate();
+   //PutRNGstate();
 }
 
 /* RotateB ****************************************************************
@@ -188,6 +107,10 @@ void RotateB(
 			kIndex;
 	bool	skip;
 
+	//printMatrix("vec", vec, nColumns, 1);	
+	//printMatrix(tVec, nColumns, 1);
+	//printMatrix("matrixXY before", matrixXY, nTerms, nColumns);
+	//fprintf(stderr,"matrixXY: %2.2f\n", matrixXY);
 
 	for (i=0;i<nColumns;i++) {
 		tVec[i]=vec[i];		
@@ -201,10 +124,12 @@ void RotateB(
 				continue;
 				
 			d=matrixXY[kIndex=Imat(i,i)];
+			fprintf(stderr,"i: %d, kIndex: %d, d: %2.2f, x: %2.2f\n", i, kIndex, d, x);
 			dp=d+weight*x*x;
 			if (fabs(dp)<TOLROT)
 				continue; 
 			matrixXY[kIndex]=dp;
+			//fprintf(stderr,"matrixXY1[kIndex]: %2.2f\n", matrixXY[kIndex]);
 			c=d/dp;
 			s=weight*x/dp;
 			
@@ -218,12 +143,14 @@ void RotateB(
 			for (j=i+1;j<nColumns;j++,kIndex++)	{
 				r=matrixXY[kIndex];
 				matrixXY[kIndex]=s*tVec[j]+c*r;
+				fprintf(stderr,"i: %d, j: %d, kIndex: %d, s: %2.2f, tVec[%d]: %2.2f, c: %2.2f, r: %2.2f, matrixXY[%d]: %2.2f\n", i, j, kIndex, s, j, tVec[j], c, r, kIndex, matrixXY[kIndex]);
 				tVec[j]-=x*r;
 			}
 		}
 		else
 		  break;
 	}
+	//printMatrix("matrixXY after", matrixXY, nTerms, nColumns);
 
 }
 
@@ -263,21 +190,27 @@ void BacksolveB(
 	if (doInverse==NOINVERSE)
 		return;
 
+	//printMatrix("matrixXY before", matrixXY, nTerms, nColumns);
 		/* BacksolveB for the inverse of T, which is upper triangular */
  	for (col=nTerms-1;col;col--) {
 		for (j=col;j--;) {
 		   lIndex=Imat(j,col);
 		   kIndex=Imat(j,j+1);
+		   
 			matrixXY[lIndex]*=(-1.0);
-			for (i=1;i<col-j;i++)
-				matrixXY[lIndex]-=matrixXY[Imat(i+j,col)]*
-					matrixXY[kIndex++];
+			for (i=1;i<col-j;i++) {
+				//fprintf(stderr,"j: %d, lIndex: %d, kIndex: %d, idx: %d\n", j, lIndex, kIndex, Imat(i+j,col));
+				matrixXY[lIndex]-=matrixXY[Imat(i+j,col)]*matrixXY[kIndex++];
+			}
 		}
 	}
-
-	for (i=0;i<nTerms;i++)
+	//printMatrix("matrixXY middle", matrixXY, nTerms, nColumns);
+	for (i=0;i<nTerms;i++) {
+		//fprintf(stderr,"i: %d, idx: %d, val: %2.2f\n", i, Imat(i,i), matrixXY[Imat(i,i)]);
 		matrixXY[Imat(i,i)]=1.0/matrixXY[Imat(i,i)];
+	}
 
+	//printMatrix("matrixXY after", matrixXY, nTerms, nColumns);
 }
 
 
@@ -317,6 +250,8 @@ void Difference(
 {
 	int i;
 
+	//printMatrix("first", first, k, 1);
+	//printMatrix("second", second, k, 1);
 	for (i=0;i<k;i++) {
 		vec[i]=first[i]-second[i];
 	}
@@ -347,7 +282,7 @@ double reduceXtoT(
 	double	*xri;
 	int		*pB;
 	double  *xmi;
-	double	logdet=0;
+	double logdet=0;
 	double  *pMx=Sc;
 	double  *pMn=Sc+k;
 	double  maxT=-1e16;
@@ -390,9 +325,16 @@ double reduceXtoT(
 				}
 			}
 			getRangeB(pMx,pMn,vec,k);
+			printMatrix("T before", T, (k*(k+1))/2, 1);
 			RotateB(vec,tvec,T,k,k,1.0);  
+			printMatrix("T after", T, (k*(k+1))/2, 1);
+
+			fprintf(stderr,"i: %d, j: %d\n", i, j);
+			//printMatrix("pMx", pMx, 1, k);
+			//printMatrix("pMn", pMn, 1, k);
 		}
 	}
+
 
 	pT=T;
 	for (i=0;i<k;i++) {
@@ -402,7 +344,9 @@ double reduceXtoT(
 			*singular=true;
 			return(0);
 		}
+		
 		logdet+=log(t); 
+		//fprintf(stderr,"t: %f, r: %f, logdet: %f\n", t, r, logdet);
 		pT+=k-i;
 	}
 	return (logdet);
@@ -646,26 +590,28 @@ void makeTiFromTB(
 			Tip[g++]=W[Imat(i,j)];
 		}
 	}
-
+	//printMatrix("Tip before scale",Tip,k,k);
 		/* Scale rows by diagonal (DT)^-1=T^-1D-1 */
 	memset((void *)W,0,k*sizeof(double)); /* reuse W to get average  variance */
 	pTip=Tip;
 	for (i=0;i<k;i++) {
+		//fprintf(stderr,"ptip: %f\n",*(pTip+i));
 		d=sqrt(*(pTip+i));
 		*(pTip+i)=1.0;
 		for (j=0;j<=i;j++) {
 			t=d*(*pTip);
 			*(pTip++)=t;
+			//fprintf(stderr,"i: %d j: %d t: %f\n",i,j,t);
 			W[j]+=t*t;
 		}
 	}
-
+	//printMatrix("W",W,k,k);
 	aVar=0;
 	for (i=0;i<k;i++) {
 		aVar+=log(W[i]);
 	}
 	*avVar=exp(aVar/(double)k); /* average variance */
-
+	//printMatrix("Tip after scale",Tip,k,k);
 }
 
 /* makeTiFromTDpc **********************************************************************
@@ -850,7 +796,8 @@ void exchangeBlock(
 	rowNoi=B[IB(curBlock,xcur)];
 	xri=X+rowNoi*k;
 	ni=blocksizes[curBlock];
-
+	//fprintf(stderr, "rowNoi: %d xmi: %f xri: %f\n", rowNoi, &xmi, &xri);
+	
 
 
 	if (extraBlock && newBlock==nB) {
@@ -859,15 +806,24 @@ void exchangeBlock(
 
 		for (i=0;i<k;i++)
 			vec[i]=xrj[i]-xmi[i];
+
+		printMatrix("vec before rotate", vec, 1, k);
 		RotateB(vec,tvec,T,k,k,1.0); 
+		printMatrix("vec after rotate", vec, 1, k);
 
 		for (i=0;i<k;i++)
 			vec[i]=xri[i]-xmi[i];
+		
+		printMatrix("vec before rotate", vec, 1, k);
 		RotateB(vec,tvec,T,k,k,-1.0); 
+		printMatrix("vec after rotate", vec, 1, k);
 		
 		for (i=0;i<k;i++)
 			vec[i]=xrj[i]-xri[i];
+
+		printMatrix("vec before rotate", vec, 1, k);
 		RotateB(vec,tvec,T,k,k,-1.0/(double)ni);
+		printMatrix("vec after rotate", vec, 1, k);
 
 
 		B[iBlock+xnew]=rowNoi;
@@ -879,28 +835,54 @@ void exchangeBlock(
 		xmj=blockMeans+newBlock*k;
 		nj=blocksizes[newBlock];
 		C=(double)(ni+nj)/(double)(ni*nj);
+		//fprintf(stderr, "rowNoj: %d", rowNoj);
+		printMatrix("xmi", xmi, 1, k);
+		printMatrix("xmj", xmj, 1, k);
+		printMatrix("xri", xri, 1, k);
+		printMatrix("xrj", xrj, 1, k);
 
-
-		for (i=0;i<k;i++)
+		for (i=0;i<k;i++) {
 			vec[i]=xmj[i]-xmi[i];
+			//fprintf(stderr, "xmj: %f xmi: %f\n", xmj[i], xmi[i]);
+		}
 
+		printMatrix("T before rotate", T, 1,21);
 		RotateB(vec,tvec,T,k,k,1.0); 
-		
-		for (i=0;i<k;i++)
+		printMatrix("T after rotate", T, 1,21);
+
+		for (i=0;i<k;i++) {
 			vec[i]-=xrj[i]-xri[i];
+			//fprintf(stderr, "xrj: %f xri: %f\n", xrj[i], xri[i]);
+		}
 
+		printMatrix("T before rotate", T, 1, 21);
 		RotateB(vec,tvec,T,k,k,-1.0); 
+		printMatrix("T after rotate", T, 1, 21);
 
-		for (i=0;i<k;i++)
+		for (i=0;i<k;i++) {
 			vec[i]=xrj[i]-xri[i];
+			//fprintf(stderr, "%d xrj: %f xri: %f\n", xrj[i], xri[i]);
+		}
 
+		printMatrix("T before rotate", T, 1, 21);
 		RotateB(vec,tvec,T,k,k,1.0-C); 
+		printMatrix("T after rotate", T, 1, 21);
 
-
-		for (i=0;i<k;i++)
+		printMatrix("BlockMeans before update", blockMeans, 7, 6);
+		for (i=0;i<k;i++) {
+			fprintf(stderr, "Before update: %d xrj[i]: %f xri[i]: %f xmi[i]: %f\n", i, xrj[i], xri[i], xmi[i]);
 			xmi[i]+=(xrj[i]-xri[i])/(double)ni;
-		for (i=0;i<k;i++)
+			//fprintf(stderr, "After update: %d xrj[i]: %f xri[i]: %f xmi[i]: %f\n", i, xrj[i], xri[i], xmi[i]);
+		}
+		for (i=0;i<k;i++) {
+			fprintf(stderr, "Before update: %d xri[i]: %f xrj[i]: %f xmj[i]: %f\n", i, xri[i], xrj[i], xmj[i]);
 			xmj[i]+=(xri[i]-xrj[i])/(double)nj;
+			//fprintf(stderr, "After update: %d xri[i]: %f xrj[i]: %f xmj[i]: %f\n", i, xri[i], xrj[i], xmj[i]);
+		}
+		printMatrix("BlockMeans after update", blockMeans, 7, 6);
+
+		printMatrix("xmi after update", xmi, 1, k);
+		printMatrix("xmj after update", xmj, 1, k);
 		B[IB(newBlock,xnew)]=rowNoi;
 	}
 
@@ -1384,48 +1366,60 @@ void exchangeDp(
 }
 
 /* findDeltaBlock ************************************************************************
-| Calculates the delta for exchanging xold in the current block with xnew in a new block
+| Calculates the improvement (delta) in the design criterion when exchanging a point 
+| from the current block with a point from another block.
+| 
+| Parameters:
+| tX - Transformed design points
+| tBlockMeans - Transformed block means
+| B - Block assignments
+| nB - Number of blocks
+| nEx - Number of extra points
+| blocksizes - Array containing size of each block
+| xcur - Current point index to potentially exchange
+| xnew - Will store index of best point to exchange with (output)
+| curBlock - Current block index
+| newBlock - Will store index of best block to exchange with (output)
+| k - Number of dimensions/variables
 */ 
 
-#define deltaTol 1e-12
+#define deltaTol 1e-12  // Minimum improvement threshold
 
 double findDeltaBlock(
 	double *tX,
-	double *tBlockMeans,
-	int		*B,
-	int		nB,
-	int     nEx,
-	int		*blocksizes,
-	int		xcur,
-	int		*xnew,
-	int		curBlock,
-	int		*newBlock,
-	int		k
+	double *tBlockMeans, 
+	int    *B,
+	int    nB,
+	int    nEx,
+	int    *blocksizes,
+	int    xcur,
+	int    *xnew,
+	int    curBlock,
+	int    *newBlock,
+	int    k
 	)
 {
-	double delta=0;
-	double d;
-	double Gi[3];
-	double Mi[3];
-	double M1i[3];
-	double g;
-	double h;
-	double dif;
-	double dif1;
-	double dif2;
-	int    ni;
-	int    nj;
-	double *fi; /* current point */
-	double *fj; /* new point */
-	double *fmi; /* current block mean */
-	double *fmj; /* new block mean */
-	int i;
-	int j;
-	int l;
+	double delta=0;  // Tracks best improvement found
+	double d;        // Current improvement being evaluated
+	double Gi[3];    // Geometric coefficients
+	double Mi[3];    // Moment terms
+	double M1i[3];   // Combined geometric and moment terms
+	double g, h;     // Temporary calculation variables
+	double dif, dif1, dif2;  // Difference terms
+	int    ni, nj;   // Block sizes
+	double *fi;      // Pointer to current point to exchange
+	double *fj;      // Pointer to candidate point to exchange with
+	double *fmi;     // Mean of current block
+	double *fmj;     // Mean of candidate block
+	int i, j, l;
 	int curRowNo;
 	int rowNo;
 	int iBlock=nB*MAXN;
 
+	fprintf(stderr, "findDeltaBlock called with xcur: %d, xnew: %d, curBlock: %d, newBlock: %d\n", xcur, *xnew, curBlock, *newBlock);
+	//printMatrix("tX", tX, nB, k);
+	//printMatrix("tBlockMeans", tBlockMeans, nB, k);
+	// Initialize geometric coefficients
 	Gi[1]=1;
 	Gi[2]=0;
 	curRowNo=B[IB(curBlock,xcur)];
@@ -1433,25 +1427,35 @@ double findDeltaBlock(
 
 	fi=tX+curRowNo*k;
 	fmi=tBlockMeans+curBlock*k;
+
+	// Loop through all blocks except current
 	for (i=0;i<nB;i++) {
 		if (i!=curBlock) {
 			nj=blocksizes[i];
+			// Calculate geometric coefficient based on block sizes
 			Gi[0]=(double)(ni+nj)/(double)(ni*nj);
 
 			fmj=tBlockMeans+i*k;
+			
+			// Calculate squared distance between block means
 			g=0;
 			for (l=0;l<k;l++) {
+				//fprintf(stderr, "fmi[%d]: %f, fmj[%d]: %f\n", l, fmi[l], l, fmj[l]);
 				dif=fmj[l]-fmi[l];
 				g+=dif*dif;
 			}
 			Mi[0]=g;
 
+			// Try exchanging with each point in candidate block
 			for (j=0;j<nj;j++) {
 				rowNo=B[IB(i,j)];
 				fj=tX+rowNo*k;
 				g=0;
 				h=0;
+				
+				// Calculate cross terms between means and points
 				for (l=0;l<k;l++) {
+					//fprintf(stderr, "rowNo: %d, i: %d, j: %d, l: %d, fmi: %f, fmj: %f, fi: %f, fj: %f\n", rowNo, i, j, l, fmi[l], fmj[l], fi[l], fj[l]);
 					dif1=fmj[l]-fmi[l];
 					dif2=fj[l]-fi[l];
 					g+=dif1*dif2;
@@ -1460,10 +1464,15 @@ double findDeltaBlock(
 				Mi[1]=g;
 				Mi[2]=h;
 			
+				// Combine geometric and moment terms
 				for (l=0;l<3;l++)
 					M1i[l]=Gi[l]+Mi[l];
 
+				// Calculate improvement in criterion
 				d=-(1+M1i[0]*M1i[2]-M1i[1]*M1i[1]); 
+				fprintf(stderr, "d: %f, i: %d, j: %d\n", d, i, j);
+
+				// Update best exchange if improvement is large enough
 				if ((d-delta)>deltaTol) {
 					delta=d;
 					*newBlock=i;
@@ -1472,16 +1481,23 @@ double findDeltaBlock(
 			}
 		}
 	}
+
+	// Check exchanges with extra block if it exists
 	if (extraBlock) {
+		// Special geometric coefficients for extra block
 		Gi[0]=(double)(ni+1)/(double)ni;
 		Gi[1]=1/(double)ni;
 		Gi[2]=-(double)(ni-1)/(double)ni;
+		
+		// Calculate squared distance to current point
 		g=0;
 		for (l=0;l<k;l++) {
 			dif=fi[l]-fmi[l];
 			g+=dif*dif;
 		}
 		Mi[2]=g;
+
+		// Try exchanging with each extra point
 		for (j=0;j<nEx;j++) {
 			rowNo=B[iBlock+j];
 			fj=tX+rowNo*k;
@@ -1496,8 +1512,8 @@ double findDeltaBlock(
 			Mi[1]=g;
 			for (l=0;l<3;l++)
 				M1i[l]=Gi[l]+Mi[l];
-				
 
+			// Calculate improvement for extra block exchange
 			d=-(1+(M1i[0]*M1i[2]-M1i[1]*M1i[1]));
 			if ((d-delta)>deltaTol) {
 				delta=d;
@@ -1505,7 +1521,6 @@ double findDeltaBlock(
 				*xnew=j;
 			}
 		}
-
 	}
 	return(delta);
 }
@@ -2315,7 +2330,7 @@ double findDeltaDp(
 | transfroms X and blockMeans to tX = X*Ti and tBlockMeans = tBlockMeans * Ti, 
 |	using Tip which containts Ti'
 */
-
+//c.transform(&Tip, &X, &tX, &blockMeans, &tBlockMeans, N, k, nB);
 void transform(
 	double *Tip,
 	double *X,
@@ -2369,6 +2384,9 @@ void transform(
 		}
 		
 	}
+
+	//printMatrix("tX", tX, N, k);
+	//printMatrix("tBlockMeans", tBlockMeans, nB, k);
 
 }
 
@@ -2424,7 +2442,7 @@ int ProgAllocate(
 	int		k,				/* Number of terms */
 	int     Nxb,				/* Sum of block sizes */
 	int		nB,				/* Number of blocks */
-	int    criterion,			/* If true, enlarge T and Tip */
+	bool    criterion,			/* If true, enlarge T and Tip */
 	int		*blocksizes				/* Number of trials in the nB blocks */
 )
 
@@ -2444,36 +2462,46 @@ int ProgAllocate(
 	if (extraBlock)
 		tBlock+=N-Nxb;
 
-	*B=(int *)R_alloc(tBlock,sizeof(int));
-	if (!*B) return 4;
-	*blockMeans=(double *)R_alloc(nB*k,sizeof(double));
-	if (!*blockMeans) return 5;
-	*tBlockMeans=(double *)R_alloc(nB*k,sizeof(double));
-	if (!*tBlockMeans) return 5;
-	*BlockArray=(int *)R_alloc(Nxb,sizeof(int));
-	if (!*BlockArray) return 5;
-	*tX=(double *)R_alloc(Nt*k,sizeof(double));
-	if (!*tX) return 6;
-	if (criterion>0) {
-		*T=(double *)R_alloc(nB*K,sizeof(double));
-		if (!*T) return 7;
-		*Tip=(double *)R_alloc(nB*K,sizeof(double));
-		if (!*Tip) return 8;
-	}
-	else {
-		*T=(double *)R_alloc(K,sizeof(double));
-		if (!*T) return 7;
-		*Tip=(double *)R_alloc(K,sizeof(double));
-		if (!*Tip) return 8;
-	}
-	*W=(double *)R_alloc(maxm(k*k,5*k),sizeof(double)); /* 5*k needed in findDeltaBlockWhole() */
-	if (!*W) return 9;
-	*vec=(double *)R_alloc(2*k,sizeof(double));
-	if (!*vec) return 10;
-	*Sc=(double *)R_alloc(2*k,sizeof(double));
-	if (!*Sc) return 11;
-	*rows=(int *)R_alloc(maxm(N,Nxb),sizeof(int));
-	if (!*rows) return 12;
+	*B = (int *)malloc(tBlock * sizeof(int));
+    if (!*B) return 4;
+    
+    *blockMeans = (double *)malloc(nB * k * sizeof(double));
+    if (!*blockMeans) return 5;
+    
+    *tBlockMeans = (double *)malloc(nB * k * sizeof(double));
+    if (!*tBlockMeans) return 5;
+    
+    *BlockArray = (int *)malloc(Nxb * sizeof(int));
+    if (!*BlockArray) return 5;
+    
+    *tX = (double *)malloc(Nt * k * sizeof(double));
+    if (!*tX) return 6;
+    
+    if (criterion>0) {
+        *T = (double *)malloc(nB * K * sizeof(double));
+        if (!*T) return 7;
+        *Tip = (double *)malloc(nB * K * sizeof(double));
+        if (!*Tip) return 8;
+    }
+    else {
+        *T = (double *)malloc(K * sizeof(double));
+        if (!*T) return 7;
+        *Tip = (double *)malloc(K * sizeof(double));
+        if (!*Tip) return 8;
+    }
+    
+    *W = (double *)malloc(maxm(k*k,5*k) * sizeof(double)); /* 5*k needed in findDeltaBlockWhole() */
+    if (!*W) return 9;
+    
+    *vec = (double *)malloc(2 * k * sizeof(double));
+    if (!*vec) return 10;
+    
+    *Sc = (double *)malloc(2 * k * sizeof(double));
+    if (!*Sc) return 11;
+    
+    *rows = (int *)malloc(maxm(N,Nxb) * sizeof(int));
+    if (!*rows) return 12;
+
 
 	return 0;
 }
@@ -2581,7 +2609,7 @@ void initializeB(
 	int t;
 	int Nt=(initRows)?Nxb:N;
 
-
+	// debug
 	for (i=0;i<Nt;i++)
 		rows[i]=i;
 
@@ -2924,11 +2952,16 @@ void BlockOptimize(
 	int j;
 
 
-
 	initializeBlockArray(rows,irows,N,Nxb,nB,blocksizes,BlockArray);
 	*iter=0;
 	repeat{
+		fprintf(stderr, "REPEAT NUMBER: %d\n", nRepeatCounts);
+		printMatrix("T beginning of repeat", T, 1, Nxb);
+		printMatrixInt("B beginning of repeat", B, 1, Nxb);
+
+
 		initializeB(B,rows,irows,N,Nxb,nB,blocksizes,nRepeatCounts==nRepeats);
+		printMatrixInt("B after initializeB", B, 1, Nxb);
 
 		formBlockMeans(blockMeans,X,B,k,nB,blocksizes);
 
@@ -2937,52 +2970,81 @@ void BlockOptimize(
 
 		if (!singular) {
 			makeTiFromTB(Tip,T,W,&aVar,k);
+			
 			if (doWholeBlock) {
 				repeat {
 					exchanged=false;
 					curBlock=0;
 					repeat {
 						for (xcur=0;xcur<blocksizes[curBlock];xcur++) {
+							printf("BEING LOOP xcur: %d\n", xcur);
 							delta=findDeltaBlockWhole(X,Tip,W,blockMeans,B,nB,nEx,blocksizes,blockFactors,xcur,&xnew,
 								curBlock,&newBlock,k);
+							
+							printf("delta: %f\n", delta);
+
 							if (10>delta && delta>designTol) {
 								exchangeBlockWhole(T,X,vec,blockMeans,B,blocksizes,blockFactors,xcur,xnew,curBlock,newBlock,nB,k);
 								logDcrit+=log(1+delta);
 								exchanged=true;
 								makeTiFromTB(Tip,T,W,&aVar,k);
 							}
-							R_CheckUserInterrupt();
+							//R_CheckUserInterrupt();
 						}
 					} until(nB<=++curBlock);
 				} until(!exchanged);
 
 			}
-			else {
+			else {				
+
 				transform(Tip,X,tX,blockMeans,tBlockMeans,N,k,nB);
 				repeat {
 					exchanged=false;
 					curBlock=0;
 					repeat {
 						for (xcur=0;xcur<blocksizes[curBlock];xcur++) {
+							fprintf(stderr, "BEGIN LOOP xcur: %d curBlock: %d, newBlock: %d\n", xcur, curBlock, newBlock);
 							delta=findDeltaBlock(tX,tBlockMeans,B,nB,nEx,blocksizes,xcur,&xnew,curBlock,&newBlock,k);
+							fprintf(stderr, "delta: %f\n", delta);
+
 							  /* poor starting designs cause numerical problems resulting in */
 							  /* very large deltas */
 							if (10>delta && delta>designTol) {
 								/* one can insert formBlockMeans() and reduceXtoT() here to
 								deal with numerical problems, but this seems not to be
 								needed when large deltas are excluded, as above. */
+								printMatrix("T after findDeltaBlock", T, 1, 21);
+								printMatrix("Tip after findDeltaBlock", Tip, 1, 21);
+								printMatrixInt("B before exchange", B, 7, 3);
+								//fprintf(stderr, "B[0]: %d\n", B[0]);
 								exchangeBlock(T,X,vec,blockMeans,B,blocksizes,xcur,xnew,curBlock,newBlock,nB,k);
 								logDcrit+=log(1+delta);
 								exchanged=true;
 								makeTiFromTB(Tip,T,W,&aVar,k);
+								printMatrix("Tip after makeTiFromTB", Tip, 1, 21);
+								printMatrix("T after makeTiFromTB", T, 1, 21);
 								transform(Tip,X,tX,blockMeans,tBlockMeans,N,k,nB);
+
+								printMatrix("tX after transform", tX, 7, 6);
+								printMatrixInt("B after transform", B, 7, 3);
+								printMatrix("blockMeans after transform", blockMeans, 7, 6);
+								printMatrix("tBlockMeans after transform", tBlockMeans, 7, 6);
 							}
-							R_CheckUserInterrupt();
+
+							
+							//if (xcur > 0) {
+							//	break;
+							//}
+							//R_CheckUserInterrupt();
 						}
+						//break;
 					} until(nB<=++curBlock);
+
+					//break;
 				} until(!exchanged);
 			}
 
+			fprintf(stderr, "logDcrit: %f, logDbest: %f\n", logDcrit, logDbest);
 			if (logDcrit>logDbest) {
 				(*iter)++;
 				logDbest=logDcrit;
@@ -3000,7 +3062,9 @@ void BlockOptimize(
 		else 
 			countSingular++;
 
+		//break;
 	}until(!(--nRepeatCounts)); 
+
 	if (countSingular==nRepeats)
 		*error=13;
 	else {
@@ -3098,7 +3162,7 @@ void BlockOptimizeOB(
 						curSS-=delta;
 						exchanged=true;
 					}
-					R_CheckUserInterrupt();
+					//R_CheckUserInterrupt();
 				}
 			} until(nB<=++curBlock);
 		} until(!exchanged);
@@ -3214,7 +3278,7 @@ void BlockOptimizeDpc(
 							exchangeDpc(T,X,vec,blockMeans,B,blocksizes,blockFactors,xcur,xnew,curBlock,newBlock,nB,k);
 							makeTiFromTDpc(Tip,T,W,blocksizes,nB,curBlock,newBlock,k);
 						}
-						R_CheckUserInterrupt();
+						//();
 					}
 				} until(nB<=++curBlock);
 			} until(!exchanged || 100<iterT++); /*iter just in case */
@@ -3342,7 +3406,7 @@ void BlockOptimizeDp(
 							exchangeDp(T,X,vec,B,blocksizes,blockFactors,xcur,xnew,curBlock,newBlock,nB,k);
 							makeTiFromTDp(Tip,T,W,blocksizes,nB,curBlock,newBlock,k);
 						}
-						R_CheckUserInterrupt();
+						//R_CheckUserInterrupt();
 					}
 				} until(nB<=++curBlock);
 			} until(!exchanged || 100<iterT++); /*iter just in case */
@@ -3390,236 +3454,157 @@ void BlockOptimizeDp(
 }
 
 
-/* BlockOpt *****************************************************************************
-|	calling function for BlockOptimize() with memory allocation and deallocation
-|
-|
-|	Input: 
-|		X, an matrix of model expanded design, without constant column
-|		nB, the number of blocks
-|		blocksizes, an array of block sizes
-|		blockFactors, a matrix of block interaction factors
-|		N, the number of rows in X
-|		nRepeats, the number of repeats
-|		k, number of terms
-|	Output: 
-|		B, an nB x MAXN array of rows of X allocated to the nB blocks, -1
-|			is used to fill blocks up to MAXN. N-nB*MAXN ints are added to
-|			hold the extra block when N is greater then the sum of the block sizes.
-|		D, the D criterion
-|		diagonality, 
-|		error true when no positive determinant can be found or for allocation errors
-|***********************
-|	Allocations and deallocations are handled by ProgAllocate() and ProgDeallocate()
-|
-|	User allocations:
-|	double
-|		X: Nxk, design list stored in column major form
-|		irows: a (sum blocksizes) array of initial design rows
-|		blocksizes: nB, array of block sizes
-|		blockFactors: nB x k array or NULL
-|		BlockArray: An array of row numbers from X arranged in nB blocks
-|
-|	Program allocations:
-|	doubles:
-|		B:	nB x max(blocksizes) array of row numers from X (filled out with -1 for short blocks)
-|			N-nB*MAXN ints are added when N is greater than the sum of the blocksizes.
-|		blockMeans:	nB x k
-|		tBlockMeans: nB x k
-|		tX:			N x k
-|		T:			k*(k+1)/2
-|		Tip:			k*(k+1)/2
-|		W:			max(k*k,5*k)
-|		vec:		2*k
-|		Sc:			2*k
-*/
 
-SEXP BlockOpt(
-	SEXP	Xi,
-	SEXP    initRowsi,
-	SEXP	irowsi,
-	SEXP	nBi,
-	SEXP	blocksizesi,
-	SEXP    doWholeBlocki,
-	SEXP	blockFactorsi,
-	SEXP	nRepeatsi,
-	SEXP	criterioni
-)
+void transposeMatrix(
+	double *X,
+	int N,  /* number of rows in transposed matrix */
+	int k	/* number of columns in transposed matrix */
+)	
 {
-	double  *X;
-	double  *blockFactors=NULL;
-	int		N;
-	int		k;
-	int		nB;
-	int		*blocksizes=0;
-	int		nRepeats;
-	int		criterion;
-	double  D;
-	double  Dp = 0.0; // -Wall
-	double  diagonality = 0.0;
+    int     size = N*k-2;
+	int		i=1;
+	int		row;
+	int		column;
+	int		indx;
+	double  temp;
 
-	int		*BlockArray;
-	int		*irows=NULL;
-	int		*B;				/* nB x max(blocksizes) (+ something) array to hold row numbers from X in nB blocks */
-	double  *blockMeans=0;	/* nB x k matrix of block means */
-	double  *tBlockMeans=0; /* Transfromed block means. */
-	double  *tX=0;			/* Transformed X */
-	double	*T=0;			/* X'X=T'T, with T upper triangualar (has scale values on diagonal) */
-	double  *Tip=0;			/* T inverse (multiplied by scale values) */
-	double  *W=0;           /* k*(k+1)/2 scratch matrix */
-	double  *vec=0;			/* scratch 2*k element vector */
-	double  *Sc=0;			/* scratch 2*k element vector */
-	int		*rows=0;        /* scratch N element vector */
-	int		i;
-	int		Nxb=0;			/* sum of the blocksizes */
-	int     nEx=0;			/* number of values in the extra block */
-	bool    error;
-	int		iter;
+	for(i=1;i<size;i++){
+		indx = i;
+		repeat
+			column = indx/k; /* indx (column+k*row) of cell in transposed matrix */
+			row = indx%k;
+			indx = N*row +  column; /* the value to be swapped is in cell at indx in current matrix */
+		solongas(indx < i); /* indx<i is a previously exchanged cell, */
+							/* track its original contents and then exchange when found */
 
-			/* returns */
-	SEXP	alist=0;
-	SEXP    anames;
-	SEXP    DVector;
-	SEXP    DpVector;
-	SEXP    DiagVector;
-	SEXP    iterVector;
-	SEXP    errVector;
-	SEXP    BAVector;
-
-	int nprotect = 0;
-
-	PROTECT(Xi=AS_NUMERIC(Xi)); /* The only argument modified by the
-				     * C program */
-	nprotect++;
-	X=NUMERIC_POINTER(Xi);
-
-	doWholeBlock=INTEGER_POINTER(doWholeBlocki)[0]; /* Global value */
-	if (doWholeBlock) {
-	    PROTECT(blockFactorsi=AS_NUMERIC(blockFactorsi));
-	    nprotect++;
-	    blockFactors=NUMERIC_POINTER(blockFactorsi);
-	}
-
-	initRows=INTEGER_POINTER(initRowsi)[0]; /* Global value */
-	if (initRows) {
-		irows=INTEGER_POINTER(irowsi);
-	}
-	N=INTEGER_POINTER(GET_DIM(Xi))[0];
-	k=INTEGER_POINTER(GET_DIM(Xi))[1];
-	nB=INTEGER_POINTER(nBi)[0];
-	blocksizes=INTEGER_POINTER(blocksizesi);
-	nRepeats=INTEGER_POINTER(nRepeatsi)[0];
-	criterion=INTEGER_POINTER(criterioni)[0];
-
-
-
-	for (i=0;i<nB;i++)
-		Nxb+=blocksizes[i];
-
-	extraBlock=false; /* Global, To be safe if program reused. */
-	if (Nxb<N) {
-		extraBlock=true; /* An extra block contains the trials outside the design */
-		nEx=N-Nxb;
-	}
-
-
-	transposeMatrix(X,N,k); /* R is column major, C is row major */
-
-	
-
-	if (doWholeBlock)
-		transposeMatrix(blockFactors,nB,k);
-
-			
-		/* allocation for all arrays */
-	if (!(error=ProgAllocate(&B,&blockMeans,&tBlockMeans,&BlockArray,&tX,&T,&Tip,&W,&vec,&Sc,&rows,N,k,Nxb,
-			nB,criterion,blocksizes))) {
-
-		obScaled=(criterion==4);
-		if (criterion==3 || criterion==4) { /* orthogonal blocks */
-			BlockOptimizeOB(X,nB,blocksizes,blockFactors,B,blockMeans,T,W,vec,
-				Sc,rows,irows,N,Nxb,k,nEx,&D,&diagonality,BlockArray,nRepeats,&iter,&error);
+		if (indx >i) {
+			temp=X[i];
+			X[i] = X[indx];
+			X[indx] = temp;
 		}
-		else if (criterion==1) { /* optimize product of centered blocks */
-			BlockOptimizeDpc(X,nB,blocksizes,blockFactors,B,blockMeans,tBlockMeans,T,Tip,W,tX,vec,
-				Sc,rows,irows,N,Nxb,nEx,k,&D,&Dp,BlockArray,nRepeats,&iter,&error);
-		}
-		else if (criterion==2) { /* optimize produce of uncentered blocks */
-			BlockOptimizeDp(X,nB,blocksizes,blockFactors,B,blockMeans,T,Tip,W,tX,vec,
-				Sc,rows,irows,N,Nxb,nEx,k,&D,&Dp,BlockArray,nRepeats,&iter,&error);
-		}
-		else {	/* optimize determinant over all blocks */
-			BlockOptimize(X,nB,blocksizes,blockFactors,B,blockMeans,tBlockMeans,T,Tip,W,tX,vec,
-				Sc,rows,irows,N,Nxb,k,nEx,&D,&diagonality,BlockArray,nRepeats,&iter,&error);
-		}
-
-					/* Prepare a list to return */
-		PROTECT(alist=NEW_LIST(6));
-
-		PROTECT(DVector=NEW_NUMERIC(1));
-		NUMERIC_POINTER(DVector)[0]=D;
-		SET_ELEMENT(alist,0,DVector);
-		UNPROTECT(1);
-
-		PROTECT(DpVector=NEW_NUMERIC(1));
-		NUMERIC_POINTER(DpVector)[0]=Dp;
-		SET_ELEMENT(alist,1,DpVector);
-		UNPROTECT(1);
-
-		PROTECT(DiagVector=NEW_NUMERIC(1));
-		NUMERIC_POINTER(DiagVector)[0]=diagonality;
-		SET_ELEMENT(alist,2,DiagVector);
-		UNPROTECT(1);
-
-		PROTECT(iterVector=NEW_INTEGER(1));
-		INTEGER_POINTER(iterVector)[0]=iter;
-		SET_ELEMENT(alist,3,iterVector);
-		UNPROTECT(1);
-
-		PROTECT(errVector=NEW_INTEGER(1));
-		INTEGER_POINTER(errVector)[0]=error;
-		SET_ELEMENT(alist,4,errVector);
-		UNPROTECT(1);
-
-
-
-		PROTECT(BAVector=NEW_INTEGER(Nxb));
-		for (i=0;i<Nxb;i++) {
-			INTEGER_POINTER(BAVector)[i]=BlockArray[i];
-		}
-		SET_ELEMENT(alist,5,BAVector);
-		UNPROTECT(1);
-
-
-			/* Label the variables in the list */
-
-		PROTECT(anames=NEW_CHARACTER(6));
-		SET_STRING_ELT(anames,0,mkChar("D"));
-		SET_STRING_ELT(anames,1,mkChar("Dp"));
-		SET_STRING_ELT(anames,2,mkChar("diagonality"));
-		SET_STRING_ELT(anames,3,mkChar("iter"));
-		SET_STRING_ELT(anames,4,mkChar("error"));
-		SET_STRING_ELT(anames,5,mkChar("BlockArray"));
-		SET_NAMES(alist,anames);
-		UNPROTECT(1);
-
-		UNPROTECT(1);	/* alist */
-
-		UNPROTECT(nprotect);
-
-		return alist;
-
 	}
-	else {
-		UNPROTECT(nprotect);
-
-		return R_NilValue;
-	}
-
-	/* the following is needed if Calloc() is used */
-/*	ProgDeallocate(B,blockMeans,tBlockMeans,tX,T,Tip,W,vec,Sc,rows); */
-	
 }
+
+/* BlockOpt *****************************************************************************
+| Command-line version of block optimization function
+|
+| Input: 
+|   X - Matrix of model expanded design (N x k), without constant column
+|   N - Number of rows
+|   k - Number of terms (columns in X)
+|   nB - Number of blocks
+|   blocksizes - Array of block sizes
+|   blockFactors - Matrix of block interaction factors (nB x k), or NULL
+|   nRepeats - Number of optimization repeats
+|   criterion - Optimization criterion (1-4)
+|   initRows - Whether to use initial row assignments
+|   irows - Initial row assignments (if initRows is true)
+|
+| Output:
+|   Returns 0 on success, error code otherwise
+|   Writes results to specified output files
+*/
+int BlockOpt(
+    double *X,               // Input matrix (N x k)
+    int N,                   // Number of rows
+    int k,                   // Number of columns
+    int nB,                 // Number of blocks
+    int *blocksizes,        // Array of block sizes
+    double *blockFactors,   // Block factors matrix (or NULL)
+    int nRepeats,          // Number of repeats
+    int criterion,         // Optimization criterion
+    bool initRows,         // Whether to use initial rows
+    int *irows            // Initial row assignments (or NULL)
+) {
+    double  D;
+    double  Dp = 0.0;
+    double  diagonality = 0.0;
+
+    int     *BlockArray;
+    int     *B;             // Block assignments
+    double  *blockMeans;    // Block means
+    double  *tBlockMeans;   // Transformed block means
+    double  *tX;           // Transformed X
+    double  *T;            // Upper triangular matrix
+    double  *Tip;          // Inverse of T
+    double  *W;            // Scratch matrix
+    double  *vec;          // Scratch vector
+    double  *Sc;           // Scratch vector
+    int     *rows;         // Scratch array
+    int     Nxb = 0;       // Sum of block sizes
+    int     nEx = 0;       // Extra block size
+    int    error;
+    int     iter;
+
+    // Calculate total block size
+    for (int i = 0; i < nB; i++) {
+        Nxb += blocksizes[i];
+    }
+
+    // Check if extra block needed
+    extraBlock = false;
+    if (Nxb < N) {
+        extraBlock = true;
+        nEx = N - Nxb;
+    }
+
+    // Set global flags
+    doWholeBlock = (blockFactors != NULL);
+    
+    // Allocate memory
+    error = ProgAllocate(&B, &blockMeans, &tBlockMeans, &BlockArray, &tX, &T, &Tip, 
+                        &W, &vec, &Sc, &rows, N, k, Nxb, nB, criterion, blocksizes);
+    
+    if (error) {
+        return error;
+    }
+
+    // Transpose input matrix for C row-major order
+    transposeMatrix(X, N, k);
+    if (doWholeBlock) {
+        transposeMatrix(blockFactors, nB, k);
+    }
+
+    // Run optimization based on criterion
+    obScaled = (criterion == 4);
+    if (criterion == 3 || criterion == 4) {
+        BlockOptimizeOB(X, nB, blocksizes, blockFactors, B, blockMeans, T, W, vec,
+            Sc, rows, irows, N, Nxb, k, nEx, &D, &diagonality, BlockArray, nRepeats, &iter, &error);
+    }
+    else if (criterion == 1) {
+        BlockOptimizeDpc(X, nB, blocksizes, blockFactors, B, blockMeans, tBlockMeans, T, Tip, W, tX, vec,
+            Sc, rows, irows, N, Nxb, nEx, k, &D, &Dp, BlockArray, nRepeats, &iter, &error);
+    }
+    else if (criterion == 2) {
+        BlockOptimizeDp(X, nB, blocksizes, blockFactors, B, blockMeans, T, Tip, W, tX, vec,
+            Sc, rows, irows, N, Nxb, nEx, k, &D, &Dp, BlockArray, nRepeats, &iter, &error);
+    }
+    else {
+        BlockOptimize(X, nB, blocksizes, blockFactors, B, blockMeans, tBlockMeans, T, Tip, W, tX, vec,
+            Sc, rows, irows, N, Nxb, k, nEx, &D, &diagonality, BlockArray, nRepeats, &iter, &error);
+    }
+
+    // Write results to output files or print to stdout
+    printf("Results:\n");
+    printf("D criterion: %f\n", D);
+    printf("Dp criterion: %f\n", Dp);
+    printf("Diagonality: %f\n", diagonality);
+    printf("Iterations: %d\n", iter);
+    printf("Error code: %d\n", error);
+    
+    printf("\nBlock assignments:\n");
+    //for (int i = 0; i < Nxb; i++) {
+    //    printf("%d ", BlockArray[i]);
+    //}
+	printMatrixInt("Block assignments",BlockArray, nB, blocksizes[0]);
+    printf("\n");
+
+    // Clean up
+    // Note: Memory allocated with R_alloc is automatically freed
+    
+    return error;
+}
+
 
 
 
