@@ -23,14 +23,14 @@ fn reduce_x_to_t(
         for &row_index in block_row.iter() {
             //println!("Calculating diff for row: {:#?} and block: {:#?}", block_data.x.row(row_index as usize), &block );
             //pretty_print!(&block_data.x.row(row_index as usize));
-            println!("row : {}",pretty_print!(&block_data.x.row(row_index as usize)));
-            println!("block means: {}",pretty_print!(&block));
+            //println!("row : {}",pretty_print!(&block_data.x.row(row_index as usize)));
+            //println!("block means: {}",pretty_print!(&block));
             let diff = block_data.x.row(row_index as usize) - &block;
-            println!("diff: {}",pretty_print!(&diff.transpose()));
+            //println!("diff: {}",pretty_print!(&diff.transpose()));
             get_range_b(&mut p_mx, &mut p_mn, &diff.transpose(), block_data.k as usize);
             // do the rotation. 
             rotate_b(block_data, &diff.transpose(), 1.0);
-            println!("t not pretty: {:?}", &block_data.t);
+            //println!("t not pretty: {:?}", &block_data.t);
             
             
             //diff
@@ -44,7 +44,7 @@ fn reduce_x_to_t(
     };
     //let upper_tri = block_data.x.clone().lu().u();
     block_data.t = block_data.t.transpose();
-    println!("t: {}", pretty_print!(&block_data.t));
+    //println!("t: {}", pretty_print!(&block_data.t));
     //println!("upper_tri: {:?}", &upper_tri);
     log_det = block_data.t.upper_triangle().determinant().log10();
     /*
@@ -101,7 +101,7 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
 
         // d points to the corresponding index in the t (upper triangular) matrix
         k_index = calc_index(i as usize, block_data.k as usize);
-        println!("i: {}, k_index: {}", i, k_index);
+        //println!("i: {}, k_index: {}", i, k_index);
         let d = block_data.t[(k_index) as usize];
         let dp = d + weight * t_vec[i as usize] * t_vec[i as usize];
         if dp.abs() < TOLROT {
@@ -123,7 +123,7 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
 
         k_index += 1;
         for j in (i+1)..block_data.k {
-            dbg!(&k_index);
+            //dbg!(&k_index);
             let r = block_data.t[k_index];
             block_data.t[k_index] = s * t_vec[j as usize] + c * r;
             t_vec[j as usize] -= t_vec[i as usize] * r;
@@ -133,10 +133,10 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
 }
 
 fn make_ti_from_tb(block_data: &mut BlockData) -> Result<f64, String> {
-    println!("block_data.t: {}", pretty_print!(&block_data.t));
+    //println!("block_data.t: {}", pretty_print!(&block_data.t));
     block_data.t_inv = block_data.t.upper_triangle().clone().try_inverse().ok_or("Failed to invert upper triangular matrix")?;
     block_data.t_inv.fill_lower_triangle_with_upper_triangle();
-    println!("ti: {}", pretty_print!(&block_data.t_inv));
+    //println!("ti: {}", pretty_print!(&block_data.t_inv));
     //let tip = ti.lower_triangle();
     
     // set the lower triangular part of block_data.t to tip
@@ -149,11 +149,17 @@ fn make_ti_from_tb(block_data: &mut BlockData) -> Result<f64, String> {
         }
     }
 
+    for i in 0..block_data.k {
+        let scale = 1.0 / block_data.t_inv[(i * block_data.k + i) as usize];
+        for j in 0..block_data.k {
+            block_data.t_inv[(i * block_data.k + j) as usize] *= scale;
+        }
+    }
     
-    println!("block_data.t: {}", pretty_print!(&block_data.t));
+    //println!("block_data.t: {}", pretty_print!(&block_data.t));
     println!("block_data.t_inv: {}", pretty_print!(&block_data.t_inv));
 
-    Ok(())
+    Ok(block_data.t_inv.variance())
 }
 
 /*/* initializeBlockArray ***********************************************************************
@@ -274,7 +280,7 @@ fn no_dup_permute_b(block_data: &mut BlockData, little_n: u8, bs: u8) -> Result<
 }
 
 fn form_block_means(block_data: &mut BlockData) {
-    println!("block_data.b: {:?}", block_data.b);
+    //println!("block_data.b: {:?}", block_data.b);
     // divide block_data.b into block_data.n_b equal sized blocks of max_n rows
     // block_data.b is a n_b x max_n matrix of row indices from block_data.x
     // block_data.block_means is a n_b x k matrix of block means
@@ -294,7 +300,7 @@ fn form_block_means(block_data: &mut BlockData) {
         block.copy_from(&(DMatrix::from_rows(&out).row_sum() / block_data.block_sizes[i as usize] as f64));
         i += 1;
     };
-    dbg!(&block_data.block_means);
+    //dbg!(&block_data.block_means);
 
 }
 
@@ -369,38 +375,126 @@ fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<(), St
 
 }
 
-fn find_delta_block(block_data: &mut BlockData, xcur: u8, cur_block: u8) -> Result<f64, String> {
-
-    let mut g_i = [0.0, 1.0, 0.0];
-    let mut m_i = [0.0, 0.0, 0.0];
-    let mut m1_i = [0.0, 0.0, 0.0];
-    let mut g = 0.0;
-    let mut h = 0.0;
-    let mut delta = 0.0;
-
+fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8) -> Result<f64, String> {
+    const DELTA_TOL: f64 = 1e-12;  // Minimum improvement threshold
+    let mut delta = 0.0;  // Tracks best improvement found
+    
+    // Get current point's row number and block size
+    let cur_row_no = block_data.b[(cur_block * block_data.max_n + xcur) as usize] as usize;
     let ni = block_data.block_sizes[cur_block as usize];
-    let fi = block_data.t_x.row(block_data.b[(cur_block * block_data.max_n + xcur) as usize] as usize);
+    
+    // Get pointers to current point and its block mean
+    let fi = block_data.t_x.row(cur_row_no);
     let fmi = block_data.t_block_means.row(cur_block as usize);
 
+    // Loop through all blocks except current
     for i in 0..block_data.n_b {
         if i != cur_block {
             let nj = block_data.block_sizes[i as usize];
-            let fmj = block_data.t_block_means.row(i as usize);
-
-            g_i[0] = (ni + nj) as f64 / (ni * nj) as f64;
-            m_i[0] = (fmj - fmi).norm();
-            m1_i[0] = 1.0 / nj as f64;
             
+            // Calculate geometric coefficient based on block sizes
+            let gi0 = (ni + nj) as f64 / (ni * nj) as f64;
+            let gi1 = 1.0;
+            let gi2 = 0.0;
 
+            let fmj = block_data.t_block_means.row(i as usize);
+            
+            // Calculate squared distance between block means
+            let mut g = 0.0;
+            for l in 0..block_data.k {
+                let dif = fmj[l as usize] - fmi[l as usize];
+                g += dif * dif;
+            }
+            let mi0 = g;
 
+            // Try exchanging with each point in candidate block
+            for j in 0..nj {
+                let row_no = block_data.b[(i * block_data.max_n + j) as usize] as usize;
+                let fj = block_data.t_x.row(row_no);
+                
+                let mut g = 0.0;
+                let mut h = 0.0;
+                
+                // Calculate cross terms between means and points
+                for l in 0..block_data.k {
+                    let dif1 = fmj[l as usize] - fmi[l as usize];
+                    let dif2 = fj[l as usize] - fi[l as usize];
+                    g += dif1 * dif2;
+                    h += dif2 * dif2;
+                }
+                let mi1 = g;
+                let mi2 = h;
+                
+                // Combine geometric and moment terms
+                let m1i0 = gi0 + mi0;
+                let m1i1 = gi1 + mi1;
+                let m1i2 = gi2 + mi2;
 
-
+                // Calculate improvement in criterion
+                let d = -(1.0 + m1i0 * m1i2 - m1i1 * m1i1);
+                
+                // Update best exchange if improvement is large enough
+                if (d - delta) > DELTA_TOL {
+                    delta = d;
+                    *new_block = i;
+                    *xnew = j;
+                }
+            }
         }
     }
-    Ok(0.0)
+
+
+    Ok(delta)
 }
 
-fn exchange_block(block_data: &mut BlockData, xcur: u8, cur_block: u8, exchanged: &mut bool) -> Result<(), String> {
+fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8, new_block: &mut u8) -> Result<(), String> {
+    let mut vec = DVector::zeros(block_data.k as usize);
+    let mut tvec = DVector::<f64>::zeros(block_data.k as usize);
+    
+    let row_no_i = block_data.b[(cur_block * block_data.max_n + xcur) as usize] as usize;
+    let ni = block_data.block_sizes[cur_block as usize];
+
+    let x_clone = block_data.x.clone();
+    let xri = x_clone.row(row_no_i);
+    let xmi = block_data.block_means.row(cur_block as usize);
+
+    // Handle normal block exchange case
+    let row_no_j = block_data.b[(*new_block * block_data.max_n + xnew) as usize] as usize;
+    let xrj = x_clone.row(row_no_j);
+    let xmj = block_data.block_means.row(*new_block as usize);
+    let nj = block_data.block_sizes[*new_block as usize];
+    let c = (ni + nj) as f64 / (ni * nj) as f64;
+
+    // vec = xmj - xmi
+    for i in 0..block_data.k {
+        vec[i as usize] = xmj[i as usize] - xmi[i as usize];
+    }
+    rotate_b(block_data, &vec, 1.0);
+
+    // vec -= xrj - xri
+    for i in 0..block_data.k {
+        vec[i as usize] -= xrj[i as usize] - xri[i as usize];
+    }
+    rotate_b(block_data, &vec, -1.0);
+
+    // vec = xrj - xri
+    for i in 0..block_data.k {
+        vec[i as usize] = xrj[i as usize] - xri[i as usize];
+    }
+    rotate_b(block_data, &vec, 1.0 - c);
+
+    // Update block means
+    for i in 0..block_data.k {
+        block_data.block_means[(cur_block * block_data.k + i) as usize] += 
+            (xrj[i as usize] - xri[i as usize]) / ni as f64;
+        block_data.block_means[(*new_block * block_data.k + i) as usize] += 
+            (xri[i as usize] - xrj[i as usize]) / nj as f64;
+    }
+
+    block_data.b[(*new_block * block_data.max_n + xnew) as usize] = row_no_i as f64;
+
+    block_data.b[(cur_block * block_data.max_n + xcur) as usize] = row_no_j as f64;
+
     Ok(())
 }
 
@@ -434,6 +528,12 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), Strin
     let mut sc: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
     let mut block_array: Vec<u8> = vec![0; block_data.n_b as usize * (*block_data.block_sizes.iter().max().unwrap()) as usize];
     let mut var = 0.0;
+    let mut best_log_det = 0.0;
+    let mut best_block_array = DMatrix::zeros(block_data.n_b as usize, block_data.max_n as usize);
+    //let mut log_det = 0.0;
+    let mut singular = false;
+    let mut xnew = 0;
+    let mut new_block = 0;
     // b is a matrix of block factors. ncols is max(blocksizes)
     initialize_block_array(block_data, &mut block_array)?;
 
@@ -441,7 +541,7 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), Strin
         initialize_b(block_data,  repeat_num == 0)?;
         //dbg!(&block_data.b);
         form_block_means(block_data);
-        let (log_det, singular) = reduce_x_to_t(block_data, &mut vec, &mut sc, false);
+        let (mut log_det, singular) = reduce_x_to_t(block_data, &mut vec, &mut sc, false);
         if singular {
             return Err("Singular matrix".to_string());
         } else {
@@ -458,20 +558,41 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<(), Strin
             //println!("421block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
             loop {  
                 let mut exchanged = false;
-                let cur_block = 0;
+                let mut cur_block = 0;
                 loop {
                     for xcur in 0..block_data.block_sizes[cur_block as usize] {
-                        let delta = find_delta_block(block_data, xcur, cur_block)?;
-                        if delta > 10.0 && delta > DESIGN_TOL {
-                            exchange_block(block_data, xcur, cur_block, &mut exchanged)?;
+                        let delta = find_delta_block(block_data, xcur, &mut xnew, cur_block, &mut new_block)?;
+                        println!("delta: {}", delta);
+                        if delta < 10.0 && delta > DESIGN_TOL {
+                            exchange_block(block_data, xcur, xnew, cur_block, &mut new_block)?;
+                            exchanged = true;
+                            log_det += (1.0 + delta).ln();  
+                            make_ti_from_tb(block_data)?;
+                            //transform(block_data)?;
+                            block_data.t_x = block_data.x.clone() * block_data.t_inv.clone();
+                            block_data.t_block_means = block_data.block_means.clone() * block_data.t_inv.clone();
                         }
                     }
+                    if cur_block == block_data.n_b - 1 {
+                        break;
+                    } else {
+                        cur_block += 1;
+                    }
                 }
-                dbg!(&log_det, &singular);
+                if !exchanged {
+                    break;
+                }
+
+                if log_det > best_log_det {
+                    best_log_det = log_det;
+                    best_block_array = block_data.b.clone();
+                }
+                //dbg!(&log_det, &singular);
             }
         }
     }
-
+    println!("best_log_det: {}", best_log_det);
+    println!("best_block_array: {}", best_block_array);
     Ok(())
 }
 
