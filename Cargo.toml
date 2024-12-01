@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.93"
 nalgebra = "0.33.1"
 pretty-print-nalgebra = "0.1.0"
 rand = "0.8.5"
