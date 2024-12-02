@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #define Imat(ROW,COL)  (COL)+(ROW)*nColumns-((ROW)*((ROW)+1))/2 /* Upper Triangular */
 #define Iblock(ROW,COL) (COL)+(ROW)*nColumns					/* Index into block means */
 #define IB(ROW,COL) (COL)+(ROW)*MAXN							/* Index into block list */
@@ -6,12 +7,6 @@
 #define DOINVERSE 1
 #define INVERSEONLY 2
 
-int		MAXN=0;
-int		nColumns=0;
-bool    doWholeBlock=false; /* create block within block interactions */
-bool    extraBlock=false;  /* True when candidate list is in an extra block */
-bool	initRows=false;    /* True when initial design rows are specified */
-bool    obScaled=false;    /* When true orthogonal blocks are scaled */
 
 extern void transposeMatrix(double *X,int N,int k);
 

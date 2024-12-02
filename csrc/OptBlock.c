@@ -2,15 +2,21 @@
 | copyright (C) 2002-2004 by Robert E. Wheeler
 */
 
-
-
 #include "wheeler.h"
-
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include "OptBlock.h"
+
+
+int		MAXN=0;
+int		nColumns=0;
+bool    doWholeBlock=false; /* create block within block interactions */
+bool    extraBlock=false;  /* True when candidate list is in an extra block */
+bool	initRows=false;    /* True when initial design rows are specified */
+bool    obScaled=false;    /* When true orthogonal blocks are scaled */
 
 /********************************************************************** */
 
@@ -30,9 +36,13 @@ int		n
 			j,
 			temp;
 
+	
    //GetRNGstate();
    for (i = 1; i < n; i++) {
-      j =(int)((double)(1+i)*rand());
+	  double unif_rand = ((float) rand() / (float)(RAND_MAX));
+	  //printf("unif_rand: %f\n", unif_rand);
+      j =(int)((double)(1+i)*unif_rand);
+	  //printf("j: %d\n", j);
       temp = a[j];
       a[j] = a[i];
       a[i] = temp;
@@ -2337,7 +2347,7 @@ int ProgAllocate(
 	int		k,				/* Number of terms */
 	int     Nxb,				/* Sum of block sizes */
 	int		nB,				/* Number of blocks */
-	int    criterion,			/* If true, enlarge T and Tip */
+	bool    criterion,			/* If true, enlarge T and Tip */
 	int		*blocksizes				/* Number of trials in the nB blocks */
 )
 
@@ -2504,7 +2514,7 @@ void initializeB(
 	int t;
 	int Nt=(initRows)?Nxb:N;
 
-
+	// debug
 	for (i=0;i<Nt;i++)
 		rows[i]=i;
 
@@ -2847,7 +2857,6 @@ void BlockOptimize(
 	int j;
 
 
-
 	initializeBlockArray(rows,irows,N,Nxb,nB,blocksizes,BlockArray);
 	*iter=0;
 	repeat{
@@ -2923,7 +2932,9 @@ void BlockOptimize(
 		else 
 			countSingular++;
 
+		
 	}until(!(--nRepeatCounts)); 
+
 	if (countSingular==nRepeats)
 		*error=13;
 	else {
@@ -3392,7 +3403,7 @@ int BlockOpt(
     int     *rows;         // Scratch array
     int     Nxb = 0;       // Sum of block sizes
     int     nEx = 0;       // Extra block size
-    bool    error;
+    int    error;
     int     iter;
 
     // Calculate total block size
@@ -3463,9 +3474,7 @@ int BlockOpt(
     return error;
 }
 
-int main() {
-	return 0;
-}
+
 
 
 
