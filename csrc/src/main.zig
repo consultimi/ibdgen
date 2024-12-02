@@ -15,7 +15,6 @@ fn printMatrix(comptime T: type, array: []const T, rows: usize, cols: usize) voi
     }
 }
 
-
 pub fn main() !void {
 
     //double *X,               // Input matrix (N x k)
@@ -111,7 +110,22 @@ test "initialize b" {
     var B = [_]i32{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     const expected = [_]i32{ 0, 2, 4, 6, 3, 1, 5, 0, 4, 3, 5, 6, 2, 1, 0, 3, 6, 1, 5, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     c.initializeB(&B, &rows, &irows, N, Nxb, nB, &blocksizes, true);
-    printMatrix(i32, &B, 7, 3);
+    //printMatrix(i32, &B, 7, 3);
 
     try std.testing.expectEqualSlices(i32, &B, &expected);
+}
+
+test "form block means" {
+    var X = [_]f64{ 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1 };
+    var B = [_]i32{ 0, 2, 4, 6, 3, 1, 5, 0, 4, 3, 5, 6, 2, 1, 0, 3, 6, 1, 5, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    var blocksizes = [_]i32{ 3, 3, 3, 3, 3, 3, 3 };
+    //const N = 7;
+    const k = 6;
+    const nB = 7;
+    var blockMeans = [_]f64{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    c.formBlockMeans(&blockMeans, &X, &B, k, nB, &blocksizes);
+    printMatrix(f64, &blockMeans, 7, 6);
+
+    const expected = [_]f64{ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 };
+    try std.testing.expectEqualSlices(f64, &blockMeans, &expected);
 }

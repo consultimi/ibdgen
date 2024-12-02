@@ -329,7 +329,8 @@ fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<()> {
                 l = 0;
                 no_dup_permute_b(block_data, i, j, bs)?;
             }
-            block_data.b[(i * block_data.max_n + j) as usize] = block_data.rows[l as usize] as f64;
+            let index = (i * block_data.max_n + j);
+            block_data.b[row_major_index_from_column_major_index(index, block_data.n, block_data.max_n) as usize] = block_data.rows[l as usize] as f64;
             l += 1;
         }
     }
@@ -728,10 +729,50 @@ mod tests {
         let mut block_data = configure_block_data();
         let mut block_array = vec![0; block_data.n_b as usize * block_data.max_n as usize];
 
+       
         initialize_block_array(&mut block_data, &mut block_array).unwrap();
+        //assert_eq!(block_array, expected.to_vec());
 
         initialize_b(&mut block_data, true).unwrap();
-        assert_eq!(block_data.b, x.cast::<f64>());
+
+        let expected = nalgebra::dmatrix![
+            0.0,2.0,4.0;
+            6.0,3.0,1.0;
+            5.0,0.0,4.0;
+            3.0,5.0,6.0;
+            2.0,1.0,0.0;
+            3.0,6.0,1.0;
+            5.0,4.0,2.0;
+        ];
+        println!("block_data.b: {}", pretty_print!(&block_data.b));
+        assert_eq!(block_data.b, expected);
+    }
+
+    #[test]
+    fn test_form_block_means() {
+        let x = dm7choose3();
+        let mut block_data = configure_block_data();
+        block_data.b = nalgebra::dmatrix![
+            0.0,2.0,4.0;
+            6.0,3.0,1.0;
+            5.0,0.0,4.0;
+            3.0,5.0,6.0;
+            2.0,1.0,0.0;
+            3.0,6.0,1.0;
+            5.0,4.0,2.0;
+        ];
+        form_block_means(&mut block_data);
+        println!("block_data.block_means: {}", pretty_print!(&block_data.block_means));
+        let expected = nalgebra::dmatrix![
+            0.5,0.5,0.5;
+            0.5,0.5,0.5;
+            0.5,0.5,0.5;
+            0.5,0.5,0.5;
+            0.5,0.5,0.5;
+            0.5,0.5,0.5;
+            0.5,0.5,0.5;
+        ];
+        assert_eq!(block_data.block_means, expected);
     }
 
     /*
