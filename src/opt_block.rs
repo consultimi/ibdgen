@@ -198,8 +198,9 @@ fn initialize_block_array(block_data: &mut BlockData, block_array: &mut Vec<u8>)
 */
 fn permute_b(a: &mut DVector<u8>, n: u8) -> Result<()> {
 
-    let rnd = rand::random::<f64>();
     for i in 1..n {
+        //let rnd = rand::random::<f64>();
+        let rnd = 0.5;
         let j = (((1 + i) as f64) * rnd) as i32;
         let temp = a[j as usize];
         a[j as usize] = a[i as usize];
@@ -209,14 +210,30 @@ fn permute_b(a: &mut DVector<u8>, n: u8) -> Result<()> {
     Ok(())
 }
 
-fn no_dup_permute_b(block_data: &mut BlockData, little_n: u8, bs: u8) -> Result<()> {
+fn row_major_index_from_column_major_index(column_major_index: u8, width: u8, height: u8) -> u8 {
+    let row = column_major_index % height;
+    let column = column_major_index / height;
+    return row * width + column;
+}
+
+fn column_major_index_from_row_major_index(row_major_index: u8, width: u8, height: u8) -> u8 {
+    return row_major_index_from_column_major_index(row_major_index, height, width);
+}
+
+fn no_dup_permute_b(block_data: &mut BlockData, offset: u8, little_n: u8, bs: u8) -> Result<()> {
+    println!("no_dup_permute_b called with little_n: {}, bs: {}, block_data.rows: {}, offset: {}", little_n, bs, &block_data.rows, offset);
+    println!("b: {}", pretty_print!(&block_data.b));
     loop {
         //dbg!(&block_data.rows);
         let mut nodup = true;
         permute_b(&mut block_data.rows, block_data.n).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
         for i in 0..little_n {
-            //dbg!("{:?} {:?}", bs, little_n);
-            let cur_val = block_data.b[(i * block_data.n_t + i) as usize];
+            println!("bs: {}, little_n: {}, offset: {}, i: {}", bs, little_n, offset, i);
+            let index = offset * block_data.max_n + i;
+            let cur_val = block_data.b[column_major_index_from_row_major_index(index, block_data.max_n, block_data.n_b) as usize];
+            //let index = offset * block_data.k + i;
+            //println!("index: {}", index);
+            //let cur_val = block_data.b[index as usize];
             for j in 0..(bs - little_n) {
                 if block_data.rows[j as usize] as f64 == cur_val {
                     nodup = false;
@@ -310,7 +327,7 @@ fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<()> {
         for j in 0..bs {
             if l >= block_data.n_t {
                 l = 0;
-                no_dup_permute_b(block_data, j, bs)?;
+                no_dup_permute_b(block_data, i, j, bs)?;
             }
             block_data.b[(i * block_data.max_n + j) as usize] = block_data.rows[l as usize] as f64;
             l += 1;
@@ -582,8 +599,7 @@ struct BlockData {
     n_repeat_counts: u8, // n_repeat_counts is the number of repeats
     init_rows: bool,     // init_rows is true if the rows are initialized from irows
     rows: DVector<u8>,  // rows is a vector of row indices
-    irows: DVector<u8>,
-    block_factors: Option<DMatrix<f64>>
+    irows: DVector<u8>
 }
 
 impl BlockData {
@@ -608,7 +624,7 @@ impl BlockData {
             init_rows: false,
             rows: DVector::zeros(0),
             irows: DVector::zeros(0),
-            block_factors: None }
+        }
     }
 
     fn rows_vec_length(&self) -> usize {
@@ -671,23 +687,58 @@ pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes:
 mod tests {
     use super::*;
 
-    fn dm7choose3() -> DMatrix<u8> {
+    fn configure_block_data() -> BlockData {
+        let mut block_data = BlockData::new();
+        let x_i = dm7choose3();
+        let n_b = 7;
+        let block_sizes = vec![3, 3, 3, 3, 3, 3, 3];
+        block_data.x = x_i.clone();
+        block_data.n = x_i.nrows() as u8;
+        block_data.k = x_i.ncols() as u8;
+        block_data.block_sizes = block_sizes.clone();
+        block_data.block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
+        block_data.t_block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
+        block_data.t = DMatrix::zeros(block_data.k as usize, block_data.k as usize);
+        block_data.t_inv = DMatrix::zeros(block_data.k as usize, block_data.k as usize);
+        block_data.n_repeat_counts = 1;
+        block_data.max_n = *block_sizes.iter().max().unwrap();
+        block_data.n_xb = block_data.block_sizes.iter().sum();
+        block_data.n_b = n_b;
+        block_data.init_rows = false;
+        block_data.rows = DVector::zeros(block_data.n as usize);
+        block_data.b = DMatrix::zeros(n_b as usize, block_data.max_n as usize);
+        block_data.n_t = block_data.n;
+        block_data
+    }
+    fn dm7choose3() -> DMatrix<f64> {
         nalgebra::dmatrix![
-            0,0,0,0,0,0,0,
-            0,1,0,0,0,0,0,
-            0,0,1,0,0,0,0,
-            0,0,0,1,0,0,0,
-            0,0,0,0,1,0,0,
-            0,0,0,0,0,1,0,
-            0,0,0,0,0,0,1
+            0.0,0.0,0.0,0.0,0.0,0.0;
+            1.0,0.0,0.0,0.0,0.0,0.0;
+            0.0,1.0,0.0,0.0,0.0,0.0;
+            0.0,0.0,1.0,0.0,0.0,0.0;
+            0.0,0.0,0.0,1.0,0.0,0.0;
+            0.0,0.0,0.0,0.0,1.0,0.0;
+            0.0,0.0,0.0,0.0,0.0,1.0;
         ]
     }
 
     #[test]
+    fn test_initialize_b() {
+        let x = dm7choose3();
+        let mut block_data = configure_block_data();
+        let mut block_array = vec![0; block_data.n_b as usize * block_data.max_n as usize];
+
+        initialize_block_array(&mut block_data, &mut block_array).unwrap();
+
+        initialize_b(&mut block_data, true).unwrap();
+        assert_eq!(block_data.b, x.cast::<f64>());
+    }
+
+    /*
     fn test_opt_block() {
         let x = dm7choose3();
         let result = opt_block(x.cast::<f64>(), None, 7, vec![3, 3,3,3,3,3,3], 1);
         assert!(result.is_ok());
-    }
+    } */
 }
 

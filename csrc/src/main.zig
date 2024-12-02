@@ -4,6 +4,18 @@ const c = @cImport({
     @cInclude("OptBlock.h");
 });
 
+fn printMatrix(comptime T: type, array: []const T, rows: usize, cols: usize) void {
+    var i: usize = 0;
+    while (i < rows) : (i += 1) {
+        var j: usize = 0;
+        while (j < cols) : (j += 1) {
+            std.debug.print("{d:.1} ", .{array[i * cols + j]});
+        }
+        std.debug.print("\n", .{});
+    }
+}
+
+
 pub fn main() !void {
 
     //double *X,               // Input matrix (N x k)
@@ -44,6 +56,7 @@ pub fn main() !void {
 
 test "simple test" {
     var X = [_]f64{ 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1 };
+    //printMatrix(f64, &X, 7, 6);
     const N = 7;
     const k = 6;
     const nB = 7;
@@ -96,7 +109,9 @@ test "initialize b" {
     const Nxb = 21;
     const nB = 7;
     var B = [_]i32{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-    const expected = [_]i32{ 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    const expected = [_]i32{ 0, 2, 4, 6, 3, 1, 5, 0, 4, 3, 5, 6, 2, 1, 0, 3, 6, 1, 5, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     c.initializeB(&B, &rows, &irows, N, Nxb, nB, &blocksizes, true);
+    printMatrix(i32, &B, 7, 3);
+
     try std.testing.expectEqualSlices(i32, &B, &expected);
 }

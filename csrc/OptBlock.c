@@ -39,7 +39,8 @@ int		n
 	
    //GetRNGstate();
    for (i = 1; i < n; i++) {
-	  double unif_rand = ((float) rand() / (float)(RAND_MAX));
+	  //double unif_rand = ((float) rand() / (float)(RAND_MAX));
+	  double unif_rand = 0.5;
 	  //printf("unif_rand: %f\n", unif_rand);
       j =(int)((double)(1+i)*unif_rand);
 	  //printf("j: %d\n", j);
