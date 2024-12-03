@@ -5,10 +5,7 @@ use anyhow::*;
 const DESIGN_TOL: f64 = 1.0e-10;
 
 fn reduce_x_to_t(
-    block_data: &mut BlockData,
-    vec: &mut DVector<f64>,
-    sc: &mut DVector<f64>,
-    do_whole_block: bool,
+    block_data: &mut BlockData
 ) -> (f64, bool) {
     let mut log_det = 0.0;
     let mut p_mx: Vec<f64> = vec![-1e16; block_data.k as usize];
@@ -20,6 +17,7 @@ fn reduce_x_to_t(
     for block in block_means.row_iter_mut() {
         //dbg!(&block);
         let block_row = b_matrix.row(i as usize);
+        let mut j: i32=0;
         for &row_index in block_row.iter() {
             //println!("Calculating diff for row: {:#?} and block: {:#?}", block_data.x.row(row_index as usize), &block );
             //pretty_print!(&block_data.x.row(row_index as usize));
@@ -30,9 +28,10 @@ fn reduce_x_to_t(
             get_range_b(&mut p_mx, &mut p_mn, &diff.transpose(), block_data.k as usize);
             // do the rotation. 
             rotate_b(block_data, &diff.transpose(), 1.0);
-            //println!("t not pretty: {:?}", &block_data.t);
+            //println!("t not pretty: {}", pretty_print!(&block_data.t.transpose()));
             
-            
+            //println!("i: {}, j: {}", i, j);
+            j += 1;
             //diff
         }
         //dbg!(&block);
@@ -46,7 +45,7 @@ fn reduce_x_to_t(
     block_data.t = block_data.t.transpose();
     //println!("t: {}", pretty_print!(&block_data.t));
     //println!("upper_tri: {:?}", &upper_tri);
-    log_det = block_data.t.upper_triangle().determinant().log10();
+    log_det = block_data.t.upper_triangle().determinant().ln();
     /*
     println!("log_det: {}", log_det);
     let mut t_cnt = 0;
@@ -89,6 +88,7 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
     let mut t_vec = vec.clone();
     //println!("vec: {:?}", &vec);
     //println!("t_vec: {:?}", &t_vec);
+    //println!("block_data.t: {}", pretty_print!(&block_data.t.transpose()));
     let mut k_index = 0;
     for i in 0..block_data.k {
         if skip == true {
@@ -103,6 +103,7 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
         k_index = calc_index(i as usize, block_data.k as usize);
         //println!("i: {}, k_index: {}", i, k_index);
         let d = block_data.t[(k_index) as usize];
+        //println!("d: {}", d);
         let dp = d + weight * t_vec[i as usize] * t_vec[i as usize];
         if dp.abs() < TOLROT {
             continue;
@@ -116,7 +117,7 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
         if d == 0.0 {
             skip = true;
             weight = 0.0;
-            continue;
+            //continue;
         } else {
             weight *= c;
         }
@@ -525,7 +526,7 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<()> {
         initialize_b(block_data,  repeat_num == 0).map_err(|e| anyhow!("Failed to initialize b: {}", e))?;
         //dbg!(&block_data.b);
         form_block_means(block_data);
-        let (mut log_det, singular) = reduce_x_to_t(block_data, &mut vec, &mut sc, false);
+        let (mut log_det, singular) = reduce_x_to_t(block_data);
         if singular {
             return Err(anyhow!("Singular matrix"));
         } else {
@@ -763,23 +764,103 @@ mod tests {
         ];
         form_block_means(&mut block_data);
         println!("block_data.block_means: {}", pretty_print!(&block_data.block_means));
+
+        
+        
+
         let expected = nalgebra::dmatrix![
-            0.5,0.5,0.5;
-            0.5,0.5,0.5;
-            0.5,0.5,0.5;
-            0.5,0.5,0.5;
-            0.5,0.5,0.5;
-            0.5,0.5,0.5;
-            0.5,0.5,0.5;
+            0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0;
+            1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0, 1.0 / 3.0;
+            0.0, 0.0, 0.0, 1.0 / 3.0, 1.0 / 3.0, 0.0;
+            0.0, 0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 1.0 / 3.0;
+            1.0 / 3.0, 1.0 / 3.0, 0.0, 0.0, 0.0, 0.0;
+            1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0, 1.0 / 3.0;
+            0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 1.0 / 3.0, 0.0
         ];
         assert_eq!(block_data.block_means, expected);
     }
 
-    /*
-    fn test_opt_block() {
-        let x = dm7choose3();
-        let result = opt_block(x.cast::<f64>(), None, 7, vec![3, 3,3,3,3,3,3], 1);
-        assert!(result.is_ok());
-    } */
+    #[test]
+    fn test_reduce_x_to_t() {
+        //let x = dm7choose3();
+        let mut block_data = configure_block_data();
+        block_data.b = nalgebra::dmatrix![
+            0.0,2.0,4.0;
+            6.0,3.0,1.0;
+            5.0,0.0,4.0;
+            3.0,5.0,6.0;
+            2.0,1.0,0.0;
+            3.0,6.0,1.0;
+            5.0,4.0,2.0;
+        ];
+
+        block_data.block_means = nalgebra::dmatrix![    
+            0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0;
+            1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0, 1.0 / 3.0;
+            0.0, 0.0, 0.0, 1.0 / 3.0, 1.0 / 3.0, 0.0;
+            0.0, 0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 1.0 / 3.0;
+            1.0 / 3.0, 1.0 / 3.0, 0.0, 0.0, 0.0, 0.0;
+            1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0, 1.0 / 3.0;
+            0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 1.0 / 3.0, 0.0
+        ];
+        let (log_det, singular) = reduce_x_to_t(&mut block_data);
+
+        println!("T: {}", pretty_print!(&block_data.t));
+        assert_eq!(log_det, 5.4594687633194745e0);
+        assert_eq!(singular, false);
+    }
+
+    #[test]
+    fn test_rotate_b() {
+        let mut block_data = configure_block_data();
+        block_data.b = nalgebra::dmatrix![
+            0.0,2.0,4.0;
+            6.0,3.0,1.0;
+            5.0,0.0,4.0;
+            3.0,5.0,6.0;
+            2.0,1.0,0.0;
+            3.0,6.0,1.0;
+            5.0,4.0,2.0;
+        ];
+
+        block_data.block_means = nalgebra::dmatrix![    
+            0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0;
+            1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0, 1.0 / 3.0;
+            0.0, 0.0, 0.0, 1.0 / 3.0, 1.0 / 3.0, 0.0;
+            0.0, 0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 1.0 / 3.0;
+            1.0 / 3.0, 1.0 / 3.0, 0.0, 0.0, 0.0, 0.0;
+            1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0, 1.0 / 3.0;
+            0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 1.0 / 3.0, 0.0
+        ];
+
+        // input 
+        let mut input = nalgebra::dmatrix![
+            2.000000, -0.166667, -0.333333, 0.000000, 0.000000, -0.333333;
+            0.000000,  1.277778, -0.086957, -0.260870, 0.000000, -0.086957;
+            0.000000,  0.000000,  1.768116, -0.016393, -0.188525, -0.696721;
+            0.000000,  0.000000,  0.000000,  1.245902, -0.271930, -0.039474;
+            0.000000,  0.000000,  0.000000,  0.000000,  1.178363, -0.491315;
+            0.000000,  0.000000,  0.000000,  0.000000,  0.000000,  0.623449;
+        ];
+
+        block_data.t = input;
+
+        let expected = nalgebra::dmatrix![
+            2.000000, -0.166667, -0.333333, 0.000000, 0.000000, -0.333333;
+            0.0,       1.388889, -0.080000, -0.160000, -0.160000, -0.080000;
+            0.0,            0.0, 1.768889,  -0.010050, -0.198492, -0.695980;
+            0.0,            0.0,      0.0,   1.408710, -0.422117, -0.021403;
+            0.0,            0.0,      0.0,          0.0,  1.421522, -0.427854;
+            0.0,            0.0,      0.0,          0.0,         0.0,  0.651192;
+        ];
+
+        let vec = nalgebra::dvector![0.0, -0.333333, 0.0, -0.333333, 0.666667, 0.0];
+
+        rotate_b(&mut block_data, &vec, 1.0);
+        assert_eq!(block_data.t, expected);
+
+    }
+
+
 }
 

@@ -20,7 +20,17 @@ bool    obScaled=false;    /* When true orthogonal blocks are scaled */
 
 /********************************************************************** */
 
-
+void printMatrix(char *name, double *matrix, int rows, int cols) {
+	fprintf(stderr,"\n---------\n");
+	fprintf(stderr,"%s\n", name);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            fprintf(stderr,"%f ", matrix[i * cols + j]);
+        }
+        fprintf(stderr,"\n");
+    }
+	fprintf(stderr,"---------\n");
+}
 /* PermuteB **********************************************************
 |	Randomly pemutes the n integers in a[] using the Fike
 |	algorithm.  See Fike, "A permutation generation method"  The Computer
@@ -85,6 +95,10 @@ void RotateB(
 			kIndex;
 	bool	skip;
 
+	printMatrix("vec", vec, nColumns, 1);	
+	//printMatrix(tVec, nColumns, 1);
+	printMatrix("matrixXY before", matrixXY, nTerms, nColumns);
+	//fprintf(stderr,"matrixXY: %2.2f\n", matrixXY);
 
 	for (i=0;i<nColumns;i++) {
 		tVec[i]=vec[i];		
@@ -98,10 +112,12 @@ void RotateB(
 				continue;
 				
 			d=matrixXY[kIndex=Imat(i,i)];
+			fprintf(stderr,"i: %d, kIndex: %d, d: %2.2f, x: %2.2f\n", i, kIndex, d, x);
 			dp=d+weight*x*x;
 			if (fabs(dp)<TOLROT)
 				continue; 
 			matrixXY[kIndex]=dp;
+			fprintf(stderr,"matrixXY1[kIndex]: %2.2f\n", matrixXY[kIndex]);
 			c=d/dp;
 			s=weight*x/dp;
 			
@@ -115,12 +131,14 @@ void RotateB(
 			for (j=i+1;j<nColumns;j++,kIndex++)	{
 				r=matrixXY[kIndex];
 				matrixXY[kIndex]=s*tVec[j]+c*r;
+				fprintf(stderr,"matrixXY2[kIndex]: %2.2f\n", matrixXY[kIndex]);
 				tVec[j]-=x*r;
 			}
 		}
 		else
 		  break;
 	}
+	printMatrix("matrixXY after", matrixXY, nTerms, nColumns);
 
 }
 
@@ -214,6 +232,8 @@ void Difference(
 {
 	int i;
 
+	printMatrix("first", first, k, 1);
+	printMatrix("second", second, k, 1);
 	for (i=0;i<k;i++) {
 		vec[i]=first[i]-second[i];
 	}
@@ -288,6 +308,7 @@ double reduceXtoT(
 			}
 			getRangeB(pMx,pMn,vec,k);
 			RotateB(vec,tvec,T,k,k,1.0);  
+			fprintf(stderr,"i: %d, j: %d\n", i, j);
 		}
 	}
 
