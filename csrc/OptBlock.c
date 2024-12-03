@@ -112,12 +112,12 @@ void RotateB(
 				continue;
 				
 			d=matrixXY[kIndex=Imat(i,i)];
-			fprintf(stderr,"i: %d, kIndex: %d, d: %2.2f, x: %2.2f\n", i, kIndex, d, x);
+			//fprintf(stderr,"i: %d, kIndex: %d, d: %2.2f, x: %2.2f\n", i, kIndex, d, x);
 			dp=d+weight*x*x;
 			if (fabs(dp)<TOLROT)
 				continue; 
 			matrixXY[kIndex]=dp;
-			fprintf(stderr,"matrixXY1[kIndex]: %2.2f\n", matrixXY[kIndex]);
+			//fprintf(stderr,"matrixXY1[kIndex]: %2.2f\n", matrixXY[kIndex]);
 			c=d/dp;
 			s=weight*x/dp;
 			
@@ -131,14 +131,14 @@ void RotateB(
 			for (j=i+1;j<nColumns;j++,kIndex++)	{
 				r=matrixXY[kIndex];
 				matrixXY[kIndex]=s*tVec[j]+c*r;
-				fprintf(stderr,"matrixXY2[kIndex]: %2.2f\n", matrixXY[kIndex]);
+				//fprintf(stderr,"matrixXY2[kIndex]: %2.2f\n", matrixXY[kIndex]);
 				tVec[j]-=x*r;
 			}
 		}
 		else
 		  break;
 	}
-	printMatrix("matrixXY after", matrixXY, nTerms, nColumns);
+	//printMatrix("matrixXY after", matrixXY, nTerms, nColumns);
 
 }
 
@@ -307,7 +307,10 @@ double reduceXtoT(
 				}
 			}
 			getRangeB(pMx,pMn,vec,k);
+			printMatrix("T before", T, k, k);
 			RotateB(vec,tvec,T,k,k,1.0);  
+			printMatrix("T after", T, k, k);
+
 			fprintf(stderr,"i: %d, j: %d\n", i, j);
 		}
 	}
