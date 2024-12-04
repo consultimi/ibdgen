@@ -95,9 +95,9 @@ void RotateB(
 			kIndex;
 	bool	skip;
 
-	printMatrix("vec", vec, nColumns, 1);	
+	//printMatrix("vec", vec, nColumns, 1);	
 	//printMatrix(tVec, nColumns, 1);
-	printMatrix("matrixXY before", matrixXY, nTerms, nColumns);
+	//printMatrix("matrixXY before", matrixXY, nTerms, nColumns);
 	//fprintf(stderr,"matrixXY: %2.2f\n", matrixXY);
 
 	for (i=0;i<nColumns;i++) {
@@ -178,6 +178,7 @@ void BacksolveB(
 	if (doInverse==NOINVERSE)
 		return;
 
+	printMatrix("matrixXY before", matrixXY, nTerms, nColumns);
 		/* BacksolveB for the inverse of T, which is upper triangular */
  	for (col=nTerms-1;col;col--) {
 		for (j=col;j--;) {
@@ -189,10 +190,11 @@ void BacksolveB(
 					matrixXY[kIndex++];
 		}
 	}
-
+	printMatrix("matrixXY middle", matrixXY, nTerms, nColumns);
 	for (i=0;i<nTerms;i++)
 		matrixXY[Imat(i,i)]=1.0/matrixXY[Imat(i,i)];
 
+	printMatrix("matrixXY after", matrixXY, nTerms, nColumns);
 }
 
 
@@ -232,8 +234,8 @@ void Difference(
 {
 	int i;
 
-	printMatrix("first", first, k, 1);
-	printMatrix("second", second, k, 1);
+	//printMatrix("first", first, k, 1);
+	//printMatrix("second", second, k, 1);
 	for (i=0;i<k;i++) {
 		vec[i]=first[i]-second[i];
 	}
@@ -307,13 +309,14 @@ double reduceXtoT(
 				}
 			}
 			getRangeB(pMx,pMn,vec,k);
-			printMatrix("T before", T, k, k);
+			//printMatrix("T before", T, k, k);
 			RotateB(vec,tvec,T,k,k,1.0);  
-			printMatrix("T after", T, k, k);
+			//printMatrix("T after", T, k, k);
 
-			fprintf(stderr,"i: %d, j: %d\n", i, j);
+			//fprintf(stderr,"i: %d, j: %d\n", i, j);
 		}
 	}
+
 
 	pT=T;
 	for (i=0;i<k;i++) {
@@ -323,7 +326,9 @@ double reduceXtoT(
 			*singular=true;
 			return(0);
 		}
+		
 		logdet+=log(t); 
+		//fprintf(stderr,"t: %f, r: %f, logdet: %f\n", t, r, logdet);
 		pT+=k-i;
 	}
 	return (logdet);
