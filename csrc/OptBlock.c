@@ -184,15 +184,19 @@ void BacksolveB(
 		for (j=col;j--;) {
 		   lIndex=Imat(j,col);
 		   kIndex=Imat(j,j+1);
+		   
 			matrixXY[lIndex]*=(-1.0);
-			for (i=1;i<col-j;i++)
-				matrixXY[lIndex]-=matrixXY[Imat(i+j,col)]*
-					matrixXY[kIndex++];
+			for (i=1;i<col-j;i++) {
+				fprintf(stderr,"j: %d, lIndex: %d, kIndex: %d, idx: %d\n", j, lIndex, kIndex, Imat(i+j,col));
+				matrixXY[lIndex]-=matrixXY[Imat(i+j,col)]*matrixXY[kIndex++];
+			}
 		}
 	}
 	printMatrix("matrixXY middle", matrixXY, nTerms, nColumns);
-	for (i=0;i<nTerms;i++)
+	for (i=0;i<nTerms;i++) {
+		fprintf(stderr,"i: %d, idx: %d, val: %2.2f\n", i, Imat(i,i), matrixXY[Imat(i,i)]);
 		matrixXY[Imat(i,i)]=1.0/matrixXY[Imat(i,i)];
+	}
 
 	printMatrix("matrixXY after", matrixXY, nTerms, nColumns);
 }
@@ -572,26 +576,28 @@ void makeTiFromTB(
 			Tip[g++]=W[Imat(i,j)];
 		}
 	}
-
+	printMatrix("Tip before scale",Tip,k,k);
 		/* Scale rows by diagonal (DT)^-1=T^-1D-1 */
 	memset((void *)W,0,k*sizeof(double)); /* reuse W to get average  variance */
 	pTip=Tip;
 	for (i=0;i<k;i++) {
+		fprintf(stderr,"ptip: %f\n",*(pTip+i));
 		d=sqrt(*(pTip+i));
 		*(pTip+i)=1.0;
 		for (j=0;j<=i;j++) {
 			t=d*(*pTip);
 			*(pTip++)=t;
+			fprintf(stderr,"i: %d j: %d t: %f\n",i,j,t);
 			W[j]+=t*t;
 		}
 	}
-
+	printMatrix("W",W,k,k);
 	aVar=0;
 	for (i=0;i<k;i++) {
 		aVar+=log(W[i]);
 	}
 	*avVar=exp(aVar/(double)k); /* average variance */
-
+	printMatrix("Tip after scale",Tip,k,k);
 }
 
 /* makeTiFromTDpc **********************************************************************

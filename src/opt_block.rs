@@ -143,8 +143,14 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
 fn make_ti_from_tb(block_data: &mut BlockData) -> Result<f64> {
     println!("block_data.t: {}", pretty_print!(&block_data.t));
     //block_data.t_inv = block_data.t.upper_triangle().clone().try_inverse().ok_or(anyhow!("Failed to invert upper triangular matrix"))?;
-    block_data.t_inv = block_data.t.abs().clone().try_inverse().ok_or(anyhow!("Failed to invert upper triangular matrix"))?;
-    //block_data.t_inv.fill_lower_triangle_with_upper_triangle();
+    let mut t_inv = block_data.t.clone();
+    t_inv.fill_diagonal(1.0);
+    let mut t_inv = t_inv.try_inverse().ok_or(anyhow!("Failed to invert upper triangular matrix"))?;
+
+    let diag = block_data.t.diagonal().apply_into(|x| *x = 1.0 / *x);
+    t_inv.set_diagonal(&diag);
+    //.pseudo_inverse(1e-10).map_err(|e| anyhow!("Failed to invert upper triangular matrix: {}", e))?;
+    
     //println!("ti: {}", pretty_print!(&block_data.t_inv));
     //let tip = ti.lower_triangle();
     
@@ -167,10 +173,31 @@ fn make_ti_from_tb(block_data: &mut BlockData) -> Result<f64> {
         }
     } */
     
-    //println!("block_data.t: {}", pretty_print!(&block_data.t));
-    println!("block_data.t_inv: {}", pretty_print!(&block_data.t_inv));
+    let scale_vec = t_inv.diagonal().map(|x| x.sqrt());
+    t_inv.fill_diagonal(1.0);
+    for (i, mut col) in t_inv.column_iter_mut().enumerate() {
+        col *= scale_vec[i];
+    }
 
-    Ok(block_data.t_inv.variance())
+    println!("scale_vec: {:?}", &scale_vec);
+    //t_inv = t_inv.component_mul(&DMatrix::from_diagonal(&scale_vec));
+
+    //println!("block_data.t: {}", pretty_print!(&block_data.t));
+    t_inv = t_inv.transpose();
+    let coltally: Vec<f64> = t_inv.column_iter().map(|x| x.map(|x| x.powi(2)).sum()).collect::<Vec<_>>();
+
+    let mut a_var = coltally.iter().map(|x| x.ln()).sum::<f64>() / block_data.k as f64;
+    a_var = a_var.exp();
+    println!("coltally: {:?}", &coltally);
+    block_data.t_inv = t_inv;
+
+
+    //block_data.t_inv.fill_lower_triangle_with_upper_triangle();
+    //block_data.t_inv.fill_upper_triangle_with_lower_triangle();
+    println!("t_inv: {}", pretty_print!(&block_data.t_inv));
+    //println!("block_data.t_inv: {}", pretty_print!(&block_data.t_inv));
+    //println!("a_var: {}", block_data.t_inv.variance());
+    Ok(a_var)
 }
 
 fn initialize_block_array(block_data: &mut BlockData, block_array: &mut Vec<u8>) -> Result<()> {
@@ -898,17 +925,22 @@ mod tests {
 
         block_data.t_inv = block_data.t.transpose();
 
-        make_ti_from_tb(&mut block_data).unwrap();
+        let a_var = make_ti_from_tb(&mut block_data).unwrap();
 
-        let expected = nalgebra::dmatrix![
-            7.071067811865475e-1, 1.1952286093343936e-1, 7.171371656006361e-1, 2.576032744446551e-1, 4.2933879074109164e-2, 7.513428837969107e-1; 
-            4.848494742372593e-2, 2.585863862598716e-1, 1.616164914124198e-2, 7.515166850677519e-1, 1.0174558409253327e-1, 2.7241559611871813e-1;
-            1.6902895421824074e-1, 3.6103271774769885e-1, 8.106825571243781e-1, 7.812047855452048e-1, 3.0462073398618045e-1, 9.602650019385153e-1;
-            2.7022807047161185e-1, 5.060634774286548e-1, 1.231038987704009e0, 0e0, 0e0, 0e0; 
-            0e0, 0e0, 0e0, 0e0, 0e0, 0e0; 
-            0e0, 0e0, 0e0, 0e0, 0e0, 0e0 
+        // Ti is in the lower triangle now
+
+        let mut expected = nalgebra::dmatrix![
+            0.707107, 0.0, 0.0, 0.0, 0.0, 0.0;
+            0.119523, 0.717137, 0.0, 0.0, 0.0, 0.0;
+            0.257603, 0.042934, 0.751343, 0.0, 0.0, 0.0;
+            0.048485, 0.258586, 0.016162, 0.751517, 0.0, 0.0;
+            0.101746, 0.272416, 0.169029, 0.361033, 0.810683, 0.0;
+            0.781205, 0.304621, 0.960265, 0.270228, 0.506063, 1.231039;
         ];
+        expected.apply(|x: &mut f64| { *x = (*x * 1000.0).round() });
+        block_data.t_inv.apply(|x: &mut f64| { *x = (*x * 1000.0).round() });
         assert_eq!(block_data.t_inv, expected);
+        assert_eq!(a_var, 1.0644289011525316);
     }
 
 
