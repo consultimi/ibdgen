@@ -573,8 +573,8 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<()> {
             |	using Tip which containts Ti'
             */
             //transform(block_data)?;
-            block_data.t_x = block_data.x.clone() * block_data.t_inv.clone();
-            block_data.t_block_means = block_data.block_means.clone() * block_data.t_inv.clone();
+            block_data.t_x = block_data.x.clone() * block_data.t_inv.transpose().clone();
+            block_data.t_block_means = block_data.block_means.clone() * block_data.t_inv.transpose().clone();
 
             //println!("420 block_data.t_x: {}", pretty_print!(&block_data.t_x));
             //println!("421block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
@@ -591,8 +591,8 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<()> {
                             log_det += (1.0 + delta).ln();      
                             av_var = make_ti_from_tb(block_data).map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
                             //transform(block_data)?;
-                            block_data.t_x = block_data.x.clone() * block_data.t_inv.clone();
-                            block_data.t_block_means = block_data.block_means.clone() * block_data.t_inv.clone();
+                            block_data.t_x = block_data.x.clone() * block_data.t_inv.transpose().clone();
+                            block_data.t_block_means = block_data.block_means.clone() * block_data.t_inv.transpose().clone();
                         }
                     }
                     if cur_block == block_data.n_b - 1 {
@@ -943,10 +943,62 @@ mod tests {
         assert_eq!(a_var, 1.0644289011525316);
     }
 
+    #[test]
+    fn test_transform() {
+        let mut block_data = configure_block_data();
+        block_data.t_inv = nalgebra::dmatrix![
+            0.707107, 0.0, 0.0, 0.0, 0.0, 0.0;
+            0.119523, 0.717137, 0.0, 0.0, 0.0, 0.0;
+            0.257603, 0.042934, 0.751343, 0.0, 0.0, 0.0;
+            0.048485, 0.258586, 0.016162, 0.751517, 0.0, 0.0;
+            0.101746, 0.272416, 0.169029, 0.361033, 0.810683, 0.0;
+            0.781205, 0.304621, 0.960265, 0.270228, 0.506063, 1.231039;
+        ];
+        block_data.block_means = nalgebra::dmatrix![    
+            0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0;
+            1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0, 1.0 / 3.0;
+            0.0, 0.0, 0.0, 1.0 / 3.0, 1.0 / 3.0, 0.0;
+            0.0, 0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 1.0 / 3.0;
+            1.0 / 3.0, 1.0 / 3.0, 0.0, 0.0, 0.0, 0.0;
+            1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0, 1.0 / 3.0;
+            0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 1.0 / 3.0, 0.0
+        ];
+        block_data.t_x = block_data.x.clone() * block_data.t_inv.transpose().clone();
+        block_data.t_block_means = block_data.block_means.clone() * block_data.t_inv.transpose().clone();
 
+        let expected_t_x = nalgebra::dmatrix![  
+            0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000;
+            0.707107, 0.119523, 0.257603, 0.048485, 0.101746, 0.781205; 
+            0.000000, 0.717137, 0.042934, 0.258586, 0.272416, 0.304621; 
+            0.000000, 0.000000, 0.751343, 0.016162, 0.169029, 0.960265; 
+            0.000000, 0.000000, 0.000000, 0.751517, 0.361033, 0.270228; 
+            0.000000, 0.000000, 0.000000, 0.000000, 0.810683, 0.506063; 
+            0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 1.231039; 
+        ];
 
+        let mut expected_t_block_means = nalgebra::dmatrix![
+            0.000000, 0.239046, 0.014311, 0.336701, 0.211149, 0.191616;
+            0.235702, 0.039841, 0.336315, 0.021549, 0.090258, 0.990836;
+            0.000000, 0.000000, 0.000000, 0.250506, 0.390572, 0.258764; 
+            0.000000, 0.000000, 0.250448, 0.005387, 0.326571, 0.899122;
+            0.235702, 0.278887, 0.100179, 0.102357, 0.124720, 0.361942;
+            0.235702, 0.039841, 0.336315, 0.021549, 0.090258, 0.990836;
+            0.000000, 0.239046, 0.014311, 0.336701, 0.481377, 0.360304;
+        ];
 
+        expected_t_block_means.apply(|x: &mut f64| { *x = (*x * 1000.0).round() });
+        block_data.t_block_means.apply(|x: &mut f64| { *x = (*x * 1000.0).round() });
 
+        println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
+        assert_eq!(block_data.t_x, expected_t_x);
+        assert_eq!(block_data.t_block_means, expected_t_block_means);
+
+    }
+
+    #[test]
+    fn test_find_delta_block() {
+
+    }
 
 }
 

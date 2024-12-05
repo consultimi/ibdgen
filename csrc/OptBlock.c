@@ -178,7 +178,7 @@ void BacksolveB(
 	if (doInverse==NOINVERSE)
 		return;
 
-	printMatrix("matrixXY before", matrixXY, nTerms, nColumns);
+	//printMatrix("matrixXY before", matrixXY, nTerms, nColumns);
 		/* BacksolveB for the inverse of T, which is upper triangular */
  	for (col=nTerms-1;col;col--) {
 		for (j=col;j--;) {
@@ -192,13 +192,13 @@ void BacksolveB(
 			}
 		}
 	}
-	printMatrix("matrixXY middle", matrixXY, nTerms, nColumns);
+	//printMatrix("matrixXY middle", matrixXY, nTerms, nColumns);
 	for (i=0;i<nTerms;i++) {
 		fprintf(stderr,"i: %d, idx: %d, val: %2.2f\n", i, Imat(i,i), matrixXY[Imat(i,i)]);
 		matrixXY[Imat(i,i)]=1.0/matrixXY[Imat(i,i)];
 	}
 
-	printMatrix("matrixXY after", matrixXY, nTerms, nColumns);
+	//printMatrix("matrixXY after", matrixXY, nTerms, nColumns);
 }
 
 
@@ -2274,7 +2274,7 @@ double findDeltaDp(
 | transfroms X and blockMeans to tX = X*Ti and tBlockMeans = tBlockMeans * Ti, 
 |	using Tip which containts Ti'
 */
-
+//c.transform(&Tip, &X, &tX, &blockMeans, &tBlockMeans, N, k, nB);
 void transform(
 	double *Tip,
 	double *X,
@@ -2328,6 +2328,9 @@ void transform(
 		}
 		
 	}
+
+	printMatrix("tX", tX, N, k);
+	printMatrix("tBlockMeans", tBlockMeans, nB, k);
 
 }
 
