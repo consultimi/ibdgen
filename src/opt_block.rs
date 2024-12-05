@@ -417,6 +417,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
             // Calculate squared distance between block means
             let mut g = 0.0;
             for l in 0..block_data.k {
+                println!("fmj[{}]: {}, fmi[{}]: {}", l, fmj[l as usize], l, fmi[l as usize]);
                 let dif = fmj[l as usize] - fmi[l as usize];
                 g += dif * dif;
             }
@@ -432,6 +433,8 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
                 
                 // Calculate cross terms between means and points
                 for l in 0..block_data.k {
+                    println!("row_no: {}, i: {}, j: {}, fj[{}]: {}", row_no, i, j, l, fj[l as usize]);
+
                     let dif1 = fmj[l as usize] - fmi[l as usize];
                     let dif2 = fj[l as usize] - fi[l as usize];
                     g += dif1 * dif2;
@@ -447,7 +450,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
 
                 // Calculate improvement in criterion
                 let d = -(1.0 + m1i0 * m1i2 - m1i1 * m1i1);
-                
+                println!("d: {}, i: {}, j: {}", d, i, j);
                 // Update best exchange if improvement is large enough
                 if (d - delta) > DELTA_TOL {
                     delta = d;
@@ -997,7 +1000,51 @@ mod tests {
 
     #[test]
     fn test_find_delta_block() {
+        let mut block_data = configure_block_data();
+        block_data.b = nalgebra::dmatrix![
+            0.0,2.0,4.0;
+            6.0,3.0,1.0;
+            5.0,0.0,4.0;
+            3.0,5.0,6.0;
+            2.0,1.0,0.0;
+            3.0,6.0,1.0;
+            5.0,4.0,2.0;
+        ];
+        block_data.t_x = nalgebra::dmatrix![  
+            0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000;
+            0.707107, 0.119523, 0.257603, 0.048485, 0.101746, 0.781205; 
+            0.000000, 0.717137, 0.042934, 0.258586, 0.272416, 0.304621; 
+            0.000000, 0.000000, 0.751343, 0.016162, 0.169029, 0.960265; 
+            0.000000, 0.000000, 0.000000, 0.751517, 0.361033, 0.270228; 
+            0.000000, 0.000000, 0.000000, 0.000000, 0.810683, 0.506063; 
+            0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 1.231039; 
+        ];
 
+        block_data.t_inv = nalgebra::dmatrix![
+            0.707107, 0.0, 0.0, 0.0, 0.0, 0.0;
+            0.119523, 0.717137, 0.0, 0.0, 0.0, 0.0;
+            0.257603, 0.042934, 0.751343, 0.0, 0.0, 0.0;
+            0.048485, 0.258586, 0.016162, 0.751517, 0.0, 0.0;
+            0.101746, 0.272416, 0.169029, 0.361033, 0.810683, 0.0;
+            0.781205, 0.304621, 0.960265, 0.270228, 0.506063, 1.231039;
+        ];
+
+        block_data.t_block_means = nalgebra::dmatrix![
+            0.000000, 0.239046, 0.014311, 0.336701, 0.211149, 0.191616;
+            0.235702, 0.039841, 0.336315, 0.021549, 0.090258, 0.990836;
+            0.000000, 0.000000, 0.000000, 0.250506, 0.390572, 0.258764; 
+            0.000000, 0.000000, 0.250448, 0.005387, 0.326571, 0.899122;
+            0.235702, 0.278887, 0.100179, 0.102357, 0.124720, 0.361942;
+            0.235702, 0.039841, 0.336315, 0.021549, 0.090258, 0.990836;
+            0.000000, 0.239046, 0.014311, 0.336701, 0.481377, 0.360304;
+        ];
+        let mut new_block = 0;
+        let mut x_new = 0;
+
+        //find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8)  
+        find_delta_block(&mut block_data, 0, &mut x_new, 0, &mut new_block).unwrap();
+        assert_eq!(new_block, 1);
+        assert_eq!(x_new, 2);
     }
 
 }

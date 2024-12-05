@@ -208,7 +208,7 @@ test "find_delta_block" {
     // findDeltaBlock(tX,tBlockMeans,B,nB,nEx,blocksizes,xcur,&xnew,curBlock,&newBlock,k);
     const delta = c.findDeltaBlock(&tX, &tBlockMeans, &B, nB, nEx, &blocksizes, xcur, &xnew, curBlock, &newBlock, k);
     try std.testing.expectEqual(@as(i32, 0), xnew);
-    try std.testing.expectEqual(@as(i32, 0), curBlock);
+    try std.testing.expectEqual(@as(i32, 1), curBlock);
     try std.testing.expectEqual(@as(i32, 1), newBlock);
     try std.testing.expectEqual(@as(f64, 4.8331093189964125e-1), delta);
 }

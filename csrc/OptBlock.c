@@ -1387,6 +1387,7 @@ double findDeltaBlock(
 			// Calculate squared distance between block means
 			g=0;
 			for (l=0;l<k;l++) {
+				fprintf(stderr, "fmj[%d]: %f, fmi[%d]: %f\n", l, fmj[l], l, fmi[l]);
 				dif=fmj[l]-fmi[l];
 				g+=dif*dif;
 			}
@@ -1401,6 +1402,7 @@ double findDeltaBlock(
 				
 				// Calculate cross terms between means and points
 				for (l=0;l<k;l++) {
+					fprintf(stderr, "rowNo: %d, i: %d, j: %d, fj[%d]: %f\n", rowNo, i, j, l, fj[l]);
 					dif1=fmj[l]-fmi[l];
 					dif2=fj[l]-fi[l];
 					g+=dif1*dif2;
@@ -1415,7 +1417,8 @@ double findDeltaBlock(
 
 				// Calculate improvement in criterion
 				d=-(1+M1i[0]*M1i[2]-M1i[1]*M1i[1]); 
-				
+				fprintf(stderr, "d: %f, i: %d, j: %d\n", d, i, j);
+
 				// Update best exchange if improvement is large enough
 				if ((d-delta)>deltaTol) {
 					delta=d;
