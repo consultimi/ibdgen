@@ -401,6 +401,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
     // Get pointers to current point and its block mean
     let fi = block_data.t_x.row(cur_row_no);
     let fmi = block_data.t_block_means.row(cur_block as usize);
+    let b_transpose = block_data.b.transpose();
     println!("t_block_means: {}", pretty_print!(&block_data.t_block_means));
     // Loop through all blocks except current
     for i in 0..block_data.n_b {
@@ -423,9 +424,10 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
             }
             let mi0 = g;
 
+            
             // Try exchanging with each point in candidate block
             for j in 0..nj {
-                let row_no = block_data.b[(i * block_data.max_n + j) as usize] as usize;
+                let row_no = b_transpose[(i * block_data.max_n + j) as usize] as usize;
                 let fj = block_data.t_x.row(row_no);
                 
                 let mut g = 0.0;
@@ -1040,7 +1042,8 @@ mod tests {
         ];
         let mut new_block = 0;
         let mut x_new = 0;
-
+        println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
+        println!("block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
         //find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8)  
         find_delta_block(&mut block_data, 0, &mut x_new, 0, &mut new_block).unwrap();
         assert_eq!(new_block, 1);

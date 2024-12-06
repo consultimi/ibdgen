@@ -1366,6 +1366,7 @@ double findDeltaBlock(
 	int rowNo;
 	int iBlock=nB*MAXN;
 
+	printMatrix("tX", tX, nB, k);
 	printMatrix("tBlockMeans", tBlockMeans, nB, k);
 	// Initialize geometric coefficients
 	Gi[1]=1;
