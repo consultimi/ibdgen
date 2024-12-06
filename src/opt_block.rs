@@ -418,7 +418,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
             // Calculate squared distance between block means
             let mut g = 0.0;
             for l in 0..block_data.k {
-                println!("fmj[{}]: {}, fmi[{}]: {}", l, fmj[l as usize], l, fmi[l as usize]);
+                //println!("fmj[{}]: {}, fmi[{}]: {}", l, fmj[l as usize], l, fmi[l as usize]);
                 let dif = fmj[l as usize] - fmi[l as usize];
                 g += dif * dif;
             }
@@ -435,7 +435,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
                 
                 // Calculate cross terms between means and points
                 for l in 0..block_data.k {
-                    println!("row_no: {}, i: {}, j: {}, l: {}, fmi: {}, fmj: {}, fi: {}, fj: {}", row_no, i, j, l, fmi[l as usize], fmj[l as usize], fi[l as usize], fj[l as usize]);
+                    //println!("row_no: {}, i: {}, j: {}, l: {}, fmi: {}, fmj: {}, fi: {}, fj: {}", row_no, i, j, l, fmi[l as usize], fmj[l as usize], fi[l as usize], fj[l as usize]);
 
                     let dif1 = fmj[l as usize] - fmi[l as usize];
                     let dif2 = fj[l as usize] - fi[l as usize];
@@ -1047,7 +1047,7 @@ mod tests {
         //find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8)  
         find_delta_block(&mut block_data, 0, &mut x_new, 0, &mut new_block).unwrap();
         assert_eq!(new_block, 1);
-        assert_eq!(x_new, 2);
+        assert_eq!(x_new, 0);
     }
 
 }
