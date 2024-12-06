@@ -1366,6 +1366,7 @@ double findDeltaBlock(
 	int rowNo;
 	int iBlock=nB*MAXN;
 
+	printMatrix("tBlockMeans", tBlockMeans, nB, k);
 	// Initialize geometric coefficients
 	Gi[1]=1;
 	Gi[2]=0;
@@ -1387,7 +1388,7 @@ double findDeltaBlock(
 			// Calculate squared distance between block means
 			g=0;
 			for (l=0;l<k;l++) {
-				fprintf(stderr, "fmj[%d]: %f, fmi[%d]: %f\n", l, fmj[l], l, fmi[l]);
+				fprintf(stderr, "fmi[%d]: %f, fmj[%d]: %f\n", l, fmi[l], l, fmj[l]);
 				dif=fmj[l]-fmi[l];
 				g+=dif*dif;
 			}
@@ -1402,7 +1403,7 @@ double findDeltaBlock(
 				
 				// Calculate cross terms between means and points
 				for (l=0;l<k;l++) {
-					fprintf(stderr, "rowNo: %d, i: %d, j: %d, fj[%d]: %f\n", rowNo, i, j, l, fj[l]);
+					fprintf(stderr, "rowNo: %d, i: %d, j: %d, l: %d, fmi: %f, fmj: %f, fi: %f, fj: %f\n", rowNo, i, j, l, fmi[l], fmj[l], fi[l], fj[l]);
 					dif1=fmj[l]-fmi[l];
 					dif2=fj[l]-fi[l];
 					g+=dif1*dif2;
@@ -2332,8 +2333,8 @@ void transform(
 		
 	}
 
-	printMatrix("tX", tX, N, k);
-	printMatrix("tBlockMeans", tBlockMeans, nB, k);
+	//printMatrix("tX", tX, N, k);
+	//printMatrix("tBlockMeans", tBlockMeans, nB, k);
 
 }
 

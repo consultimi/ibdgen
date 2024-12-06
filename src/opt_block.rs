@@ -401,7 +401,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
     // Get pointers to current point and its block mean
     let fi = block_data.t_x.row(cur_row_no);
     let fmi = block_data.t_block_means.row(cur_block as usize);
-
+    println!("t_block_means: {}", pretty_print!(&block_data.t_block_means));
     // Loop through all blocks except current
     for i in 0..block_data.n_b {
         if i != cur_block {
@@ -433,7 +433,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
                 
                 // Calculate cross terms between means and points
                 for l in 0..block_data.k {
-                    println!("row_no: {}, i: {}, j: {}, fj[{}]: {}", row_no, i, j, l, fj[l as usize]);
+                    println!("row_no: {}, i: {}, j: {}, l: {}, fmi: {}, fmj: {}, fi: {}, fj: {}", row_no, i, j, l, fmi[l as usize], fmj[l as usize], fi[l as usize], fj[l as usize]);
 
                     let dif1 = fmj[l as usize] - fmi[l as usize];
                     let dif2 = fj[l as usize] - fi[l as usize];
