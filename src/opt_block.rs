@@ -469,19 +469,27 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
 
 fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8, new_block: &mut u8) -> Result<()> {
     let mut vec = DVector::zeros(block_data.k as usize);
-    //let mut tvec = DVector::<f64>::zeros(block_data.k as usize);
-    
-    let row_no_i = block_data.b[(cur_block * block_data.max_n + xcur) as usize] as usize;
+    //let b_transpose = block_data.b.transpose();
+    let row_no_i = block_data.b[column_major_index_from_row_major_index(
+        cur_block * block_data.max_n + xcur,
+        block_data.max_n,
+        block_data.n_b
+    ) as usize] as usize;
     let ni = block_data.block_sizes[cur_block as usize];
 
     let x_clone = block_data.x.clone();
     let xri = x_clone.row(row_no_i);
     let xmi = block_data.block_means.row(cur_block as usize);
-
+    println!("xri: {} xmi: {}", pretty_print!(&xri), pretty_print!(&xmi));
     // Handle normal block exchange case
-    let row_no_j = block_data.b[(*new_block * block_data.max_n + xnew) as usize] as usize;
+    let row_no_j = block_data.b[column_major_index_from_row_major_index(
+        *new_block * block_data.max_n + xnew,
+        block_data.max_n,
+        block_data.n_b
+    ) as usize] as usize;
     let xrj = x_clone.row(row_no_j);
     let xmj = block_data.block_means.row(*new_block as usize);
+    println!("xrj: {} xmj: {}", pretty_print!(&xrj), pretty_print!(&xmj));
     let nj = block_data.block_sizes[*new_block as usize];
     let c = (ni + nj) as f64 / (ni * nj) as f64;
 
@@ -489,25 +497,25 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
     for i in 0..block_data.k {
         vec[i as usize] = xmj[i as usize] - xmi[i as usize];
     }
-    println!("t before rotate: {}", pretty_print!(&block_data.t));
+    //println!("t before rotate: {}", pretty_print!(&block_data.t));
     rotate_b(block_data, &vec, 1.0);
-    println!("t after rotate: {}", pretty_print!(&block_data.t));
+    //println!("t after rotate: {}", pretty_print!(&block_data.t));
 
     // vec -= xrj - xri
     for i in 0..block_data.k {
         vec[i as usize] -= xrj[i as usize] - xri[i as usize];
     }
 
-    println!("t before rotate: {}", pretty_print!(&block_data.t));
+    //println!("t before rotate: {}", pretty_print!(&block_data.t));
     rotate_b(block_data, &vec, -1.0);
-    println!("t after rotate: {}", pretty_print!(&block_data.t));
+    //println!("t after rotate: {}", pretty_print!(&block_data.t));
     // vec = xrj - xri
     for i in 0..block_data.k {
         vec[i as usize] = xrj[i as usize] - xri[i as usize];
     }
-    println!("t before rotate: {}", pretty_print!(&block_data.t));
+    //println!("t before rotate: {}", pretty_print!(&block_data.t));
     rotate_b(block_data, &vec, 1.0 - c);
-    println!("t after rotate: {}", pretty_print!(&block_data.t));
+    //println!("t after rotate: {}", pretty_print!(&block_data.t));
 
     // Update block means
     for i in 0..block_data.k {
@@ -517,9 +525,17 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
             (xri[i as usize] - xrj[i as usize]) / nj as f64;
     }
 
-    block_data.b[(*new_block * block_data.max_n + xnew) as usize] = row_no_i as f64;
+    block_data.b[column_major_index_from_row_major_index(
+        *new_block * block_data.max_n + xnew,
+        block_data.max_n,
+        block_data.n_b
+    ) as usize] = row_no_i as f64;
 
-    block_data.b[(cur_block * block_data.max_n + xcur) as usize] = row_no_j as f64;
+    block_data.b[column_major_index_from_row_major_index(
+        cur_block * block_data.max_n + xcur,
+        block_data.max_n,
+        block_data.n_b
+    ) as usize] = row_no_j as f64;
 
     Ok(())
 }
@@ -1048,6 +1064,50 @@ mod tests {
         find_delta_block(&mut block_data, 0, &mut x_new, 0, &mut new_block).unwrap();
         assert_eq!(new_block, 1);
         assert_eq!(x_new, 0);
+    }
+
+    #[test]
+    fn test_exchange_blocks() {
+        let mut block_data = configure_block_data();
+        block_data.b = nalgebra::dmatrix![
+            0.0,2.0,4.0;
+            6.0,3.0,1.0;
+            5.0,0.0,4.0;
+            3.0,5.0,6.0;
+            2.0,1.0,0.0;
+            3.0,6.0,1.0;
+            5.0,4.0,2.0;
+        ];
+        block_data.t = nalgebra::dmatrix![
+            2.000000, -0.166667, -0.333333, 0.000000,   0.000000, -0.333333;
+            0.0,       1.944444, -0.057143, -0.342857, -0.171429, -0.057143;
+            0.0,            0.0,  1.771429, -0.021505, -0.198925, -0.693548;
+            0.0,            0.0,       0.0,  1.770609, -0.445344, -0.036437;
+            0.0,            0.0,       0.0,       0.0,  1.521592, -0.411086;
+            0.0,            0.0,       0.0,       0.0,       0.0, 0.659867
+        ];
+
+        let expected_b = nalgebra::dmatrix![
+            6.0,2.0,4.0;
+            0.0,3.0,1.0;
+            5.0,0.0,4.0;
+            3.0,5.0,6.0;
+            2.0,1.0,0.0;
+            3.0,6.0,1.0;
+            5.0,4.0,2.0;
+        ];
+
+        let xcur = 0;
+        let xnew = 0;
+
+        let cur_block = 0;
+        let mut new_block = 1;
+
+
+        exchange_block(&mut block_data, xcur, xnew, cur_block, &mut new_block).unwrap();
+        println!("block_data.b: {}", pretty_print!(&block_data.b));
+
+        assert_eq!(block_data.b, expected_b);
     }
 
 }

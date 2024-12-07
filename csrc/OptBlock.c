@@ -782,7 +782,7 @@ void exchangeBlock(
 	rowNoi=B[IB(curBlock,xcur)];
 	xri=X+rowNoi*k;
 	ni=blocksizes[curBlock];
-
+	fprintf(stderr, "rowNoi: %d xmi: %f xri: %f\n", rowNoi, &xmi, &xri);
 
 
 	if (extraBlock && newBlock==nB) {
@@ -811,20 +811,26 @@ void exchangeBlock(
 		xmj=blockMeans+newBlock*k;
 		nj=blocksizes[newBlock];
 		C=(double)(ni+nj)/(double)(ni*nj);
-
-
-		for (i=0;i<k;i++)
+		fprintf(stderr, "rowNoj: %d", rowNoj);
+		for (i=0;i<k;i++) {
 			vec[i]=xmj[i]-xmi[i];
+			fprintf(stderr, "xmj: %f xmi: %f\n", xmj[i], xmi[i]);
+		}
+
 
 		RotateB(vec,tvec,T,k,k,1.0); 
 		
-		for (i=0;i<k;i++)
+		for (i=0;i<k;i++) {
 			vec[i]-=xrj[i]-xri[i];
+			fprintf(stderr, "xrj: %f xri: %f\n", xrj[i], xri[i]);
+		}
 
 		RotateB(vec,tvec,T,k,k,-1.0); 
 
-		for (i=0;i<k;i++)
+		for (i=0;i<k;i++) {
 			vec[i]=xrj[i]-xri[i];
+			fprintf(stderr, "%d xrj: %f xri: %f\n", xrj[i], xri[i]);
+		}
 
 		RotateB(vec,tvec,T,k,k,1.0-C); 
 

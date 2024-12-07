@@ -1,6 +1,6 @@
 test
-+- run test stderr
-j: 3, lIndex: 17, kIndex: 16, idx: 19
++- run test 9/10 passed, 1 failed
+error: 'main.test.exchange_blocks' failed: j: 3, lIndex: 17, kIndex: 16, idx: 19
 j: 2, lIndex: 14, kIndex: 12, idx: 17
 j: 2, lIndex: 14, kIndex: 13, idx: 19
 j: 1, lIndex: 10, kIndex: 7, idx: 14
@@ -267,6 +267,25 @@ rowNo: 2, i: 6, j: 2, l: 3, fmi: 0.336701, fmj: 0.336701, fi: 0.000000, fj: 0.25
 rowNo: 2, i: 6, j: 2, l: 4, fmi: 0.211149, fmj: 0.481377, fi: 0.000000, fj: 0.272416
 rowNo: 2, i: 6, j: 2, l: 5, fmi: 0.191616, fmj: 0.360304, fi: 0.000000, fj: 0.304621
 d: -0.310484, i: 6, j: 2
+rowNoi: 0 xmi: 0.000000 xri: 0.000000
+rowNoj: 6xmj: 0.333333 xmi: 0.000000
+xmj: 0.000000 xmi: 0.333333
+xmj: 0.333333 xmi: 0.000000
+xmj: 0.000000 xmi: 0.333333
+xmj: 0.000000 xmi: 0.000000
+xmj: 0.333333 xmi: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 1.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
 j: 3, lIndex: 17, kIndex: 16, idx: 19
 j: 2, lIndex: 14, kIndex: 12, idx: 17
 j: 2, lIndex: 14, kIndex: 13, idx: 19
@@ -534,6 +553,25 @@ rowNo: 2, i: 6, j: 2, l: 3, fmi: 0.336701, fmj: 0.336701, fi: 0.258586, fj: 0.25
 rowNo: 2, i: 6, j: 2, l: 4, fmi: 0.211149, fmj: 0.481377, fi: 0.272416, fj: 0.272416
 rowNo: 2, i: 6, j: 2, l: 5, fmi: 0.670789, fmj: 0.505389, fi: 0.496200, fj: 0.496200
 d: -0.000000, i: 6, j: 2
+rowNoi: 2 xmi: 0.000000 xri: 0.000000
+rowNoj: 1xmj: 0.333333 xmi: 0.000000
+xmj: 0.000000 xmi: 0.333333
+xmj: 0.333333 xmi: 0.000000
+xmj: 0.000000 xmi: 0.333333
+xmj: 0.000000 xmi: 0.000000
+xmj: 0.333333 xmi: 0.333333
+xrj: 1.000000 xri: 0.000000
+xrj: 0.000000 xri: 1.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 1.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
 j: 3, lIndex: 17, kIndex: 16, idx: 19
 j: 2, lIndex: 14, kIndex: 12, idx: 17
 j: 2, lIndex: 14, kIndex: 13, idx: 19
@@ -985,6 +1023,25 @@ rowNo: 2, i: 6, j: 2, l: 3, fmi: 0.069886, fmj: 0.297014, fi: 0.000000, fj: 0.15
 rowNo: 2, i: 6, j: 2, l: 4, fmi: 0.108070, fmj: 0.459298, fi: 0.000000, fj: 0.243158
 rowNo: 2, i: 6, j: 2, l: 5, fmi: 0.337449, fmj: 0.506173, fi: 0.000000, fj: 0.506173
 d: -0.171820, i: 6, j: 2
+rowNoi: 0 xmi: 0.000000 xri: 0.000000
+rowNoj: 5xmj: 0.000000 xmi: 0.333333
+xmj: 0.000000 xmi: 0.000000
+xmj: 0.333333 xmi: 0.333333
+xmj: 0.000000 xmi: 0.000000
+xmj: 0.333333 xmi: 0.000000
+xmj: 0.333333 xmi: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 1.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
 j: 3, lIndex: 17, kIndex: 16, idx: 19
 j: 2, lIndex: 14, kIndex: 12, idx: 17
 j: 2, lIndex: 14, kIndex: 13, idx: 19
@@ -1620,6 +1677,25 @@ rowNo: 2, i: 6, j: 2, l: 3, fmi: 0.244600, fmj: 0.297014, fi: 0.000000, fj: 0.15
 rowNo: 2, i: 6, j: 2, l: 4, fmi: 0.411664, fmj: 0.510026, fi: 0.852472, fj: 0.295086
 rowNo: 2, i: 6, j: 2, l: 5, fmi: 0.274710, fmj: 0.427327, fi: 0.386630, fj: 0.457851
 d: -0.361451, i: 6, j: 2
+rowNoi: 5 xmi: 0.000000 xri: 0.000000
+rowNoj: 3xmj: 0.000000 xmi: 0.000000
+xmj: 0.000000 xmi: 0.000000
+xmj: 0.333333 xmi: 0.000000
+xmj: 0.000000 xmi: 0.333333
+xmj: 0.000000 xmi: 0.333333
+xmj: 0.333333 xmi: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 1.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 1.000000
+xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 1.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
 j: 3, lIndex: 17, kIndex: 16, idx: 19
 j: 2, lIndex: 14, kIndex: 12, idx: 17
 j: 2, lIndex: 14, kIndex: 13, idx: 19
@@ -8424,3 +8500,79 @@ rowNo: 2, i: 6, j: 2, l: 3, fmi: 0.336701, fmj: 0.336701, fi: 0.000000, fj: 0.25
 rowNo: 2, i: 6, j: 2, l: 4, fmi: 0.211149, fmj: 0.481377, fi: 0.000000, fj: 0.272416
 rowNo: 2, i: 6, j: 2, l: 5, fmi: 0.191616, fmj: 0.360304, fi: 0.000000, fj: 0.304621
 d: -0.310484, i: 6, j: 2
+rowNoi: 0 xmi: 0.000000 xri: 0.000000
+rowNoj: 6xmj: 0.333333 xmi: 0.000000
+xmj: 0.000000 xmi: 0.333333
+xmj: 0.333333 xmi: 0.000000
+xmj: 0.000000 xmi: 0.333333
+xmj: 0.000000 xmi: 0.000000
+xmj: 0.333333 xmi: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 0.000000 xri: 0.000000
+xrj: 1.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+0 xrj: 0.000000 xri: 0.000000
+slices differ. first difference occurs at index 0 (0x0)
+
+============ expected this output: =============  len: 42 (0x2A)
+
+[0]: 0
+[1]: 2
+[2]: 4
+[3]: 6
+[4]: 3
+[5]: 1
+[6]: 5
+[7]: 0
+[8]: 4
+[9]: 3
+[10]: 5
+[11]: 6
+[12]: 2
+[13]: 1
+[14]: 0
+[15]: 3
+... truncated, remaining items: 26 ...
+
+============= instead found this: ==============  len: 42 (0x2A)
+
+[0]: 6
+[1]: 2
+[2]: 4
+[3]: 0
+[4]: 3
+[5]: 1
+[6]: 5
+[7]: 0
+[8]: 4
+[9]: 3
+[10]: 5
+[11]: 6
+[12]: 2
+[13]: 1
+[14]: 0
+[15]: 3
+... truncated, remaining items: 26 ...
+
+================================================
+
+C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.13.0\lib\std\testing.zig:395:5: 0x9fed74 in expectEqualSlices__anon_3782 (test.exe.obj)
+    return error.TestExpectedEqual;
+    ^
+C:\Users\Miles\Documents\GitHub\celldesigner\csrc\src\main.zig:235:5: 0xa003cf in test.exchange_blocks (test.exe.obj)
+    try std.testing.expectEqualSlices(i32, &expected_B, &B);
+    ^
+error: while executing test 'main.test.exchange_blocks', the following test command failed:
+C:\Users\Miles\Documents\GitHub\celldesigner\csrc\.zig-cache\o\9a95f71229eaa07ff96fd05e3ceb4cce\test.exe --listen=- 
+Build Summary: 3/5 steps succeeded; 1 failed; 9/10 tests passed; 1 failed (disable with --summary none)
+test transitive failure
++- run test 9/10 passed, 1 failed
+error: the following build command failed with exit code 1:
+C:\Users\Miles\Documents\GitHub\celldesigner\csrc\.zig-cache\o\a13f567176a240a6a4780fb241f320fb\build.exe C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.13.0\zig.exe C:\Users\Miles\Documents\GitHub\celldesigner\csrc C:\Users\Miles\Documents\GitHub\celldesigner\csrc\.zig-cache C:\Users\Miles\AppData\Local\zig --seed 0xd1b6d438 -Z84d4dfa33d1c8b14 test
