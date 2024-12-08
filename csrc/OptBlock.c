@@ -31,6 +31,18 @@ void printMatrix(char *name, double *matrix, int rows, int cols) {
     }
 	fprintf(stderr,"---------\n");
 }
+
+void printMatrixInt(char *name, int *matrix, int rows, int cols) {
+	fprintf(stderr,"\n---------\n");
+	fprintf(stderr,"%s\n", name);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            fprintf(stderr,"%d ", matrix[i * cols + j]);
+        }
+        fprintf(stderr,"\n");
+    }
+	fprintf(stderr,"---------\n");
+}
 /* PermuteB **********************************************************
 |	Randomly pemutes the n integers in a[] using the Fike
 |	algorithm.  See Fike, "A permutation generation method"  The Computer
@@ -187,14 +199,14 @@ void BacksolveB(
 		   
 			matrixXY[lIndex]*=(-1.0);
 			for (i=1;i<col-j;i++) {
-				fprintf(stderr,"j: %d, lIndex: %d, kIndex: %d, idx: %d\n", j, lIndex, kIndex, Imat(i+j,col));
+				//fprintf(stderr,"j: %d, lIndex: %d, kIndex: %d, idx: %d\n", j, lIndex, kIndex, Imat(i+j,col));
 				matrixXY[lIndex]-=matrixXY[Imat(i+j,col)]*matrixXY[kIndex++];
 			}
 		}
 	}
 	//printMatrix("matrixXY middle", matrixXY, nTerms, nColumns);
 	for (i=0;i<nTerms;i++) {
-		fprintf(stderr,"i: %d, idx: %d, val: %2.2f\n", i, Imat(i,i), matrixXY[Imat(i,i)]);
+		//fprintf(stderr,"i: %d, idx: %d, val: %2.2f\n", i, Imat(i,i), matrixXY[Imat(i,i)]);
 		matrixXY[Imat(i,i)]=1.0/matrixXY[Imat(i,i)];
 	}
 
@@ -576,28 +588,28 @@ void makeTiFromTB(
 			Tip[g++]=W[Imat(i,j)];
 		}
 	}
-	printMatrix("Tip before scale",Tip,k,k);
+	//printMatrix("Tip before scale",Tip,k,k);
 		/* Scale rows by diagonal (DT)^-1=T^-1D-1 */
 	memset((void *)W,0,k*sizeof(double)); /* reuse W to get average  variance */
 	pTip=Tip;
 	for (i=0;i<k;i++) {
-		fprintf(stderr,"ptip: %f\n",*(pTip+i));
+		//fprintf(stderr,"ptip: %f\n",*(pTip+i));
 		d=sqrt(*(pTip+i));
 		*(pTip+i)=1.0;
 		for (j=0;j<=i;j++) {
 			t=d*(*pTip);
 			*(pTip++)=t;
-			fprintf(stderr,"i: %d j: %d t: %f\n",i,j,t);
+			//fprintf(stderr,"i: %d j: %d t: %f\n",i,j,t);
 			W[j]+=t*t;
 		}
 	}
-	printMatrix("W",W,k,k);
+	//printMatrix("W",W,k,k);
 	aVar=0;
 	for (i=0;i<k;i++) {
 		aVar+=log(W[i]);
 	}
 	*avVar=exp(aVar/(double)k); /* average variance */
-	printMatrix("Tip after scale",Tip,k,k);
+	//printMatrix("Tip after scale",Tip,k,k);
 }
 
 /* makeTiFromTDpc **********************************************************************
@@ -782,7 +794,7 @@ void exchangeBlock(
 	rowNoi=B[IB(curBlock,xcur)];
 	xri=X+rowNoi*k;
 	ni=blocksizes[curBlock];
-	fprintf(stderr, "rowNoi: %d xmi: %f xri: %f\n", rowNoi, &xmi, &xri);
+	//fprintf(stderr, "rowNoi: %d xmi: %f xri: %f\n", rowNoi, &xmi, &xri);
 
 
 	if (extraBlock && newBlock==nB) {
@@ -811,10 +823,10 @@ void exchangeBlock(
 		xmj=blockMeans+newBlock*k;
 		nj=blocksizes[newBlock];
 		C=(double)(ni+nj)/(double)(ni*nj);
-		fprintf(stderr, "rowNoj: %d", rowNoj);
+		//fprintf(stderr, "rowNoj: %d", rowNoj);
 		for (i=0;i<k;i++) {
 			vec[i]=xmj[i]-xmi[i];
-			fprintf(stderr, "xmj: %f xmi: %f\n", xmj[i], xmi[i]);
+			//fprintf(stderr, "xmj: %f xmi: %f\n", xmj[i], xmi[i]);
 		}
 
 
@@ -822,14 +834,14 @@ void exchangeBlock(
 		
 		for (i=0;i<k;i++) {
 			vec[i]-=xrj[i]-xri[i];
-			fprintf(stderr, "xrj: %f xri: %f\n", xrj[i], xri[i]);
+			//fprintf(stderr, "xrj: %f xri: %f\n", xrj[i], xri[i]);
 		}
 
 		RotateB(vec,tvec,T,k,k,-1.0); 
 
 		for (i=0;i<k;i++) {
 			vec[i]=xrj[i]-xri[i];
-			fprintf(stderr, "%d xrj: %f xri: %f\n", xrj[i], xri[i]);
+			//fprintf(stderr, "%d xrj: %f xri: %f\n", xrj[i], xri[i]);
 		}
 
 		RotateB(vec,tvec,T,k,k,1.0-C); 
@@ -1372,8 +1384,8 @@ double findDeltaBlock(
 	int rowNo;
 	int iBlock=nB*MAXN;
 
-	printMatrix("tX", tX, nB, k);
-	printMatrix("tBlockMeans", tBlockMeans, nB, k);
+	//printMatrix("tX", tX, nB, k);
+	//printMatrix("tBlockMeans", tBlockMeans, nB, k);
 	// Initialize geometric coefficients
 	Gi[1]=1;
 	Gi[2]=0;
@@ -1395,7 +1407,7 @@ double findDeltaBlock(
 			// Calculate squared distance between block means
 			g=0;
 			for (l=0;l<k;l++) {
-				fprintf(stderr, "fmi[%d]: %f, fmj[%d]: %f\n", l, fmi[l], l, fmj[l]);
+				//fprintf(stderr, "fmi[%d]: %f, fmj[%d]: %f\n", l, fmi[l], l, fmj[l]);
 				dif=fmj[l]-fmi[l];
 				g+=dif*dif;
 			}
@@ -1410,7 +1422,7 @@ double findDeltaBlock(
 				
 				// Calculate cross terms between means and points
 				for (l=0;l<k;l++) {
-					fprintf(stderr, "rowNo: %d, i: %d, j: %d, l: %d, fmi: %f, fmj: %f, fi: %f, fj: %f\n", rowNo, i, j, l, fmi[l], fmj[l], fi[l], fj[l]);
+					//fprintf(stderr, "rowNo: %d, i: %d, j: %d, l: %d, fmi: %f, fmj: %f, fi: %f, fj: %f\n", rowNo, i, j, l, fmi[l], fmj[l], fi[l], fj[l]);
 					dif1=fmj[l]-fmi[l];
 					dif2=fj[l]-fi[l];
 					g+=dif1*dif2;
@@ -1425,7 +1437,7 @@ double findDeltaBlock(
 
 				// Calculate improvement in criterion
 				d=-(1+M1i[0]*M1i[2]-M1i[1]*M1i[1]); 
-				fprintf(stderr, "d: %f, i: %d, j: %d\n", d, i, j);
+				//fprintf(stderr, "d: %f, i: %d, j: %d\n", d, i, j);
 
 				// Update best exchange if improvement is large enough
 				if ((d-delta)>deltaTol) {
@@ -2919,6 +2931,7 @@ void BlockOptimize(
 
 		if (!singular) {
 			makeTiFromTB(Tip,T,W,&aVar,k);
+			
 			if (doWholeBlock) {
 				repeat {
 					exchanged=false;
@@ -2939,7 +2952,8 @@ void BlockOptimize(
 				} until(!exchanged);
 
 			}
-			else {
+			else {				
+
 				transform(Tip,X,tX,blockMeans,tBlockMeans,N,k,nB);
 				repeat {
 					exchanged=false;
@@ -2953,12 +2967,23 @@ void BlockOptimize(
 								/* one can insert formBlockMeans() and reduceXtoT() here to
 								deal with numerical problems, but this seems not to be
 								needed when large deltas are excluded, as above. */
+								printMatrix("T in block_optimize", T, 7, 6);
+								printMatrix("Tip in block_optimize", Tip, 15, 1);
+								printMatrixInt("B before exchange", B, 7, 3);
+								//fprintf(stderr, "B[0]: %d\n", B[0]);
 								exchangeBlock(T,X,vec,blockMeans,B,blocksizes,xcur,xnew,curBlock,newBlock,nB,k);
 								logDcrit+=log(1+delta);
 								exchanged=true;
 								makeTiFromTB(Tip,T,W,&aVar,k);
+								printMatrix("Tip after makeTiFromTB", Tip, 15, 1);
 								transform(Tip,X,tX,blockMeans,tBlockMeans,N,k,nB);
+
+								printMatrix("tX after transform", tX, 7, 6);
+								printMatrixInt("B after transform", B, 7, 3);
 							}
+
+							
+							return;
 							//R_CheckUserInterrupt();
 						}
 					} until(nB<=++curBlock);

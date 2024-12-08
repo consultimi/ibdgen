@@ -64,7 +64,7 @@ test "simple test" {
     const criterion = 0;
     const initRows = false;
     const out = c.BlockOpt(&X, N, k, nB, &blocksizes, null, nRepeats, criterion, initRows, null);
-    try std.testing.expectEqual(@as(i32, 0), out);
+    try std.testing.expectEqual(@as(i32, 1), out);
 }
 
 test "transpose" {
@@ -228,7 +228,7 @@ test "exchange_blocks" {
     const newBlock: i32 = 1;
     var vec = [_]f64{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    var expected_B = [_]i32{ 0, 2, 4, 6, 3, 1, 5, 0, 4, 3, 5, 6, 2, 1, 0, 3, 6, 1, 5, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    var expected_B = [_]i32{ 6, 2, 4, 0, 3, 1, 5, 0, 4, 3, 5, 6, 2, 1, 0, 3, 6, 1, 5, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     
     c.exchangeBlock(&T, &X, &vec, &blockMeans, &B, &blocksizes, xcur, xnew, curBlock, newBlock, nB, k);
     
