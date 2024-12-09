@@ -143,7 +143,7 @@ void RotateB(
 			for (j=i+1;j<nColumns;j++,kIndex++)	{
 				r=matrixXY[kIndex];
 				matrixXY[kIndex]=s*tVec[j]+c*r;
-				//fprintf(stderr,"matrixXY2[kIndex]: %2.2f\n", matrixXY[kIndex]);
+				fprintf(stderr,"matrixXY2[%d]: %2.2f\n", kIndex, matrixXY[kIndex]);
 				tVec[j]-=x*r;
 			}
 		}
@@ -2967,15 +2967,16 @@ void BlockOptimize(
 								/* one can insert formBlockMeans() and reduceXtoT() here to
 								deal with numerical problems, but this seems not to be
 								needed when large deltas are excluded, as above. */
-								printMatrix("T in block_optimize", T, 7, 6);
-								printMatrix("Tip in block_optimize", Tip, 15, 1);
+								printMatrix("T after findDeltaBlock", T, 1, 21);
+								printMatrix("Tip after findDeltaBlock", Tip, 1, 21);
 								printMatrixInt("B before exchange", B, 7, 3);
 								//fprintf(stderr, "B[0]: %d\n", B[0]);
 								exchangeBlock(T,X,vec,blockMeans,B,blocksizes,xcur,xnew,curBlock,newBlock,nB,k);
 								logDcrit+=log(1+delta);
 								exchanged=true;
 								makeTiFromTB(Tip,T,W,&aVar,k);
-								printMatrix("Tip after makeTiFromTB", Tip, 15, 1);
+								printMatrix("Tip after makeTiFromTB", Tip, 1, 21);
+								printMatrix("T after makeTiFromTB", T, 1, 21);
 								transform(Tip,X,tX,blockMeans,tBlockMeans,N,k,nB);
 
 								printMatrix("tX after transform", tX, 7, 6);

@@ -42,7 +42,7 @@ fn reduce_x_to_t(
         //println!("block_data.t: {:#?}", &block_data.t);
     };
     //let upper_tri = block_data.x.clone().lu().u();
-    block_data.t = block_data.t.transpose();
+    //block_data.t = block_data.t.transpose();
     //println!("t: {}", pretty_print!(&block_data.t));
     //println!("upper_tri: {:?}", &upper_tri);
     log_det = block_data.t.determinant().ln();
@@ -108,7 +108,7 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
 
         // d points to the corresponding index in the t (upper triangular) matrix
         k_index = calc_index(i as usize, block_data.k as usize);
-        //println!("i: {}, k_index: {}", i, k_index);
+        println!("i: {}, k_index: {}", i, k_index);
         let d = block_data.t[(k_index) as usize];
         //println!("d: {}", d);
         let dp = d + weight * t_vec[i as usize] * t_vec[i as usize];
@@ -117,7 +117,7 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
         }
         //dbg!(&k_index);
         block_data.t[(k_index) as usize] = dp;
-
+        println!("t after set: {}", pretty_print!(&block_data.t));
         let c = d / dp;
         let s = weight * t_vec[i as usize] / dp;
 
@@ -131,7 +131,7 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
 
         k_index += 1;
         for j in (i+1)..block_data.k {
-            //dbg!(&k_index);
+            println!("i: {}, j: {}, k_index: {}", i, j, k_index);
             let r = block_data.t[k_index];
             block_data.t[k_index] = s * t_vec[j as usize] + c * r;
             t_vec[j as usize] -= t_vec[i as usize] * r;
@@ -497,25 +497,25 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
     for i in 0..block_data.k {
         vec[i as usize] = xmj[i as usize] - xmi[i as usize];
     }
-    //println!("t before rotate: {}", pretty_print!(&block_data.t));
+    println!("t before rotate: {}", pretty_print!(&block_data.t));
     rotate_b(block_data, &vec, 1.0);
-    //println!("t after rotate: {}", pretty_print!(&block_data.t));
+    println!("t after rotate: {}", pretty_print!(&block_data.t));
 
     // vec -= xrj - xri
     for i in 0..block_data.k {
         vec[i as usize] -= xrj[i as usize] - xri[i as usize];
     }
 
-    //println!("t before rotate: {}", pretty_print!(&block_data.t));
+    println!("t before rotate: {}", pretty_print!(&block_data.t));
     rotate_b(block_data, &vec, -1.0);
-    //println!("t after rotate: {}", pretty_print!(&block_data.t));
+    println!("t after rotate: {}", pretty_print!(&block_data.t));
     // vec = xrj - xri
     for i in 0..block_data.k {
         vec[i as usize] = xrj[i as usize] - xri[i as usize];
     }
-    //println!("t before rotate: {}", pretty_print!(&block_data.t));
+    println!("t before rotate: {}", pretty_print!(&block_data.t));
     rotate_b(block_data, &vec, 1.0 - c);
-    //println!("t after rotate: {}", pretty_print!(&block_data.t));
+    println!("t after rotate: {}", pretty_print!(&block_data.t));
 
     // Update block means
     for i in 0..block_data.k {
@@ -594,12 +594,10 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResu
         if singular {
             return Err(anyhow!("Singular matrix"));
         } else {
+            println!("t_inv before first make_ti_from_tb: {}", pretty_print!(&block_data.t_inv));
             av_var = make_ti_from_tb(block_data).map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
-            /* transform **********************************************************************
-| transfroms X and blockMeans to tX = X*Ti and tBlockMeans = tBlockMeans * Ti, 
-            |	using Tip which containts Ti'
-            */
-            //transform(block_data)?;
+            println!("t_inv after first make_ti_from_tb: {}", pretty_print!(&block_data.t_inv));
+            println!("t after first make_ti_from_tb: {}", pretty_print!(&block_data.t));
             block_data.t_x = block_data.x.clone() * block_data.t_inv.transpose().clone();
             block_data.t_block_means = block_data.block_means.clone() * block_data.t_inv.transpose().clone();
 
@@ -622,7 +620,8 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResu
                             log_det += (1.0 + delta).ln();      
                             av_var = make_ti_from_tb(block_data).map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
                             println!("t_inv after make_ti_from_tb: {}", pretty_print!(&block_data.t_inv));
-                            
+                            println!("t after make_ti_from_tb: {}", pretty_print!(&block_data.t));
+
                             //transform(block_data)?;
                             block_data.t_x = block_data.x.clone() * block_data.t_inv.transpose().clone();
                             block_data.t_block_means = block_data.block_means.clone() * block_data.t_inv.transpose().clone();
@@ -630,7 +629,7 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResu
                             println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
                             println!("block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
                             // exit the program
-                            std::process::exit(0);
+                            //std::process::exit(0);
                         }
                     }
                     if cur_block == block_data.n_b - 1 {
@@ -835,8 +834,6 @@ mod tests {
         form_block_means(&mut block_data);
         println!("block_data.block_means: {}", pretty_print!(&block_data.block_means));
 
-        
-        
 
         let expected = nalgebra::dmatrix![
             0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 0.0, 0.0;
@@ -848,6 +845,7 @@ mod tests {
             0.0, 1.0 / 3.0, 0.0, 1.0 / 3.0, 1.0 / 3.0, 0.0
         ];
         assert_eq!(block_data.block_means, expected);
+
     }
 
     #[test]
@@ -901,6 +899,8 @@ mod tests {
         let out = block_data.t.transpose().apply_into(|x: &mut f64| { *x = (*x * 1000.0).round() });
         assert_eq!(out, expected);
     }
+
+
     #[test]
     fn test_reduce_x_to_t() {
         //let x = dm7choose3();
