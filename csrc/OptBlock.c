@@ -143,7 +143,7 @@ void RotateB(
 			for (j=i+1;j<nColumns;j++,kIndex++)	{
 				r=matrixXY[kIndex];
 				matrixXY[kIndex]=s*tVec[j]+c*r;
-				fprintf(stderr,"matrixXY2[%d]: %2.2f\n", kIndex, matrixXY[kIndex]);
+				fprintf(stderr,"i: %d, j: %d, kIndex: %d, s: %2.2f, tVec[%d]: %2.2f, c: %2.2f, r: %2.2f, matrixXY[%d]: %2.2f\n", i, j, kIndex, s, j, tVec[j], c, r, kIndex, matrixXY[kIndex]);
 				tVec[j]-=x*r;
 			}
 		}
@@ -795,6 +795,7 @@ void exchangeBlock(
 	xri=X+rowNoi*k;
 	ni=blocksizes[curBlock];
 	//fprintf(stderr, "rowNoi: %d xmi: %f xri: %f\n", rowNoi, &xmi, &xri);
+	
 
 
 	if (extraBlock && newBlock==nB) {
@@ -803,15 +804,24 @@ void exchangeBlock(
 
 		for (i=0;i<k;i++)
 			vec[i]=xrj[i]-xmi[i];
+
+		printMatrix("vec before rotate", vec, 1, k);
 		RotateB(vec,tvec,T,k,k,1.0); 
+		printMatrix("vec after rotate", vec, 1, k);
 
 		for (i=0;i<k;i++)
 			vec[i]=xri[i]-xmi[i];
+		
+		printMatrix("vec before rotate", vec, 1, k);
 		RotateB(vec,tvec,T,k,k,-1.0); 
+		printMatrix("vec after rotate", vec, 1, k);
 		
 		for (i=0;i<k;i++)
 			vec[i]=xrj[i]-xri[i];
+
+		printMatrix("vec before rotate", vec, 1, k);
 		RotateB(vec,tvec,T,k,k,-1.0/(double)ni);
+		printMatrix("vec after rotate", vec, 1, k);
 
 
 		B[iBlock+xnew]=rowNoi;
@@ -824,27 +834,37 @@ void exchangeBlock(
 		nj=blocksizes[newBlock];
 		C=(double)(ni+nj)/(double)(ni*nj);
 		//fprintf(stderr, "rowNoj: %d", rowNoj);
+		printMatrix("xmi", xmi, 1, k);
+		printMatrix("xmj", xmj, 1, k);
+		printMatrix("xri", xri, 1, k);
+		printMatrix("xrj", xrj, 1, k);
+
 		for (i=0;i<k;i++) {
 			vec[i]=xmj[i]-xmi[i];
 			//fprintf(stderr, "xmj: %f xmi: %f\n", xmj[i], xmi[i]);
 		}
 
-
+		printMatrix("T before rotate", T, 1,21);
 		RotateB(vec,tvec,T,k,k,1.0); 
-		
+		printMatrix("T after rotate", T, 1,21);
+
 		for (i=0;i<k;i++) {
 			vec[i]-=xrj[i]-xri[i];
 			//fprintf(stderr, "xrj: %f xri: %f\n", xrj[i], xri[i]);
 		}
 
+		printMatrix("T before rotate", T, 1, 21);
 		RotateB(vec,tvec,T,k,k,-1.0); 
+		printMatrix("T after rotate", T, 1, 21);
 
 		for (i=0;i<k;i++) {
 			vec[i]=xrj[i]-xri[i];
 			//fprintf(stderr, "%d xrj: %f xri: %f\n", xrj[i], xri[i]);
 		}
 
+		printMatrix("T before rotate", T, 1, 21);
 		RotateB(vec,tvec,T,k,k,1.0-C); 
+		printMatrix("T after rotate", T, 1, 21);
 
 
 		for (i=0;i<k;i++)
@@ -2960,6 +2980,7 @@ void BlockOptimize(
 					curBlock=0;
 					repeat {
 						for (xcur=0;xcur<blocksizes[curBlock];xcur++) {
+							fprintf(stderr, "BEGIN LOOP xcur: %d\n", xcur);
 							delta=findDeltaBlock(tX,tBlockMeans,B,nB,nEx,blocksizes,xcur,&xnew,curBlock,&newBlock,k);
 							  /* poor starting designs cause numerical problems resulting in */
 							  /* very large deltas */
@@ -2981,13 +3002,20 @@ void BlockOptimize(
 
 								printMatrix("tX after transform", tX, 7, 6);
 								printMatrixInt("B after transform", B, 7, 3);
+								printMatrix("blockMeans after transform", blockMeans, 7, 6);
+								printMatrix("tBlockMeans after transform", tBlockMeans, 7, 6);
 							}
 
 							
-							return;
+							if (xcur > 0) {
+								break;
+							}
 							//R_CheckUserInterrupt();
 						}
+						break;
 					} until(nB<=++curBlock);
+
+					break;
 				} until(!exchanged);
 			}
 
@@ -3008,7 +3036,7 @@ void BlockOptimize(
 		else 
 			countSingular++;
 
-		
+		break;
 	}until(!(--nRepeatCounts)); 
 
 	if (countSingular==nRepeats)

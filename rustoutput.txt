@@ -1,0 +1,211 @@
+   Compiling celldesigner v0.1.0 (C:\Users\Miles\Documents\GitHub\celldesigner)
+error[E0425]: cannot find value `r` in this scope
+   --> src\opt_block.rs:134:130
+    |
+134 |             println!("i: {}, j: {}, k_index: {}, s: {}, t_vec[{}]: {}, c: {}, r: {}", i, j, k_index, s, j, t_vec[j as usize], c, r);
+    |                                                                                                                                  ^ help: a local variable with a similar name exists: `c`
+
+warning: unused import: `dmatrix`
+ --> src\opt_block.rs:1:34
+  |
+1 | use nalgebra::{DMatrix, DVector, dmatrix};
+  |                                  ^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unnecessary parentheses around assigned value
+   --> src\opt_block.rs:370:25
+    |
+370 |             let index = (i * block_data.max_n + j);
+    |                         ^                        ^
+    |
+    = note: `#[warn(unused_parens)]` on by default
+help: remove these parentheses
+    |
+370 -             let index = (i * block_data.max_n + j);
+370 +             let index = i * block_data.max_n + j;
+    |
+
+warning: value assigned to `log_det` is never read
+  --> src\opt_block.rs:10:13
+   |
+10 |     let mut log_det = 0.0;
+   |             ^^^^^^^
+   |
+   = help: maybe it is overwritten before being read?
+   = note: `#[warn(unused_assignments)]` on by default
+
+warning: variable `j` is assigned to, but never used
+  --> src\opt_block.rs:20:17
+   |
+20 |         let mut j: i32=0;
+   |                 ^
+   |
+   = note: consider using `_j` instead
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `j`
+   --> src\opt_block.rs:321:13
+    |
+321 |     let mut j = 0;
+    |             ^ help: if this is intentional, prefix it with an underscore: `_j`
+
+warning: unused variable: `l`
+   --> src\opt_block.rs:322:13
+    |
+322 |     let mut l = 0;
+    |             ^ help: if this is intentional, prefix it with an underscore: `_l`
+
+warning: value assigned to `bs` is never read
+   --> src\opt_block.rs:323:13
+    |
+323 |     let mut bs = 0;
+    |             ^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: value assigned to `t` is never read
+   --> src\opt_block.rs:325:13
+    |
+325 |     let mut t = 0;
+    |             ^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: variable does not need to be mutable
+   --> src\opt_block.rs:321:9
+    |
+321 |     let mut j = 0;
+    |         ----^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+warning: variable does not need to be mutable
+   --> src\opt_block.rs:322:9
+    |
+322 |     let mut l = 0;
+    |         ----^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\opt_block.rs:324:9
+    |
+324 |     let mut i_block = block_data.n_b * block_data.max_n;
+    |         ----^^^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: unused variable: `tip`
+   --> src\opt_block.rs:573:13
+    |
+573 |     let mut tip: DMatrix<f64> = DMatrix::zeros(block_data.n as usize, block_data.k as usize);
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_tip`
+
+warning: unused variable: `w`
+   --> src\opt_block.rs:574:13
+    |
+574 |     let mut w: DMatrix<f64> = DMatrix::zeros(block_data.k as usize * (block_data.k as usize + 1) / 2, 1);
+    |             ^ help: if this is intentional, prefix it with an underscore: `_w`
+
+warning: unused variable: `vec`
+   --> src\opt_block.rs:575:13
+    |
+575 |     let mut vec: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_vec`
+
+warning: unused variable: `sc`
+   --> src\opt_block.rs:576:13
+    |
+576 |     let mut sc: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
+    |             ^^ help: if this is intentional, prefix it with an underscore: `_sc`
+
+warning: unused variable: `var`
+   --> src\opt_block.rs:578:13
+    |
+578 |     let mut var = 0.0;
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_var`
+
+warning: unused variable: `singular`
+   --> src\opt_block.rs:582:13
+    |
+582 |     let mut singular = false;
+    |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_singular`
+
+warning: variable `av_var` is assigned to, but never used
+   --> src\opt_block.rs:585:13
+    |
+585 |     let mut av_var = 0.0;
+    |             ^^^^^^
+    |
+    = note: consider using `_av_var` instead
+
+warning: value assigned to `av_var` is never read
+   --> src\opt_block.rs:598:13
+    |
+598 |             av_var = make_ti_from_tb(block_data).map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
+    |             ^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: value assigned to `av_var` is never read
+   --> src\opt_block.rs:622:29
+    |
+622 | ...                   av_var = make_ti_from_tb(block_data).map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
+    |                       ^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: variable does not need to be mutable
+   --> src\opt_block.rs:573:9
+    |
+573 |     let mut tip: DMatrix<f64> = DMatrix::zeros(block_data.n as usize, block_data.k as usize);
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\opt_block.rs:574:9
+    |
+574 |     let mut w: DMatrix<f64> = DMatrix::zeros(block_data.k as usize * (block_data.k as usize + 1) / 2, 1);
+    |         ----^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\opt_block.rs:575:9
+    |
+575 |     let mut vec: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\opt_block.rs:576:9
+    |
+576 |     let mut sc: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
+    |         ----^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\opt_block.rs:578:9
+    |
+578 |     let mut var = 0.0;
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\opt_block.rs:582:9
+    |
+582 |     let mut singular = false;
+    |         ----^^^^^^^^
+    |         |
+    |         help: remove this `mut`
+
+For more information about this error, try `rustc --explain E0425`.
+warning: `celldesigner` (bin "celldesigner") generated 26 warnings
+error: could not compile `celldesigner` (bin "celldesigner") due to 1 previous error; 26 warnings emitted
