@@ -520,8 +520,10 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
     // Update block means
     for i in 0..block_data.k {
         let idx = column_major_index_from_row_major_index(cur_block * block_data.k + i, block_data.max_n, block_data.n_b);
+        println!("idx: {}, xrj[i]: {}, xri[i]: {}, ni: {}", idx, xrj[i as usize], xri[i as usize], ni);
         block_data.block_means[idx as usize] += (xrj[i as usize] - xri[i as usize]) / ni as f64;
         let idx = column_major_index_from_row_major_index(*new_block * block_data.k + i, block_data.max_n, block_data.n_b);
+        println!("idx: {}, xrj[i]: {}, xri[i]: {}, nj: {}", idx, xrj[i as usize], xri[i as usize], nj);
         block_data.block_means[idx as usize] += (xri[i as usize] - xrj[i as usize]) / nj as f64;
     }
 

@@ -871,6 +871,9 @@ void exchangeBlock(
 			xmi[i]+=(xrj[i]-xri[i])/(double)ni;
 		for (i=0;i<k;i++)
 			xmj[i]+=(xri[i]-xrj[i])/(double)nj;
+
+		printMatrix("xmi after update", xmi, 1, k);
+		printMatrix("xmj after update", xmj, 1, k);
 		B[IB(newBlock,xnew)]=rowNoi;
 	}
 
