@@ -8,16 +8,16 @@ warning: unused import: `dmatrix`
   = note: `#[warn(unused_imports)]` on by default
 
 warning: unnecessary parentheses around assigned value
-   --> src\opt_block.rs:370:25
+   --> src\opt_block.rs:371:25
     |
-370 |             let index = (i * block_data.max_n + j);
+371 |             let index = (i * block_data.max_n + j);
     |                         ^                        ^
     |
     = note: `#[warn(unused_parens)]` on by default
 help: remove these parentheses
     |
-370 -             let index = (i * block_data.max_n + j);
-370 +             let index = i * block_data.max_n + j;
+371 -             let index = (i * block_data.max_n + j);
+371 +             let index = i * block_data.max_n + j;
     |
 
 warning: value assigned to `log_det` is never read
@@ -101,142 +101,199 @@ warning: variable does not need to be mutable
     |         help: remove this `mut`
 
 warning: unused variable: `tip`
-   --> src\opt_block.rs:585:13
+   --> src\opt_block.rs:588:13
     |
-585 |     let mut tip: DMatrix<f64> = DMatrix::zeros(block_data.n as usize, block_data.k as usize);
+588 |     let mut tip: DMatrix<f64> = DMatrix::zeros(block_data.n as usize, block_data.k as usize);
     |             ^^^ help: if this is intentional, prefix it with an underscore: `_tip`
 
 warning: unused variable: `w`
-   --> src\opt_block.rs:586:13
+   --> src\opt_block.rs:589:13
     |
-586 |     let mut w: DMatrix<f64> = DMatrix::zeros(block_data.k as usize * (block_data.k as usize + 1) / 2, 1);
+589 |     let mut w: DMatrix<f64> = DMatrix::zeros(block_data.k as usize * (block_data.k as usize + 1) / 2, 1);
     |             ^ help: if this is intentional, prefix it with an underscore: `_w`
 
 warning: unused variable: `vec`
-   --> src\opt_block.rs:587:13
+   --> src\opt_block.rs:590:13
     |
-587 |     let mut vec: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
+590 |     let mut vec: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
     |             ^^^ help: if this is intentional, prefix it with an underscore: `_vec`
 
 warning: unused variable: `sc`
-   --> src\opt_block.rs:588:13
+   --> src\opt_block.rs:591:13
     |
-588 |     let mut sc: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
+591 |     let mut sc: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
     |             ^^ help: if this is intentional, prefix it with an underscore: `_sc`
 
 warning: unused variable: `var`
-   --> src\opt_block.rs:590:13
+   --> src\opt_block.rs:593:13
     |
-590 |     let mut var = 0.0;
+593 |     let mut var = 0.0;
     |             ^^^ help: if this is intentional, prefix it with an underscore: `_var`
 
 warning: unused variable: `singular`
-   --> src\opt_block.rs:594:13
+   --> src\opt_block.rs:597:13
     |
-594 |     let mut singular = false;
+597 |     let mut singular = false;
     |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_singular`
 
 warning: variable `av_var` is assigned to, but never used
-   --> src\opt_block.rs:597:13
+   --> src\opt_block.rs:600:13
     |
-597 |     let mut av_var = 0.0;
+600 |     let mut av_var = 0.0;
     |             ^^^^^^
     |
     = note: consider using `_av_var` instead
 
 warning: value assigned to `av_var` is never read
-   --> src\opt_block.rs:610:13
+   --> src\opt_block.rs:613:13
     |
-610 |             av_var = make_ti_from_tb(block_data).map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
+613 |             av_var = make_ti_from_tb(block_data).map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
     |             ^^^^^^
     |
     = help: maybe it is overwritten before being read?
 
 warning: value assigned to `av_var` is never read
-   --> src\opt_block.rs:634:29
+   --> src\opt_block.rs:637:29
     |
-634 | ...                   av_var = make_ti_from_tb(block_data).map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
+637 | ...                   av_var = make_ti_from_tb(block_data).map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
     |                       ^^^^^^
     |
     = help: maybe it is overwritten before being read?
 
 warning: variable does not need to be mutable
-   --> src\opt_block.rs:585:9
-    |
-585 |     let mut tip: DMatrix<f64> = DMatrix::zeros(block_data.n as usize, block_data.k as usize);
-    |         ----^^^
-    |         |
-    |         help: remove this `mut`
-
-warning: variable does not need to be mutable
-   --> src\opt_block.rs:586:9
-    |
-586 |     let mut w: DMatrix<f64> = DMatrix::zeros(block_data.k as usize * (block_data.k as usize + 1) / 2, 1);
-    |         ----^
-    |         |
-    |         help: remove this `mut`
-
-warning: variable does not need to be mutable
-   --> src\opt_block.rs:587:9
-    |
-587 |     let mut vec: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
-    |         ----^^^
-    |         |
-    |         help: remove this `mut`
-
-warning: variable does not need to be mutable
    --> src\opt_block.rs:588:9
     |
-588 |     let mut sc: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
-    |         ----^^
+588 |     let mut tip: DMatrix<f64> = DMatrix::zeros(block_data.n as usize, block_data.k as usize);
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\opt_block.rs:589:9
+    |
+589 |     let mut w: DMatrix<f64> = DMatrix::zeros(block_data.k as usize * (block_data.k as usize + 1) / 2, 1);
+    |         ----^
     |         |
     |         help: remove this `mut`
 
 warning: variable does not need to be mutable
    --> src\opt_block.rs:590:9
     |
-590 |     let mut var = 0.0;
+590 |     let mut vec: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
     |         ----^^^
     |         |
     |         help: remove this `mut`
 
 warning: variable does not need to be mutable
-   --> src\opt_block.rs:594:9
+   --> src\opt_block.rs:591:9
     |
-594 |     let mut singular = false;
+591 |     let mut sc: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
+    |         ----^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\opt_block.rs:593:9
+    |
+593 |     let mut var = 0.0;
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\opt_block.rs:597:9
+    |
+597 |     let mut singular = false;
     |         ----^^^^^^^^
     |         |
     |         help: remove this `mut`
 
+warning: function `dm9choose3` is never used
+  --> src/main.rs:18:4
+   |
+18 | fn dm9choose3() -> DMatrix<u8> {
+   |    ^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: function `dm12choose4` is never used
+  --> src/main.rs:32:4
+   |
+32 | fn dm12choose4() -> DMatrix<u8> {
+   |    ^^^^^^^^^^^
+
 warning: field `best_log_det` is never read
-   --> src\opt_block.rs:557:5
+   --> src\opt_block.rs:560:5
     |
-556 | struct BlockResult {
+559 | struct BlockResult {
     |        ----------- field in this struct
-557 |     best_log_det: f64,
+560 |     best_log_det: f64,
     |     ^^^^^^^^^^^^
     |
     = note: `BlockResult` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
-    = note: `#[warn(dead_code)]` on by default
 
 warning: function `configure_block_data` is never used
-   --> src\opt_block.rs:780:8
+   --> src\opt_block.rs:784:8
     |
-780 |     fn configure_block_data() -> BlockData {
+784 |     fn configure_block_data() -> BlockData {
     |        ^^^^^^^^^^^^^^^^^^^^
 
 warning: function `dm7choose3` is never used
-   --> src\opt_block.rs:803:8
+   --> src\opt_block.rs:807:8
     |
-803 |     fn dm7choose3() -> DMatrix<f64> {
+807 |     fn dm7choose3() -> DMatrix<f64> {
     |        ^^^^^^^^^^
 
-warning: `celldesigner` (bin "celldesigner") generated 30 warnings (run `cargo fix --bin "celldesigner"` to apply 11 suggestions)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.38s
+warning: `celldesigner` (bin "celldesigner") generated 32 warnings (run `cargo fix --bin "celldesigner"` to apply 11 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.41s
      Running `target\debug\celldesigner.exe`
+bs: 3
+column_major_index: 0, block_data.rows[l as usize]: 0
+column_major_index: 7, block_data.rows[l as usize]: 2
+column_major_index: 14, block_data.rows[l as usize]: 4
+bs: 3
+column_major_index: 1, block_data.rows[l as usize]: 6
+column_major_index: 8, block_data.rows[l as usize]: 3
+column_major_index: 15, block_data.rows[l as usize]: 1
+bs: 3
+column_major_index: 2, block_data.rows[l as usize]: 5
 bs: 3, little_n: 1, offset: 2, i: 0
+column_major_index: 9, block_data.rows[l as usize]: 0
+column_major_index: 16, block_data.rows[l as usize]: 4
+bs: 3
+column_major_index: 3, block_data.rows[l as usize]: 3
+column_major_index: 10, block_data.rows[l as usize]: 5
+column_major_index: 17, block_data.rows[l as usize]: 6
+bs: 3
+column_major_index: 4, block_data.rows[l as usize]: 2
+column_major_index: 11, block_data.rows[l as usize]: 1
 bs: 3, little_n: 2, offset: 4, i: 0
 bs: 3, little_n: 2, offset: 4, i: 1
+column_major_index: 18, block_data.rows[l as usize]: 0
+bs: 3
+column_major_index: 5, block_data.rows[l as usize]: 3
+column_major_index: 12, block_data.rows[l as usize]: 6
+column_major_index: 19, block_data.rows[l as usize]: 1
+bs: 3
+column_major_index: 6, block_data.rows[l as usize]: 5
+column_major_index: 13, block_data.rows[l as usize]: 4
+column_major_index: 20, block_data.rows[l as usize]: 2
+block_data.b after initialize_b: 
+           0.000        2.000        4.000
+           6.000        3.000        1.000
+           5.000        0.000        4.000
+           3.000        5.000        6.000
+           2.000        1.000        0.000
+           3.000        6.000        1.000
+           5.000        4.000        2.000
+block_means inside form_block_means: 
+           0.000        0.333        0.000        0.333        0.000        0.000
+           0.333        0.000        0.333        0.000        0.000        0.333
+           0.000        0.000        0.000        0.333        0.333        0.000
+           0.000        0.000        0.333        0.000        0.333        0.333
+           0.333        0.333        0.000        0.000        0.000        0.000
+           0.333        0.000        0.333        0.000        0.000        0.333
+           0.000        0.333        0.000        0.333        0.333        0.000
 i: 1, k_index: 7
 i: 1, j: 2, k_index: 8, s: -3, t_vec[2]: 0, c: 0, r: 0
 i: 1, j: 3, k_index: 9, s: -3, t_vec[3]: -0.3333333333333333, c: 0, r: 0
@@ -4575,10 +4632,10 @@ best_block_array:
 
 
 block_result: 
-           6.000        1.000        4.000
-           5.000        3.000        1.000
-           3.000        0.000        4.000
-           5.000        0.000        6.000
-           2.000        1.000        0.000
-           3.000        6.000        2.000
-           5.000        4.000        2.000
+           7.000        2.000        5.000
+           6.000        4.000        2.000
+           4.000        1.000        5.000
+           6.000        1.000        7.000
+           3.000        2.000        1.000
+           4.000        7.000        3.000
+           6.000        5.000        3.000
