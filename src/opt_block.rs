@@ -517,15 +517,22 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
     rotate_b(block_data, &vec, 1.0 - c);
     println!("t after rotate: {}", pretty_print!(&block_data.t));
 
+    println!("block_data.block_means before update: {}", pretty_print!(&block_data.block_means));
     // Update block means
+    println!("block_data.k: {}", block_data.k);
     for i in 0..block_data.k {
-        let idx = column_major_index_from_row_major_index(cur_block * block_data.k + i, block_data.max_n, block_data.n_b);
-        println!("idx: {}, xrj[i]: {}, xri[i]: {}, ni: {}", idx, xrj[i as usize], xri[i as usize], ni);
-        block_data.block_means[idx as usize] += (xrj[i as usize] - xri[i as usize]) / ni as f64;
-        let idx = column_major_index_from_row_major_index(*new_block * block_data.k + i, block_data.max_n, block_data.n_b);
-        println!("idx: {}, xrj[i]: {}, xri[i]: {}, nj: {}", idx, xrj[i as usize], xri[i as usize], nj);
-        block_data.block_means[idx as usize] += (xri[i as usize] - xrj[i as usize]) / nj as f64;
+        let idx = column_major_index_from_row_major_index(i, block_data.k, block_data.n_b);
+        let newsum = (xrj[i as usize] - xri[i as usize]) / ni as f64;
+        println!("idx: {}, xrj[i]: {}, xri[i]: {}, ni: {}, newsum: {}", idx, xrj[i as usize], xri[i as usize], ni, newsum);
+        block_data.block_means[idx as usize] += newsum;
+        let idx = column_major_index_from_row_major_index(row_no_j as u8 + i as u8, block_data.k, block_data.n_b);
+        //let idx = row_no_j as u8 + i as u8;
+        let newsum = (xri[i as usize] - xrj[i as usize]) / nj as f64;
+        println!("idx: {}, xrj[i]: {}, xri[i]: {}, nj: {}, newsum: {}", idx, xrj[i as usize], xri[i as usize], nj, newsum);
+        block_data.block_means[idx as usize] = block_data.block_means[idx as usize] + newsum;
     }
+
+    println!("block_data.block_means after update: {}", pretty_print!(&block_data.block_means));
 
     block_data.b[column_major_index_from_row_major_index(
         *new_block * block_data.max_n + xnew,
@@ -612,7 +619,7 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResu
                     for xcur in 0..block_data.block_sizes[cur_block as usize] {
                         println!("BEING LOOP xcur: {}", xcur);
                         let delta = find_delta_block(block_data, xcur, &mut xnew, cur_block, &mut new_block).map_err(|e| anyhow!("Failed to find delta block: {}", e))?;
-                        //println!("delta: {}", delta);
+                        println!("delta: {}", delta);
                         if delta < 10.0 && delta > DESIGN_TOL {
 
                             println!("t before exchange: {}", pretty_print!(&block_data.t));

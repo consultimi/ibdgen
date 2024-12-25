@@ -866,11 +866,18 @@ void exchangeBlock(
 		RotateB(vec,tvec,T,k,k,1.0-C); 
 		printMatrix("T after rotate", T, 1, 21);
 
-
-		for (i=0;i<k;i++)
+		printMatrix("BlockMeans before update", blockMeans, 7, 6);
+		for (i=0;i<k;i++) {
+			fprintf(stderr, "Before update: %d xrj[i]: %f xri[i]: %f xmi[i]: %f\n", i, xrj[i], xri[i], xmi[i]);
 			xmi[i]+=(xrj[i]-xri[i])/(double)ni;
-		for (i=0;i<k;i++)
+			//fprintf(stderr, "After update: %d xrj[i]: %f xri[i]: %f xmi[i]: %f\n", i, xrj[i], xri[i], xmi[i]);
+		}
+		for (i=0;i<k;i++) {
+			fprintf(stderr, "Before update: %d xri[i]: %f xrj[i]: %f xmj[i]: %f\n", i, xri[i], xrj[i], xmj[i]);
 			xmj[i]+=(xri[i]-xrj[i])/(double)nj;
+			//fprintf(stderr, "After update: %d xri[i]: %f xrj[i]: %f xmj[i]: %f\n", i, xri[i], xrj[i], xmj[i]);
+		}
+		printMatrix("BlockMeans after update", blockMeans, 7, 6);
 
 		printMatrix("xmi after update", xmi, 1, k);
 		printMatrix("xmj after update", xmj, 1, k);
@@ -2961,8 +2968,13 @@ void BlockOptimize(
 					curBlock=0;
 					repeat {
 						for (xcur=0;xcur<blocksizes[curBlock];xcur++) {
+							printf("BEING LOOP xcur: %d\n", xcur);
 							delta=findDeltaBlockWhole(X,Tip,W,blockMeans,B,nB,nEx,blocksizes,blockFactors,xcur,&xnew,
 								curBlock,&newBlock,k);
+							
+							printf("TEST");
+							printf("delta: %f\n", delta);
+
 							if (10>delta && delta>designTol) {
 								exchangeBlockWhole(T,X,vec,blockMeans,B,blocksizes,blockFactors,xcur,xnew,curBlock,newBlock,nB,k);
 								logDcrit+=log(1+delta);
@@ -2985,6 +2997,8 @@ void BlockOptimize(
 						for (xcur=0;xcur<blocksizes[curBlock];xcur++) {
 							fprintf(stderr, "BEGIN LOOP xcur: %d\n", xcur);
 							delta=findDeltaBlock(tX,tBlockMeans,B,nB,nEx,blocksizes,xcur,&xnew,curBlock,&newBlock,k);
+							fprintf(stderr, "delta: %f\n", delta);
+
 							  /* poor starting designs cause numerical problems resulting in */
 							  /* very large deltas */
 							if (10>delta && delta>designTol) {
