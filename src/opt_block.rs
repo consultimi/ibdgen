@@ -391,10 +391,11 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
     const DELTA_TOL: f64 = 1e-12;  // Minimum improvement threshold
     let mut delta = 0.0;  // Tracks best improvement found
     
-    //println!("find_delta_block called with xcur: {}, xnew: {}, cur_block: {}, new_block: {}", xcur, xnew, cur_block, new_block);
+    println!("find_delta_block called with xcur: {}, xnew: {}, cur_block: {}, new_block: {}", xcur, xnew, cur_block, new_block);
     // Get current point's row number and block size
-    let cur_row_no = block_data.b[(cur_block * block_data.max_n + xcur) as usize] as usize;
-    //println!("cur_row_no: {}", cur_row_no);
+    //let cur_row_no = block_data.b[(cur_block * block_data.max_n + xcur) as usize] as usize;
+    let cur_row_no = block_data.b[column_major_index_from_row_major_index(cur_block * block_data.max_n + xcur, block_data.max_n, block_data.n_b) as usize] as usize;
+    println!("cur_row_no: {}", cur_row_no);
     let ni = block_data.block_sizes[cur_block as usize];
     //println!("transposed block means: {}", &block_data.t_block_means);
 
@@ -402,7 +403,9 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
     let fi = block_data.t_x.row(cur_row_no);
     let fmi = block_data.t_block_means.row(cur_block as usize);
     let b_transpose = block_data.b.transpose();
-    //println!("t_block_means: {}", pretty_print!(&block_data.t_block_means));
+    println!("t_block_means inside find_delta_blocks: {}", pretty_print!(&block_data.t_block_means));
+    println!("b_transpose inside find_delta_blocks: {}", pretty_print!(&b_transpose));
+    println!("b inside find_delta_blocks: {}", pretty_print!(&block_data.b));
     // Loop through all blocks except current
     for i in 0..block_data.n_b {
         if i != cur_block {
@@ -418,7 +421,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
             // Calculate squared distance between block means
             let mut g = 0.0;
             for l in 0..block_data.k {
-                //println!("fmj[{}]: {}, fmi[{}]: {}", l, fmj[l as usize], l, fmi[l as usize]);
+                println!("fmj[{}]: {}, fmi[{}]: {}", l, fmj[l as usize], l, fmi[l as usize]);
                 let dif = fmj[l as usize] - fmi[l as usize];
                 g += dif * dif;
             }
@@ -452,7 +455,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
 
                 // Calculate improvement in criterion
                 let d = -(1.0 + m1i0 * m1i2 - m1i1 * m1i1);
-                //println!("d: {}, i: {}, j: {}", d, i, j);
+                println!("d: {}, i: {}, j: {}", d, i, j);
                 // Update best exchange if improvement is large enough
                 if (d - delta) > DELTA_TOL {
                     delta = d;
@@ -521,11 +524,11 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
     // Update block means
     println!("block_data.k: {}", block_data.k);
     for i in 0..block_data.k {
-        let idx = column_major_index_from_row_major_index(i, block_data.k, block_data.n_b);
+        let idx = column_major_index_from_row_major_index(cur_block * block_data.k + i, block_data.k, block_data.n_b);
         let newsum = (xrj[i as usize] - xri[i as usize]) / ni as f64;
         println!("idx: {}, xrj[i]: {}, xri[i]: {}, ni: {}, newsum: {}", idx, xrj[i as usize], xri[i as usize], ni, newsum);
         block_data.block_means[idx as usize] += newsum;
-        let idx = column_major_index_from_row_major_index(row_no_j as u8 + i as u8, block_data.k, block_data.n_b);
+        let idx = column_major_index_from_row_major_index(*new_block * block_data.k + i, block_data.k, block_data.n_b);
         //let idx = row_no_j as u8 + i as u8;
         let newsum = (xri[i as usize] - xrj[i as usize]) / nj as f64;
         println!("idx: {}, xrj[i]: {}, xri[i]: {}, nj: {}, newsum: {}", idx, xrj[i as usize], xri[i as usize], nj, newsum);
@@ -617,7 +620,7 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResu
                 let mut cur_block = 0;
                 loop {
                     for xcur in 0..block_data.block_sizes[cur_block as usize] {
-                        println!("BEING LOOP xcur: {}", xcur);
+                        println!("BEING LOOP xcur: {}, curBlock: {}, newBlock: {}", xcur, cur_block, new_block);
                         let delta = find_delta_block(block_data, xcur, &mut xnew, cur_block, &mut new_block).map_err(|e| anyhow!("Failed to find delta block: {}", e))?;
                         println!("delta: {}", delta);
                         if delta < 10.0 && delta > DESIGN_TOL {
@@ -642,10 +645,11 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResu
                             
                             // exit the program
                             //std::process::exit(0);
-                            if xcur > 0 {
-                                return Ok(BlockResult { best_log_det: log_det, best_block_array: block_data.b.clone() });
-                            }
+                            
                         }
+                        //if xcur > 0 {
+                        //  break;
+                        //}
                     }
                     if cur_block == block_data.n_b - 1 {
                         break;

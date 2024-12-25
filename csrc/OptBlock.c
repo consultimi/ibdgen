@@ -1414,6 +1414,7 @@ double findDeltaBlock(
 	int rowNo;
 	int iBlock=nB*MAXN;
 
+	fprintf(stderr, "findDeltaBlock called with xcur: %d, curBlock: %d, newBlock: %d\n", xcur, curBlock, *newBlock);
 	//printMatrix("tX", tX, nB, k);
 	//printMatrix("tBlockMeans", tBlockMeans, nB, k);
 	// Initialize geometric coefficients
@@ -1437,7 +1438,7 @@ double findDeltaBlock(
 			// Calculate squared distance between block means
 			g=0;
 			for (l=0;l<k;l++) {
-				//fprintf(stderr, "fmi[%d]: %f, fmj[%d]: %f\n", l, fmi[l], l, fmj[l]);
+				fprintf(stderr, "fmi[%d]: %f, fmj[%d]: %f\n", l, fmi[l], l, fmj[l]);
 				dif=fmj[l]-fmi[l];
 				g+=dif*dif;
 			}
@@ -1467,7 +1468,7 @@ double findDeltaBlock(
 
 				// Calculate improvement in criterion
 				d=-(1+M1i[0]*M1i[2]-M1i[1]*M1i[1]); 
-				//fprintf(stderr, "d: %f, i: %d, j: %d\n", d, i, j);
+				fprintf(stderr, "d: %f, i: %d, j: %d\n", d, i, j);
 
 				// Update best exchange if improvement is large enough
 				if ((d-delta)>deltaTol) {
@@ -2972,7 +2973,6 @@ void BlockOptimize(
 							delta=findDeltaBlockWhole(X,Tip,W,blockMeans,B,nB,nEx,blocksizes,blockFactors,xcur,&xnew,
 								curBlock,&newBlock,k);
 							
-							printf("TEST");
 							printf("delta: %f\n", delta);
 
 							if (10>delta && delta>designTol) {
@@ -2995,7 +2995,7 @@ void BlockOptimize(
 					curBlock=0;
 					repeat {
 						for (xcur=0;xcur<blocksizes[curBlock];xcur++) {
-							fprintf(stderr, "BEGIN LOOP xcur: %d\n", xcur);
+							fprintf(stderr, "BEGIN LOOP xcur: %d curBlock: %d, newBlock: %d\n", xcur, curBlock, newBlock);
 							delta=findDeltaBlock(tX,tBlockMeans,B,nB,nEx,blocksizes,xcur,&xnew,curBlock,&newBlock,k);
 							fprintf(stderr, "delta: %f\n", delta);
 
@@ -3024,12 +3024,12 @@ void BlockOptimize(
 							}
 
 							
-							if (xcur > 0) {
-								break;
-							}
+							//if (xcur > 0) {
+							//	break;
+							//}
 							//R_CheckUserInterrupt();
 						}
-						break;
+						//break;
 					} until(nB<=++curBlock);
 
 					break;
