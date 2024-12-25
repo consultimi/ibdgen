@@ -2097,6 +2097,7 @@ fmi[5]: 0.462910, fmj[5]: 0.462910
 d: -0.428571, i: 3, j: 0
 d: -0.081633, i: 3, j: 1
 d: -0.081633, i: 3, j: 2
+Run `zig build test` to run the tests.
 fmi[0]: 0.000000, fmj[0]: 0.235702
 fmi[1]: 0.239046, fmj[1]: 0.278887
 fmi[2]: 0.048795, fmj[2]: 0.097590
@@ -2171,9 +2172,9 @@ fmi[4]: 0.445435, fmj[4]: 0.178174
 fmi[5]: 0.462910, fmj[5]: 0.617213
 d: -0.428571, i: 5, j: 0
 d: -0.428571, i: 5, j: 1
-Run `zig build test` to run the tests.
 d: -0.000000, i: 5, j: 2
 delta: 0.000000
+logDcrit: 3.137877, logDbest: 0.000000
 out: 0
 All your codebase are s to us.
 Results:

@@ -3036,6 +3036,7 @@ void BlockOptimize(
 				} until(!exchanged);
 			}
 
+			fprintf(stderr, "logDcrit: %f, logDbest: %f\n", logDcrit, logDbest);
 			if (logDcrit>logDbest) {
 				(*iter)++;
 				logDbest=logDcrit;

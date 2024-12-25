@@ -558,7 +558,7 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
 #[derive(Debug)]
 struct BlockResult {
     best_log_det: f64,
-    best_block_array: DMatrix<f64>
+    best_block_array: DMatrix<usize>
 }
 
 // optimize determinant over all blocks using d-criterion
@@ -666,7 +666,7 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResu
 
                 if log_det > best_log_det {
                     best_log_det = log_det;
-                    best_block_array = block_data.b.clone();
+                    best_block_array = block_data.b.clone().try_cast::<usize>().unwrap();
                 }
                 //dbg!(&log_det, &singular);
             }
@@ -770,7 +770,7 @@ pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes:
 
 
     let mut block_result = block_optimize(&mut block_data, n_repeats).map_err(|e| anyhow!("Failed to optimize block: {}", e))?;
-    block_result.best_block_array.apply(|x: &mut f64| { *x += 1.0 });
+    block_result.best_block_array.apply(|x: &mut usize| { *x += 1 });
     println!("block_result: {}", pretty_print!(&block_result.best_block_array));
 
     Ok(())
@@ -1149,9 +1149,9 @@ mod tests {
     fn test_block_optimize() {
         let mut block_data = configure_block_data();
         let block_result = block_optimize(&mut block_data, 1).unwrap();
-        println!("block_result: {}", pretty_print!(&block_result.best_block_array));
+        //println!("block_result: {}", pretty_print!(&block_result.best_block_array.cast::<u8>()));
 
-        assert_eq!(block_result.best_log_det, 2505.0);
+        assert_eq!(block_result.best_log_det, 3.1378770132679095);
     }
 
 }
