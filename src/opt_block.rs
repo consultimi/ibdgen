@@ -4,7 +4,7 @@ use anyhow::*;
 
 const DESIGN_TOL: f64 = 1.0e-10;
 
-const DEBUG: bool = true;
+const DEBUG: bool = false;
 
 macro_rules! debug_println {
     ($($arg:tt)*) => {
@@ -257,8 +257,8 @@ fn initialize_block_array(block_data: &mut BlockData, block_array: &mut Vec<u8>)
 fn permute_b(a: &mut DVector<u8>, n: u8) -> Result<()> {
 
     for i in 1..n {
-        //let rnd = rand::random::<f64>();
-        let rnd = 0.5;
+        let rnd = rand::random::<f64>();
+        //let rnd = 0.5;
         let j = (((1 + i) as f64) * rnd) as i32;
         let temp = a[j as usize];
         a[j as usize] = a[i as usize];

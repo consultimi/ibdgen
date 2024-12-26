@@ -3,6 +3,7 @@ mod opt_block;
 use nalgebra::DMatrix;
 use opt_block::*;
 
+#[allow(unused)]
 fn dm7choose3() -> DMatrix<u8> {
     nalgebra::dmatrix![
         0,0,0,0,0,0;
@@ -15,6 +16,7 @@ fn dm7choose3() -> DMatrix<u8> {
     ]
 }
 
+#[allow(unused)]
 fn dm9choose3() -> DMatrix<u8> {
     nalgebra::dmatrix![
         0,0,0,0,0,0,0,0;
