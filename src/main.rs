@@ -31,6 +31,7 @@ fn dm9choose3() -> DMatrix<u8> {
     ]
 }
 
+#[allow(unused)]
 fn dm12choose4() -> DMatrix<u8> {
     nalgebra::dmatrix![
         0,0,0,0,0,0,0,0,0,0,0;

@@ -268,14 +268,14 @@ fn permute_b(a: &mut DVector<u8>, n: u8) -> Result<()> {
     Ok(())
 }
 
-fn row_major_index_from_column_major_index(column_major_index: usize , width: usize, height: usize) -> usize {
+fn rmi_from_cmi(column_major_index: usize , width: usize, height: usize) -> usize {
     let row = column_major_index % height;
     let column = column_major_index / height;
     return row * width + column;
 }
 
-fn column_major_index_from_row_major_index(row_major_index: usize, width: usize, height: usize) -> usize {
-    return row_major_index_from_column_major_index(row_major_index, height, width);
+fn cmi_from_rmi(row_major_index: usize, width: usize, height: usize) -> usize {
+    return rmi_from_cmi(row_major_index, height, width);
 }
 
 fn no_dup_permute_b(block_data: &mut BlockData, offset: u8, little_n: u8, bs: u8) -> Result<()> {
@@ -288,7 +288,7 @@ fn no_dup_permute_b(block_data: &mut BlockData, offset: u8, little_n: u8, bs: u8
         for i in 0..little_n {
             debug_println!("bs: {}, little_n: {}, offset: {}, i: {}", bs, little_n, offset, i);
             let index = offset * block_data.max_n + i;
-            let cur_val = block_data.b[column_major_index_from_row_major_index(index as usize, block_data.max_n as usize, block_data.n_b as usize) as usize];
+            let cur_val = block_data.b[cmi_from_rmi(index as usize, block_data.max_n as usize, block_data.n_b as usize) as usize];
             //let index = offset * block_data.k + i;
             //debug_println!("index: {}", index);
             //let cur_val = block_data.b[index as usize];
@@ -389,7 +389,7 @@ fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<()> {
                 no_dup_permute_b(block_data, i, j, bs)?;
             }
             let index = (i * block_data.max_n + j) as usize;
-            let column_major_index = column_major_index_from_row_major_index(index, block_data.max_n as usize, block_data.n_b as usize);
+            let column_major_index = cmi_from_rmi(index, block_data.max_n as usize, block_data.n_b as usize);
             //debug_println!("column_major_index: {}, block_data.rows[l as usize]: {}", column_major_index, block_data.rows[l as usize]);
             block_data.b[column_major_index] = block_data.rows[l as usize] as f64;
             l += 1;
@@ -417,7 +417,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
     debug_println!("find_delta_block called with xcur: {}, xnew: {}, cur_block: {}, new_block: {}", xcur, xnew, cur_block, new_block);
     // Get current point's row number and block size
     //let cur_row_no = block_data.b[(cur_block * block_data.max_n + xcur) as usize] as usize;
-    let cur_row_no = block_data.b[column_major_index_from_row_major_index((cur_block * block_data.max_n + xcur) as usize, block_data.max_n as usize, block_data.n_b as usize) as usize] as usize;
+    let cur_row_no = block_data.b[cmi_from_rmi((cur_block * block_data.max_n + xcur) as usize, block_data.max_n as usize, block_data.n_b as usize) as usize] as usize;
     debug_println!("cur_row_no: {}", cur_row_no);
     let ni = block_data.block_sizes[cur_block as usize];
     //debug_println!("transposed block means: {}", &block_data.t_block_means);
@@ -496,7 +496,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
 fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8, new_block: &mut u8) -> Result<()> {
     let mut vec = DVector::zeros(block_data.k as usize);
     //let b_transpose = block_data.b.transpose();
-    let row_no_i = block_data.b[column_major_index_from_row_major_index(
+    let row_no_i = block_data.b[cmi_from_rmi(
         (cur_block * block_data.max_n + xcur) as usize,
         block_data.max_n as usize,
         block_data.n_b as usize
@@ -508,7 +508,7 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
     let xmi = block_data.block_means.row(cur_block as usize);
     //debug_println!("xri: {}\nxmi: {}\nrowNoi: {}", pretty_print!(&xri), pretty_print!(&xmi), row_no_i);
     // Handle normal block exchange case
-    let row_no_j = block_data.b[column_major_index_from_row_major_index(
+    let row_no_j = block_data.b[cmi_from_rmi(
         (*new_block * block_data.max_n + xnew) as usize,
         block_data.max_n as usize,
         block_data.n_b as usize
@@ -547,11 +547,11 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
     // Update block means
     debug_println!("block_data.k: {}", block_data.k);
     for i in 0..block_data.k {
-        let idx = column_major_index_from_row_major_index((cur_block as usize * block_data.k as usize + i as usize) as usize, block_data.k as usize, block_data.n_b as usize);
+        let idx = cmi_from_rmi((cur_block as usize * block_data.k as usize + i as usize) as usize, block_data.k as usize, block_data.n_b as usize);
         let newsum = (xrj[i as usize] - xri[i as usize]) / ni as f64;
         debug_println!("idx: {}, xrj[i]: {}, xri[i]: {}, ni: {}, newsum: {}", idx, xrj[i as usize], xri[i as usize], ni, newsum);
         block_data.block_means[idx as usize] += newsum;
-        let idx = column_major_index_from_row_major_index((*new_block as usize * block_data.k as usize + i as usize) as usize, block_data.k as usize, block_data.n_b as usize);
+        let idx = cmi_from_rmi((*new_block as usize * block_data.k as usize + i as usize) as usize, block_data.k as usize, block_data.n_b as usize);
         //let idx = row_no_j as u8 + i as u8;
         let newsum = (xri[i as usize] - xrj[i as usize]) / nj as f64;
         debug_println!("idx: {}, xrj[i]: {}, xri[i]: {}, nj: {}, newsum: {}", idx, xrj[i as usize], xri[i as usize], nj, newsum);
@@ -560,13 +560,13 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
 
     debug_println!("block_data.block_means after update: {}", pretty_print!(&block_data.block_means));
 
-    block_data.b[column_major_index_from_row_major_index(
+    block_data.b[cmi_from_rmi(
         (*new_block * block_data.max_n + xnew) as usize,
         block_data.max_n as usize,
         block_data.n_b as usize
     ) as usize] = row_no_i as f64;
 
-    block_data.b[column_major_index_from_row_major_index(
+    block_data.b[cmi_from_rmi(
         (cur_block * block_data.max_n + xcur) as usize,
         block_data.max_n as usize,
         block_data.n_b as usize
@@ -863,6 +863,8 @@ mod tests {
         block_data.n_t = block_data.n;
         block_data
     }
+
+    #[allow(unused)]
     fn dm7choose3() -> DMatrix<f64> {
         nalgebra::dmatrix![
             0.0,0.0,0.0,0.0,0.0,0.0;
