@@ -4,12 +4,26 @@ use anyhow::*;
 
 const DESIGN_TOL: f64 = 1.0e-10;
 
+const DEBUG: bool = true;
+
+macro_rules! debug_println {
+    ($($arg:tt)*) => {
+        if DEBUG {
+            println!($($arg)*);
+        }
+    };
+}
+
+
 fn reduce_x_to_t(
     block_data: &mut BlockData
 ) -> (f64, bool) {
     let mut log_det = 0.0;
     let mut p_mx: Vec<f64> = vec![-1e16; block_data.k as usize];
     let mut p_mn: Vec<f64> = vec![1e16; block_data.k as usize];
+
+    // initialise T again
+    block_data.t.fill(0.0);
 
     let mut i = 0;
     let mut block_means = block_data.block_means.clone();
@@ -19,18 +33,20 @@ fn reduce_x_to_t(
         let block_row = b_matrix.row(i as usize);
         let mut j: i32=0;
         for &row_index in block_row.iter() {
-            //println!("Calculating diff for row: {:#?} and block: {:#?}", block_data.x.row(row_index as usize), &block );
+            //debug_println!("Calculating diff for row: {:#?} and block: {:#?}", block_data.x.row(row_index as usize), &block );
             //pretty_print!(&block_data.x.row(row_index as usize));
-            //println!("row : {}",pretty_print!(&block_data.x.row(row_index as usize)));
-            //println!("block means: {}",pretty_print!(&block));
+            //debug_println!("row : {}",pretty_print!(&block_data.x.row(row_index as usize)));
+            //debug_println!("block means: {}",pretty_print!(&block));
             let diff = block_data.x.row(row_index as usize) - &block;
-            //println!("diff: {}",pretty_print!(&diff.transpose()));
+            //debug_println!("diff: {}",pretty_print!(&diff.transpose()));
             get_range_b(&mut p_mx, &mut p_mn, &diff.transpose(), block_data.k as usize);
             // do the rotation. 
             rotate_b(block_data, &diff.transpose(), 1.0);
-            //println!("t not pretty: {}", pretty_print!(&block_data.t.transpose()));
+            //debug_println!("t not pretty: {}", pretty_print!(&block_data.t.transpose()));
             
-            //println!("i: {}, j: {}", i, j);
+            //debug_println!("i: {}, j: {}", i, j);
+            //debug_println!("p_mx: {:?}", &p_mx);
+            //debug_println!("p_mn: {:?}", &p_mn);
             j += 1;
             //diff
         }
@@ -39,20 +55,20 @@ fn reduce_x_to_t(
         //dbg!(&DMatrix::from_rows(&out).row_sum());
         //block.copy_from(&(DMatrix::from_rows(&out).row_sum() / block_data.block_sizes[i as usize] as f64));
         i += 1;
-        //println!("block_data.t: {:#?}", &block_data.t);
+        //debug_println!("block_data.t: {:#?}", &block_data.t);
     };
     //let upper_tri = block_data.x.clone().lu().u();
     //block_data.t = block_data.t.transpose();
-    //println!("t: {}", pretty_print!(&block_data.t));
-    //println!("upper_tri: {:?}", &upper_tri);
+    //debug_println!("t: {}", pretty_print!(&block_data.t));
+    //debug_println!("upper_tri: {:?}", &upper_tri);
     log_det = block_data.t.determinant().ln();
     
-    //println!("log_det: {}", log_det);
-    //println!("p_mx: {:?}", &p_mx);
-    //println!("p_mn: {:?}", &p_mn);
+    //debug_println!("log_det: {}", log_det);
+    //debug_println!("p_mx: {:?}", &p_mx);
+    //debug_println!("p_mn: {:?}", &p_mn);
     //let mut t_cnt = 0;
     
-    //println!("block_data.t diagonal: {}", pretty_print!(&block_data.t.diagonal()));
+    //debug_println!("block_data.t diagonal: {}", pretty_print!(&block_data.t.diagonal()));
     /*
     let diag = block_data.t.diagonal().clone();
     for i in 0..block_data.k {
@@ -61,7 +77,7 @@ fn reduce_x_to_t(
         if t <= 0.0 || t < r * 1e-10 {
             return (0.0, true);
         }
-        println!("t: {}, r: {}", t, r);
+        debug_println!("t: {}, r: {}", t, r);
         log_det += t.ln();
         //t_cnt += (block_data.k - i) as usize;
     }  */
@@ -89,13 +105,14 @@ fn calc_index(i: usize, nc: usize) -> usize {
 }
 
 fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64) {
+
+    debug_println!("rotate_b called with t: {}", pretty_print!(&block_data.t));
     let mut skip: bool = false;
     let mut weight = starting_weight;
     // clone the diff vector
     let mut t_vec = vec.clone();
-    //println!("vec: {:?}", &vec);
-    //println!("t_vec: {:?}", &t_vec);
-    //println!("block_data.t: {}", pretty_print!(&block_data.t.transpose()));
+    //debug_println!("vec: {:?}", &vec);
+    //debug_println!("block_data.t: {}", pretty_print!(&block_data.t.transpose()));
     let mut k_index = 0;
     for i in 0..block_data.k {
         if skip == true {
@@ -108,16 +125,16 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
 
         // d points to the corresponding index in the t (upper triangular) matrix
         k_index = calc_index(i as usize, block_data.k as usize);
-        println!("i: {}, k_index: {}", i, k_index);
+        //debug_println!("i: {}, k_index: {}", i, k_index);
         let d = block_data.t[(k_index) as usize];
-        //println!("d: {}", d);
+        //debug_println!("d: {}", d);
         let dp = d + weight * t_vec[i as usize] * t_vec[i as usize];
         if dp.abs() < TOLROT {
             continue;
         }
         //dbg!(&k_index);
         block_data.t[(k_index) as usize] = dp;
-        //println!("t after set: {}", pretty_print!(&block_data.t));
+        //debug_println!("t after set: {}", pretty_print!(&block_data.t));
         let c = d / dp;
         let s = weight * t_vec[i as usize] / dp;
 
@@ -131,17 +148,20 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
 
         k_index += 1;
         for j in (i+1)..block_data.k {
-            println!("i: {}, j: {}, k_index: {}, s: {}, t_vec[{}]: {}, c: {}, r: {}", i, j, k_index, s, j, t_vec[j as usize], c, block_data.t[k_index]);
+            debug_println!("i: {}, j: {}, k_index: {}, s: {}, t_vec[{}]: {}, c: {}, r: {}", i, j, k_index, s, j, t_vec[j as usize], c, block_data.t[k_index]);
             let r = block_data.t[k_index];
             block_data.t[k_index] = s * t_vec[j as usize] + c * r;
             t_vec[j as usize] -= t_vec[i as usize] * r;
             k_index += 1;
         }
     }
+
+    //debug_println!("t after rotate_b: {}", pretty_print!(&block_data.t));
+
 }
 
 fn make_ti_from_tb(block_data: &mut BlockData) -> Result<f64> {
-    println!("block_data.t (make_ti_from_tb): {}", pretty_print!(&block_data.t));
+    debug_println!("block_data.t (make_ti_from_tb): {}", pretty_print!(&block_data.t));
     //block_data.t_inv = block_data.t.upper_triangle().clone().try_inverse().ok_or(anyhow!("Failed to invert upper triangular matrix"))?;
     let mut t_inv = block_data.t.clone();
     t_inv.fill_diagonal(1.0);
@@ -151,7 +171,7 @@ fn make_ti_from_tb(block_data: &mut BlockData) -> Result<f64> {
     t_inv.set_diagonal(&diag);
     //.pseudo_inverse(1e-10).map_err(|e| anyhow!("Failed to invert upper triangular matrix: {}", e))?;
     
-    //println!("ti: {}", pretty_print!(&block_data.t_inv));
+    //debug_println!("ti: {}", pretty_print!(&block_data.t_inv));
     //let tip = ti.lower_triangle();
     
     // set the lower triangular part of block_data.t to tip
@@ -179,24 +199,24 @@ fn make_ti_from_tb(block_data: &mut BlockData) -> Result<f64> {
         row *= scale_vec[i];
     }
 
-    //println!("scale_vec (make_ti_from_tb): {:?}", &scale_vec);
+    //debug_println!("scale_vec (make_ti_from_tb): {:?}", &scale_vec);
     //t_inv = t_inv.component_mul(&DMatrix::from_diagonal(&scale_vec));
 
-    //println!("block_data.t: {}", pretty_print!(&block_data.t));
+    //debug_println!("block_data.t: {}", pretty_print!(&block_data.t));
     //t_inv = t_inv.transpose();
     let rowtally: Vec<f64> = t_inv.column_iter().map(|x| x.map(|x| x.powi(2)).sum()).collect::<Vec<_>>();
 
     let mut a_var = rowtally.iter().map(|x| x.ln()).sum::<f64>() / block_data.k as f64;
     a_var = a_var.exp();
-    //println!("coltally (make_ti_from_tb): {:?}", &coltally);
+    //debug_println!("coltally (make_ti_from_tb): {:?}", &coltally);
     block_data.t_inv = t_inv;
 
 
     //block_data.t_inv.fill_lower_triangle_with_upper_triangle();
     //block_data.t_inv.fill_upper_triangle_with_lower_triangle();
-    //println!("t_inv (make_ti_from_tb): {}", pretty_print!(&block_data.t_inv));
-    //println!("block_data.t_inv: {}", pretty_print!(&block_data.t_inv));
-    //println!("a_var: {}", block_data.t_inv.variance());
+    //debug_println!("t_inv (make_ti_from_tb): {}", pretty_print!(&block_data.t_inv));
+    //debug_println!("block_data.t_inv: {}", pretty_print!(&block_data.t_inv));
+    //debug_println!("a_var: {}", block_data.t_inv.variance());
     Ok(a_var)
 }
 
@@ -259,18 +279,18 @@ fn column_major_index_from_row_major_index(row_major_index: usize, width: usize,
 }
 
 fn no_dup_permute_b(block_data: &mut BlockData, offset: u8, little_n: u8, bs: u8) -> Result<()> {
-    //println!("no_dup_permute_b called with little_n: {}, bs: {}, block_data.rows: {}, offset: {}", little_n, bs, &block_data.rows, offset);
-    //println!("b: {}", pretty_print!(&block_data.b));
+    //debug_println!("no_dup_permute_b called with little_n: {}, bs: {}, block_data.rows: {}, offset: {}", little_n, bs, &block_data.rows, offset);
+    //debug_println!("b: {}", pretty_print!(&block_data.b));
     loop {
         //dbg!(&block_data.rows);
         let mut nodup = true;
         permute_b(&mut block_data.rows, block_data.n).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
         for i in 0..little_n {
-            println!("bs: {}, little_n: {}, offset: {}, i: {}", bs, little_n, offset, i);
+            debug_println!("bs: {}, little_n: {}, offset: {}, i: {}", bs, little_n, offset, i);
             let index = offset * block_data.max_n + i;
             let cur_val = block_data.b[column_major_index_from_row_major_index(index as usize, block_data.max_n as usize, block_data.n_b as usize) as usize];
             //let index = offset * block_data.k + i;
-            //println!("index: {}", index);
+            //debug_println!("index: {}", index);
             //let cur_val = block_data.b[index as usize];
             for j in 0..(bs - little_n) {
                 if block_data.rows[j as usize] as f64 == cur_val {
@@ -291,7 +311,7 @@ fn no_dup_permute_b(block_data: &mut BlockData, offset: u8, little_n: u8, bs: u8
 }
 
 fn form_block_means(block_data: &mut BlockData) {
-    //println!("block_data.b: {:?}", block_data.b);
+    //debug_println!("block_data.b: {:?}", block_data.b);
     // divide block_data.b into block_data.n_b equal sized blocks of max_n rows
     // block_data.b is a n_b x max_n matrix of row indices from block_data.x
     // block_data.block_means is a n_b x k matrix of block means
@@ -311,7 +331,7 @@ fn form_block_means(block_data: &mut BlockData) {
         block.copy_from(&(DMatrix::from_rows(&out).row_sum() / block_data.block_sizes[i as usize] as f64));
         i += 1;
     };
-    println!("block_means inside form_block_means: {}", pretty_print!(&block_data.block_means));
+    debug_println!("block_means inside form_block_means: {}", pretty_print!(&block_data.block_means));
 
 }
 
@@ -362,20 +382,20 @@ fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<()> {
     let mut l = 0;
     for i in 0..block_data.n_b {
         bs = block_data.block_sizes[i as usize];
-        println!("bs: {}", bs);
+        debug_println!("bs: {}", bs);
         for j in 0..bs {
             if l >= block_data.n_t {
                 l = 0;
                 no_dup_permute_b(block_data, i, j, bs)?;
             }
-            let index = (i * block_data.max_n + j);
-            let column_major_index = column_major_index_from_row_major_index(index as usize, block_data.max_n as usize, block_data.n_b as usize);
-            println!("column_major_index: {}, block_data.rows[l as usize]: {}", column_major_index, block_data.rows[l as usize]);
+            let index = (i * block_data.max_n + j) as usize;
+            let column_major_index = column_major_index_from_row_major_index(index, block_data.max_n as usize, block_data.n_b as usize);
+            //debug_println!("column_major_index: {}, block_data.rows[l as usize]: {}", column_major_index, block_data.rows[l as usize]);
             block_data.b[column_major_index] = block_data.rows[l as usize] as f64;
             l += 1;
         }
     }
-    println!("block_data.b after initialize_b: {}", pretty_print!(&block_data.b));
+    debug_println!("block_data.b after initialize_b: {}", pretty_print!(&block_data.b));
     /*	if (extraBlock) { /* Put the leftover rows in the extra block */
 		for (i=l;i<Nt;i++)
 			B[iBlock++]=rows[i];
@@ -394,21 +414,21 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
     const DELTA_TOL: f64 = 1e-12;  // Minimum improvement threshold
     let mut delta = 0.0;  // Tracks best improvement found
     
-    println!("find_delta_block called with xcur: {}, xnew: {}, cur_block: {}, new_block: {}", xcur, xnew, cur_block, new_block);
+    debug_println!("find_delta_block called with xcur: {}, xnew: {}, cur_block: {}, new_block: {}", xcur, xnew, cur_block, new_block);
     // Get current point's row number and block size
     //let cur_row_no = block_data.b[(cur_block * block_data.max_n + xcur) as usize] as usize;
     let cur_row_no = block_data.b[column_major_index_from_row_major_index((cur_block * block_data.max_n + xcur) as usize, block_data.max_n as usize, block_data.n_b as usize) as usize] as usize;
-    println!("cur_row_no: {}", cur_row_no);
+    debug_println!("cur_row_no: {}", cur_row_no);
     let ni = block_data.block_sizes[cur_block as usize];
-    //println!("transposed block means: {}", &block_data.t_block_means);
+    //debug_println!("transposed block means: {}", &block_data.t_block_means);
 
     // Get pointers to current point and its block mean
     let fi = block_data.t_x.row(cur_row_no);
     let fmi = block_data.t_block_means.row(cur_block as usize);
     let b_transpose = block_data.b.transpose();
-    println!("t_block_means inside find_delta_blocks: {}", pretty_print!(&block_data.t_block_means));
-    println!("b_transpose inside find_delta_blocks: {}", pretty_print!(&b_transpose));
-    println!("b inside find_delta_blocks: {}", pretty_print!(&block_data.b));
+    debug_println!("t_block_means inside find_delta_blocks: {}", pretty_print!(&block_data.t_block_means));
+    debug_println!("b_transpose inside find_delta_blocks: {}", pretty_print!(&b_transpose));
+    debug_println!("b inside find_delta_blocks: {}", pretty_print!(&block_data.b));
     // Loop through all blocks except current
     for i in 0..block_data.n_b {
         if i != cur_block {
@@ -424,7 +444,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
             // Calculate squared distance between block means
             let mut g = 0.0;
             for l in 0..block_data.k {
-                println!("fmj[{}]: {}, fmi[{}]: {}", l, fmj[l as usize], l, fmi[l as usize]);
+                debug_println!("fmj[{}]: {}, fmi[{}]: {}", l, fmj[l as usize], l, fmi[l as usize]);
                 let dif = fmj[l as usize] - fmi[l as usize];
                 g += dif * dif;
             }
@@ -441,7 +461,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
                 
                 // Calculate cross terms between means and points
                 for l in 0..block_data.k {
-                    //println!("row_no: {}, i: {}, j: {}, l: {}, fmi: {}, fmj: {}, fi: {}, fj: {}", row_no, i, j, l, fmi[l as usize], fmj[l as usize], fi[l as usize], fj[l as usize]);
+                    //debug_println!("row_no: {}, i: {}, j: {}, l: {}, fmi: {}, fmj: {}, fi: {}, fj: {}", row_no, i, j, l, fmi[l as usize], fmj[l as usize], fi[l as usize], fj[l as usize]);
 
                     let dif1 = fmj[l as usize] - fmi[l as usize];
                     let dif2 = fj[l as usize] - fi[l as usize];
@@ -458,7 +478,7 @@ fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_blo
 
                 // Calculate improvement in criterion
                 let d = -(1.0 + m1i0 * m1i2 - m1i1 * m1i1);
-                println!("d: {}, i: {}, j: {}", d, i, j);
+                debug_println!("d: {}, i: {}, j: {}", d, i, j);
                 // Update best exchange if improvement is large enough
                 if (d - delta) > DELTA_TOL {
                     delta = d;
@@ -486,7 +506,7 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
     let x_clone = block_data.x.clone();
     let xri = x_clone.row(row_no_i);
     let xmi = block_data.block_means.row(cur_block as usize);
-    //println!("xri: {}\nxmi: {}\nrowNoi: {}", pretty_print!(&xri), pretty_print!(&xmi), row_no_i);
+    //debug_println!("xri: {}\nxmi: {}\nrowNoi: {}", pretty_print!(&xri), pretty_print!(&xmi), row_no_i);
     // Handle normal block exchange case
     let row_no_j = block_data.b[column_major_index_from_row_major_index(
         (*new_block * block_data.max_n + xnew) as usize,
@@ -495,7 +515,7 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
     ) as usize] as usize;
     let xrj = x_clone.row(row_no_j);
     let xmj = block_data.block_means.row(*new_block as usize);
-    println!("xmi: {}\nxmj: {}\nxri: {}\nxrj: {}\nrowNoj: {}", pretty_print!(&xmi), pretty_print!(&xmj), pretty_print!(&xri), pretty_print!(&xrj), row_no_j);
+    debug_println!("xmi: {}\nxmj: {}\nxri: {}\nxrj: {}\nrowNoj: {}", pretty_print!(&xmi), pretty_print!(&xmj), pretty_print!(&xri), pretty_print!(&xrj), row_no_j);
     let nj = block_data.block_sizes[*new_block as usize];
     let c = (ni + nj) as f64 / (ni * nj) as f64;
 
@@ -503,42 +523,42 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
     for i in 0..block_data.k {
         vec[i as usize] = xmj[i as usize] - xmi[i as usize];
     }
-    println!("t before rotate: {}", pretty_print!(&block_data.t));
+    debug_println!("t before rotate: {}", pretty_print!(&block_data.t));
     rotate_b(block_data, &vec, 1.0);
-    println!("t after rotate: {}", pretty_print!(&block_data.t));
+    debug_println!("t after rotate: {}", pretty_print!(&block_data.t));
 
     // vec -= xrj - xri
     for i in 0..block_data.k {
         vec[i as usize] -= xrj[i as usize] - xri[i as usize];
     }
 
-    println!("t before rotate: {}", pretty_print!(&block_data.t));
+    debug_println!("t before rotate: {}", pretty_print!(&block_data.t));
     rotate_b(block_data, &vec, -1.0);
-    println!("t after rotate: {}", pretty_print!(&block_data.t));
+    debug_println!("t after rotate: {}", pretty_print!(&block_data.t));
     // vec = xrj - xri
     for i in 0..block_data.k {
         vec[i as usize] = xrj[i as usize] - xri[i as usize];
     }
-    println!("t before rotate: {}", pretty_print!(&block_data.t));
+    debug_println!("t before rotate: {}", pretty_print!(&block_data.t));
     rotate_b(block_data, &vec, 1.0 - c);
-    println!("t after rotate: {}", pretty_print!(&block_data.t));
+    debug_println!("t after rotate: {}", pretty_print!(&block_data.t));
 
-    println!("block_data.block_means before update: {}", pretty_print!(&block_data.block_means));
+    debug_println!("block_data.block_means before update: {}", pretty_print!(&block_data.block_means));
     // Update block means
-    println!("block_data.k: {}", block_data.k);
+    debug_println!("block_data.k: {}", block_data.k);
     for i in 0..block_data.k {
-        let idx = column_major_index_from_row_major_index((cur_block * block_data.k + i) as usize, block_data.k as usize, block_data.n_b as usize);
+        let idx = column_major_index_from_row_major_index((cur_block as usize * block_data.k as usize + i as usize) as usize, block_data.k as usize, block_data.n_b as usize);
         let newsum = (xrj[i as usize] - xri[i as usize]) / ni as f64;
-        println!("idx: {}, xrj[i]: {}, xri[i]: {}, ni: {}, newsum: {}", idx, xrj[i as usize], xri[i as usize], ni, newsum);
+        debug_println!("idx: {}, xrj[i]: {}, xri[i]: {}, ni: {}, newsum: {}", idx, xrj[i as usize], xri[i as usize], ni, newsum);
         block_data.block_means[idx as usize] += newsum;
         let idx = column_major_index_from_row_major_index((*new_block as usize * block_data.k as usize + i as usize) as usize, block_data.k as usize, block_data.n_b as usize);
         //let idx = row_no_j as u8 + i as u8;
         let newsum = (xri[i as usize] - xrj[i as usize]) / nj as f64;
-        println!("idx: {}, xrj[i]: {}, xri[i]: {}, nj: {}, newsum: {}", idx, xrj[i as usize], xri[i as usize], nj, newsum);
+        debug_println!("idx: {}, xrj[i]: {}, xri[i]: {}, nj: {}, newsum: {}", idx, xrj[i as usize], xri[i as usize], nj, newsum);
         block_data.block_means[idx as usize] = block_data.block_means[idx as usize] + newsum;
     }
 
-    println!("block_data.block_means after update: {}", pretty_print!(&block_data.block_means));
+    debug_println!("block_data.block_means after update: {}", pretty_print!(&block_data.block_means));
 
     block_data.b[column_major_index_from_row_major_index(
         (*new_block * block_data.max_n + xnew) as usize,
@@ -558,32 +578,13 @@ fn exchange_block(block_data: &mut BlockData, xcur: u8, xnew: u8, cur_block: u8,
 #[derive(Debug)]
 struct BlockResult {
     best_log_det: f64,
-    best_block_array: DMatrix<usize>
+    best_block_array: DMatrix<usize>,
+    best_d: f64,
+    best_diagonality: f64
 }
 
 // optimize determinant over all blocks using d-criterion
 fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResult> {
-    /*
-	int		*B, //  an nB x MAXN array of rows of X allocated to the nB blocks, -1 is used to fill blocks up to MAXN. N-nB*MAXN ints are added to hold the extra block when N is greater then the sum of the block sizes.
-	double  *blockMeans, // nB x k matrix of block means
-	double  *tBlockMeans, // transformed block means
-	double  *T, // X'X=T'T, with T upper triangualar (has scale values on diagonal)
-	double  *Tip, // T inverse (multiplied by scale values)
-	double  *W, // k*(k+1)/2 scratch matrix
-	double  *vec, // scratch 2*k element vector
-	double  *Sc, // scratch 2*k element vector
-	int		*rows, // rows to use
-	int		*irows,
-	int		N,
-	int		Nxb,
-	int		k,
-	int		nEx,
-	double  *D,
-	double  *diagonality, 
-	int     *BlockArray, // array of row numbers from X arranged in nB blocks
-	int     *iter,
-	int     *error
-     */
 
     let mut tip: DMatrix<f64> = DMatrix::zeros(block_data.n as usize, block_data.k as usize);
     let mut w: DMatrix<f64> = DMatrix::zeros(block_data.k as usize * (block_data.k as usize + 1) / 2, 1);
@@ -602,49 +603,60 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResu
     initialize_block_array(block_data, &mut block_array).map_err(|e| anyhow!("Failed to initialize block array: {}", e))?;
 
     for repeat_num in 0..n_repeats {
+        println!("REPEAT NUMBER: {}", repeat_num);
+        debug_println!("t_inv after beginning of loop: {}", pretty_print!(&block_data.t_inv));
+        debug_println!("t after first beginning of loop: {}", pretty_print!(&block_data.t));
+        debug_println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
+        debug_println!("block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
+        debug_println!("block_data.block_means: {}", pretty_print!(&block_data.block_means));
+        debug_println!("block_data.b: {}", pretty_print!(&block_data.b));
+
         initialize_b(block_data,  repeat_num == 0).map_err(|e| anyhow!("Failed to initialize b: {}", e))?;
+
+        debug_println!("block_data.b after initialize_b: {}", pretty_print!(&block_data.b));
+
         //dbg!(&block_data.b);
         form_block_means(block_data);
         let (mut log_det, singular) = reduce_x_to_t(block_data);
         if singular {
             return Err(anyhow!("Singular matrix"));
         } else {
-            println!("t_inv before first make_ti_from_tb: {}", pretty_print!(&block_data.t_inv));
+            debug_println!("t_inv before first make_ti_from_tb: {}", pretty_print!(&block_data.t_inv));
             av_var = make_ti_from_tb(block_data).map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
-            println!("t_inv after first make_ti_from_tb: {}", pretty_print!(&block_data.t_inv));
-            println!("t after first make_ti_from_tb: {}", pretty_print!(&block_data.t));
+            debug_println!("t_inv after first make_ti_from_tb: {}", pretty_print!(&block_data.t_inv));
+            debug_println!("t after first make_ti_from_tb: {}", pretty_print!(&block_data.t));
             block_data.t_x = block_data.x.clone() * block_data.t_inv.transpose().clone();
             block_data.t_block_means = block_data.block_means.clone() * block_data.t_inv.transpose().clone();
 
-            //println!("420 block_data.t_x: {}", pretty_print!(&block_data.t_x));
-            //println!("421block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
+            //debug_println!("420 block_data.t_x: {}", pretty_print!(&block_data.t_x));
+            //debug_println!("421block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
             loop {  
                 let mut exchanged = false;
                 let mut cur_block = 0;
                 loop {
                     for xcur in 0..block_data.block_sizes[cur_block as usize] {
-                        println!("BEING LOOP xcur: {}, curBlock: {}, newBlock: {}", xcur, cur_block, new_block);
+                        debug_println!("BEING LOOP xcur: {}, curBlock: {}, newBlock: {}", xcur, cur_block, new_block);
                         let delta = find_delta_block(block_data, xcur, &mut xnew, cur_block, &mut new_block).map_err(|e| anyhow!("Failed to find delta block: {}", e))?;
-                        println!("delta: {}", delta);
+                        debug_println!("delta: {}", delta);
                         if delta < 10.0 && delta > DESIGN_TOL {
 
-                            println!("t before exchange: {}", pretty_print!(&block_data.t));
-                            println!("t_inv before exchange: {}", pretty_print!(&block_data.t_inv));
+                            debug_println!("t before exchange: {}", pretty_print!(&block_data.t));
+                            debug_println!("t_inv before exchange: {}", pretty_print!(&block_data.t_inv));
                             exchange_block(block_data, xcur, xnew, cur_block, &mut new_block).map_err(|e| anyhow!("Failed to exchange block: {}", e))?;
-                            println!("t_inv after exchange: {}", pretty_print!(&block_data.t_inv));
+                            debug_println!("t_inv after exchange: {}", pretty_print!(&block_data.t_inv));
                             exchanged = true;
                             log_det += (1.0 + delta).ln();      
                             av_var = make_ti_from_tb(block_data).map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
-                            println!("t_inv after make_ti_from_tb: {}", pretty_print!(&block_data.t_inv));
-                            println!("t after make_ti_from_tb: {}", pretty_print!(&block_data.t));
+                            debug_println!("t_inv after make_ti_from_tb: {}", pretty_print!(&block_data.t_inv));
+                            debug_println!("t after make_ti_from_tb: {}", pretty_print!(&block_data.t));
 
                             //transform(block_data)?;
                             block_data.t_x = block_data.x.clone() * block_data.t_inv.transpose().clone();
                             block_data.t_block_means = block_data.block_means.clone() * block_data.t_inv.transpose().clone();
 
-                            println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
-                            println!("block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
-                            println!("block_data.block_means: {}", pretty_print!(&block_data.block_means));
+                            debug_println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
+                            debug_println!("block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
+                            debug_println!("block_data.block_means: {}", pretty_print!(&block_data.block_means));
                             
                             // exit the program
                             //std::process::exit(0);
@@ -667,14 +679,22 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResu
                 if log_det > best_log_det {
                     best_log_det = log_det;
                     best_block_array = block_data.b.clone().try_cast::<usize>().unwrap();
+
                 }
                 //dbg!(&log_det, &singular);
             }
         }
     }
-    println!("best_log_det: {}", best_log_det);
-    println!("best_block_array: {}", best_block_array);
-    Ok(BlockResult { best_log_det, best_block_array })
+
+    debug_println!("best_log_det: {}", best_log_det);
+    println!("block_data.k: {}", block_data.k);
+    println!("block_data.n_xb: {}", block_data.n_xb);
+    // 	*D=exp(logDbest/(double)k)/(double)Nxb;
+    let best_d = (best_log_det / block_data.k as f64).exp() / block_data.n_xb as f64;
+    let best_diagonality = 1.0 / (best_d * av_var * block_data.n_xb as f64);
+    debug_println!("best_log_det: {}", best_log_det);
+    debug_println!("best_block_array: {}", best_block_array);
+    Ok(BlockResult { best_log_det, best_block_array, best_d, best_diagonality })
 }
 
 #[derive(Debug)]
@@ -742,9 +762,9 @@ pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes:
     block_data.t_inv = DMatrix::zeros(block_data.k as usize, block_data.k as usize);
     block_data.n_repeat_counts = n_repeats;
     block_data.max_n = *block_sizes.iter().max().unwrap();
+    block_data.block_sizes = block_sizes;
     block_data.n_xb = block_data.block_sizes.iter().sum();
     block_data.n_b = n_b;
-    block_data.block_sizes = block_sizes;
     if let Some(rows) = rows {
         block_data.init_rows = true;
         block_data.rows = rows.into();
@@ -769,10 +789,49 @@ pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes:
     //dbg!(&block_data);
 
 
-    let mut block_result = block_optimize(&mut block_data, n_repeats).map_err(|e| anyhow!("Failed to optimize block: {}", e))?;
-    block_result.best_block_array.apply(|x: &mut usize| { *x += 1 });
+    let block_result = block_optimize(&mut block_data, n_repeats).map_err(|e| anyhow!("Failed to optimize block: {}", e))?;
+    //block_result.best_block_array.apply(|x: &mut usize| { *x += 1 });
     println!("block_result: {}", pretty_print!(&block_result.best_block_array));
+    println!("block_result.best_log_det: {}", block_result.best_log_det);
+    println!("block_result.best_d: {}", block_result.best_d);
+    println!("block_result.best_diagonality: {}", block_result.best_diagonality);
+    // Create coincidence matrix to store pairwise counts
+    let n = block_data.n as usize;
+    let mut coincidence: DMatrix<usize> = DMatrix::zeros(n, n);
+    //debug_println!("coincidence: {}", pretty_print!(&coincidence));
+    // For each block, count coincidences between all pairs of elements
+    for block_idx in 0..block_data.n_b as usize {
+        let block_size = block_data.block_sizes[block_idx] as usize;
+        
+        // Get elements in this block
+        //let block_elements: Vec<usize> = (0..block_size)
+        //    .map(|i| block_result.best_block_array[block_idx * block_data.max_n as usize + i])
+        //    .collect();
 
+        let block_elements = block_result.best_block_array.row(block_idx);
+        //debug_println!("block_elements: {:?}", &block_elements);
+        // Update coincidence matrix
+        for i in 0..block_size {
+            let elem_i = block_elements[i];
+            // Diagonal counts total appearances
+            coincidence[(elem_i, elem_i)] += 1;
+            
+            // Upper triangle counts pairwise coincidences
+            for j in (i+1)..block_size {
+                
+                let elem_j = block_elements[j];
+                debug_println!("i: {}, j: {}, elem_i: {}, elem_j: {}", i, j, elem_i, elem_j);
+                if elem_i < elem_j {
+                    coincidence[(elem_i, elem_j)] += 1;
+                } else {
+                    coincidence[(elem_j, elem_i)] += 1;
+                }
+            }
+        }
+    }
+
+    println!("Coincidence matrix:");
+    println!("{}", coincidence);
     Ok(())
 }
 
@@ -837,7 +896,7 @@ mod tests {
             3.0,6.0,1.0;
             5.0,4.0,2.0;
         ];
-        println!("block_data.b: {}", pretty_print!(&block_data.b));
+        debug_println!("block_data.b: {}", pretty_print!(&block_data.b));
         assert_eq!(block_data.b, expected);
     }
 
@@ -855,7 +914,7 @@ mod tests {
             5.0,4.0,2.0;
         ];
         form_block_means(&mut block_data);
-        println!("block_data.block_means: {}", pretty_print!(&block_data.block_means));
+        debug_println!("block_data.block_means: {}", pretty_print!(&block_data.block_means));
 
 
         let expected = nalgebra::dmatrix![
@@ -949,7 +1008,7 @@ mod tests {
         ];
         let (log_det, singular) = reduce_x_to_t(&mut block_data);
 
-        println!("T: {}", pretty_print!(&block_data.t));
+        debug_println!("T: {}", pretty_print!(&block_data.t));
 
         let mut expected_t = nalgebra::dmatrix![
             2.000000, -0.166667, -0.333333, 0.000000,   0.000000, -0.333333;
@@ -1045,7 +1104,7 @@ mod tests {
         expected_t_block_means.apply(|x: &mut f64| { *x = (*x * 1000.0).round() });
         block_data.t_block_means.apply(|x: &mut f64| { *x = (*x * 1000.0).round() });
 
-        println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
+        debug_println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
         assert_eq!(block_data.t_x, expected_t_x);
         assert_eq!(block_data.t_block_means, expected_t_block_means);
 
@@ -1093,8 +1152,8 @@ mod tests {
         ];
         let mut new_block = 0;
         let mut x_new = 0;
-        println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
-        println!("block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
+        debug_println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
+        debug_println!("block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
         //find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8)  
         find_delta_block(&mut block_data, 0, &mut x_new, 0, &mut new_block).unwrap();
         assert_eq!(new_block, 1);
@@ -1140,7 +1199,7 @@ mod tests {
 
 
         exchange_block(&mut block_data, xcur, xnew, cur_block, &mut new_block).unwrap();
-        println!("block_data.b: {}", pretty_print!(&block_data.b));
+        debug_println!("block_data.b: {}", pretty_print!(&block_data.b));
 
         assert_eq!(block_data.b, expected_b);
     }
@@ -1148,8 +1207,8 @@ mod tests {
     #[test]
     fn test_block_optimize() {
         let mut block_data = configure_block_data();
-        let block_result = block_optimize(&mut block_data, 1).unwrap();
-        //println!("block_result: {}", pretty_print!(&block_result.best_block_array.cast::<u8>()));
+        let block_result = block_optimize(&mut block_data, 5).unwrap();
+        //debug_println!("block_result: {}", pretty_print!(&block_result.best_block_array.cast::<u8>()));
 
         assert_eq!(block_result.best_log_det, 3.1378770132679095);
     }

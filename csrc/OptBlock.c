@@ -124,7 +124,7 @@ void RotateB(
 				continue;
 				
 			d=matrixXY[kIndex=Imat(i,i)];
-			//fprintf(stderr,"i: %d, kIndex: %d, d: %2.2f, x: %2.2f\n", i, kIndex, d, x);
+			fprintf(stderr,"i: %d, kIndex: %d, d: %2.2f, x: %2.2f\n", i, kIndex, d, x);
 			dp=d+weight*x*x;
 			if (fabs(dp)<TOLROT)
 				continue; 
@@ -325,11 +325,13 @@ double reduceXtoT(
 				}
 			}
 			getRangeB(pMx,pMn,vec,k);
-			//printMatrix("T before", T, k, k);
+			printMatrix("T before", T, (k*(k+1))/2, 1);
 			RotateB(vec,tvec,T,k,k,1.0);  
-			//printMatrix("T after", T, k, k);
+			printMatrix("T after", T, (k*(k+1))/2, 1);
 
-			//fprintf(stderr,"i: %d, j: %d\n", i, j);
+			fprintf(stderr,"i: %d, j: %d\n", i, j);
+			//printMatrix("pMx", pMx, 1, k);
+			//printMatrix("pMn", pMn, 1, k);
 		}
 	}
 
@@ -1414,7 +1416,7 @@ double findDeltaBlock(
 	int rowNo;
 	int iBlock=nB*MAXN;
 
-	fprintf(stderr, "findDeltaBlock called with xcur: %d, curBlock: %d, newBlock: %d\n", xcur, curBlock, *newBlock);
+	fprintf(stderr, "findDeltaBlock called with xcur: %d, xnew: %d, curBlock: %d, newBlock: %d\n", xcur, *xnew, curBlock, *newBlock);
 	//printMatrix("tX", tX, nB, k);
 	//printMatrix("tBlockMeans", tBlockMeans, nB, k);
 	// Initialize geometric coefficients
@@ -1438,7 +1440,7 @@ double findDeltaBlock(
 			// Calculate squared distance between block means
 			g=0;
 			for (l=0;l<k;l++) {
-				fprintf(stderr, "fmi[%d]: %f, fmj[%d]: %f\n", l, fmi[l], l, fmj[l]);
+				//fprintf(stderr, "fmi[%d]: %f, fmj[%d]: %f\n", l, fmi[l], l, fmj[l]);
 				dif=fmj[l]-fmi[l];
 				g+=dif*dif;
 			}
@@ -2953,7 +2955,13 @@ void BlockOptimize(
 	initializeBlockArray(rows,irows,N,Nxb,nB,blocksizes,BlockArray);
 	*iter=0;
 	repeat{
+		fprintf(stderr, "REPEAT NUMBER: %d\n", nRepeatCounts);
+		printMatrix("T beginning of repeat", T, 1, Nxb);
+		printMatrixInt("B beginning of repeat", B, 1, Nxb);
+
+
 		initializeB(B,rows,irows,N,Nxb,nB,blocksizes,nRepeatCounts==nRepeats);
+		printMatrixInt("B after initializeB", B, 1, Nxb);
 
 		formBlockMeans(blockMeans,X,B,k,nB,blocksizes);
 
@@ -3032,7 +3040,7 @@ void BlockOptimize(
 						//break;
 					} until(nB<=++curBlock);
 
-					break;
+					//break;
 				} until(!exchanged);
 			}
 
@@ -3054,7 +3062,7 @@ void BlockOptimize(
 		else 
 			countSingular++;
 
-		break;
+		//break;
 	}until(!(--nRepeatCounts)); 
 
 	if (countSingular==nRepeats)
@@ -3585,9 +3593,10 @@ int BlockOpt(
     printf("Error code: %d\n", error);
     
     printf("\nBlock assignments:\n");
-    for (int i = 0; i < Nxb; i++) {
-        printf("%d ", BlockArray[i]);
-    }
+    //for (int i = 0; i < Nxb; i++) {
+    //    printf("%d ", BlockArray[i]);
+    //}
+	printMatrixInt("Block assignments",BlockArray, nB, blocksizes[0]);
     printf("\n");
 
     // Clean up
