@@ -18,70 +18,25 @@ macro_rules! debug_println {
 fn reduce_x_to_t(
     block_data: &mut BlockData
 ) -> (f64, bool) {
-    let mut log_det = 0.0;
     let mut p_mx: Vec<f64> = vec![-1e16; block_data.k as usize];
     let mut p_mn: Vec<f64> = vec![1e16; block_data.k as usize];
 
-    // initialise T again
+    // initialise T
     block_data.t.fill(0.0);
-
     let mut i = 0;
     let mut block_means = block_data.block_means.clone();
     let b_matrix = block_data.b.clone();
     for block in block_means.row_iter_mut() {
         //dbg!(&block);
         let block_row = b_matrix.row(i as usize);
-        let mut j: i32=0;
         for &row_index in block_row.iter() {
-            //debug_println!("Calculating diff for row: {:#?} and block: {:#?}", block_data.x.row(row_index as usize), &block );
-            //pretty_print!(&block_data.x.row(row_index as usize));
-            //debug_println!("row : {}",pretty_print!(&block_data.x.row(row_index as usize)));
-            //debug_println!("block means: {}",pretty_print!(&block));
             let diff = block_data.x.row(row_index as usize) - &block;
-            //debug_println!("diff: {}",pretty_print!(&diff.transpose()));
             get_range_b(&mut p_mx, &mut p_mn, &diff.transpose(), block_data.k as usize);
-            // do the rotation. 
             rotate_b(block_data, &diff.transpose(), 1.0);
-            //debug_println!("t not pretty: {}", pretty_print!(&block_data.t.transpose()));
-            
-            //debug_println!("i: {}, j: {}", i, j);
-            //debug_println!("p_mx: {:?}", &p_mx);
-            //debug_println!("p_mn: {:?}", &p_mn);
-            j += 1;
-            //diff
         }
-        //dbg!(&block);
-        
-        //dbg!(&DMatrix::from_rows(&out).row_sum());
-        //block.copy_from(&(DMatrix::from_rows(&out).row_sum() / block_data.block_sizes[i as usize] as f64));
         i += 1;
-        //debug_println!("block_data.t: {:#?}", &block_data.t);
     };
-    //let upper_tri = block_data.x.clone().lu().u();
-    //block_data.t = block_data.t.transpose();
-    //debug_println!("t: {}", pretty_print!(&block_data.t));
-    //debug_println!("upper_tri: {:?}", &upper_tri);
-    log_det = block_data.t.determinant().ln();
-    
-    //debug_println!("log_det: {}", log_det);
-    //debug_println!("p_mx: {:?}", &p_mx);
-    //debug_println!("p_mn: {:?}", &p_mn);
-    //let mut t_cnt = 0;
-    
-    //debug_println!("block_data.t diagonal: {}", pretty_print!(&block_data.t.diagonal()));
-    /*
-    let diag = block_data.t.diagonal().clone();
-    for i in 0..block_data.k {
-        let r = (p_mx[i as usize] + p_mn[i as usize]) / 2.0;
-        let t = diag[i as usize];
-        if t <= 0.0 || t < r * 1e-10 {
-            return (0.0, true);
-        }
-        debug_println!("t: {}, r: {}", t, r);
-        log_det += t.ln();
-        //t_cnt += (block_data.k - i) as usize;
-    }  */
-
+    let log_det = block_data.t.determinant().ln();
     (log_det, false)
 }
 
@@ -113,7 +68,7 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
     let mut t_vec = vec.clone();
     //debug_println!("vec: {:?}", &vec);
     //debug_println!("block_data.t: {}", pretty_print!(&block_data.t.transpose()));
-    let mut k_index = 0;
+    //let mut k_index = 0;
     for i in 0..block_data.k {
         if skip == true {
             break;
@@ -124,7 +79,7 @@ fn rotate_b(block_data: &mut BlockData, vec: &DVector<f64>, starting_weight: f64
         }
 
         // d points to the corresponding index in the t (upper triangular) matrix
-        k_index = calc_index(i as usize, block_data.k as usize);
+        let mut k_index = calc_index(i as usize, block_data.k as usize);
         //debug_println!("i: {}, k_index: {}", i, k_index);
         let d = block_data.t[(k_index) as usize];
         //debug_println!("d: {}", d);
@@ -311,39 +266,23 @@ fn no_dup_permute_b(block_data: &mut BlockData, offset: u8, little_n: u8, bs: u8
 }
 
 fn form_block_means(block_data: &mut BlockData) {
-    //debug_println!("block_data.b: {:?}", block_data.b);
     // divide block_data.b into block_data.n_b equal sized blocks of max_n rows
     // block_data.b is a n_b x max_n matrix of row indices from block_data.x
     // block_data.block_means is a n_b x k matrix of block means
 
-    //block_data.block_means.fill(0.0);
-
     let mut i = 0;
     for mut block in block_data.block_means.row_iter_mut() {
-        //dbg!(&block);
         let block_row = block_data.b.row(i as usize);
         let out: Vec<_> = block_row.iter().map(|&row_index| {
             block_data.x.row(row_index as usize)
         }).collect();
-        //dbg!(&out_mat.row_sum());
-        
-        //dbg!(&DMatrix::from_rows(&out).row_sum());
         block.copy_from(&(DMatrix::from_rows(&out).row_sum() / block_data.block_sizes[i as usize] as f64));
         i += 1;
     };
     debug_println!("block_means inside form_block_means: {}", pretty_print!(&block_data.block_means));
-
 }
 
 fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<()> {
-
-    //let mut i = 0;
-    let j = 0;
-    let l = 0;
-    let mut bs = 0;
-    let i_block = block_data.n_b * block_data.max_n;
-    let mut t = 0;
-
 
     for i in 0..block_data.n_t {
         block_data.rows[i as usize] = i;
@@ -351,7 +290,7 @@ fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<()> {
 
     if block_data.init_rows {
         for i in 0..block_data.n_xb {
-            t = block_data.rows[i as usize];
+            let t = block_data.rows[i as usize];
             block_data.rows[i as usize] = block_data.irows[i as usize];
             block_data.rows[block_data.irows[i as usize] as usize] = t;
         }
@@ -368,20 +307,9 @@ fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<()> {
         block_data.b[i as usize] = -1.0;
     }
 
-    /*l=0;
-	for (i=0;i<nB;i++) {
-		bs=blocksizes[i];
-		for (j=0;j<bs;j++) {
-			if (l>=Nt) {
-				l=0;
-				NoDupPermuteB(rows,N,B+IB(i,0),j,bs);
-			}
-			B[IB(i,j)]=rows[l++];
-		}
-	} */
     let mut l = 0;
     for i in 0..block_data.n_b {
-        bs = block_data.block_sizes[i as usize];
+        let bs = block_data.block_sizes[i as usize];
         debug_println!("bs: {}", bs);
         for j in 0..bs {
             if l >= block_data.n_t {
@@ -396,18 +324,7 @@ fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<()> {
         }
     }
     debug_println!("block_data.b after initialize_b: {}", pretty_print!(&block_data.b));
-    /*	if (extraBlock) { /* Put the leftover rows in the extra block */
-		for (i=l;i<Nt;i++)
-			B[iBlock++]=rows[i];
-	} */
-    if block_data.extra_block {
-        for i in l..block_data.n_t {
-            block_data.b[(i_block + i) as usize] = block_data.rows[i as usize] as f64;
-        }
-    }
-
     Ok(())
-
 }
 
 fn find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8) -> Result<f64> {
@@ -586,16 +503,9 @@ struct BlockResult {
 // optimize determinant over all blocks using d-criterion
 fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResult> {
 
-    let tip: DMatrix<f64> = DMatrix::zeros(block_data.n as usize, block_data.k as usize);
-    let w: DMatrix<f64> = DMatrix::zeros(block_data.k as usize * (block_data.k as usize + 1) / 2, 1);
-    let vec: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
-    let sc: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
     let mut block_array: Vec<u8> = vec![0; block_data.n_b as usize * (*block_data.block_sizes.iter().max().unwrap()) as usize];
-    let var = 0.0;
     let mut best_log_det = 0.0;
     let mut best_block_array = DMatrix::zeros(block_data.n_b as usize, block_data.max_n as usize);
-    //let mut log_det = 0.0;
-    let singular = false;
     let mut xnew = 0;
     let mut new_block = 0;
     let mut av_var = 0.0;
@@ -657,14 +567,7 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResu
                             debug_println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
                             debug_println!("block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
                             debug_println!("block_data.block_means: {}", pretty_print!(&block_data.block_means));
-                            
-                            // exit the program
-                            //std::process::exit(0);
-                            
                         }
-                        //if xcur > 0 {
-                        //  break;
-                        //}
                     }
                     if cur_block == block_data.n_b - 1 {
                         break;
@@ -681,7 +584,6 @@ fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResu
                     best_block_array = block_data.b.clone().try_cast::<usize>().unwrap();
 
                 }
-                //dbg!(&log_det, &singular);
             }
         }
     }
@@ -750,6 +652,32 @@ impl BlockData {
     }
 }
 
+fn create_coincidence_matrix(block_data: &BlockData, block_result: &BlockResult) -> DMatrix<usize> {
+    let mut coincidence: DMatrix<usize> = DMatrix::zeros(block_data.n as usize, block_data.n as usize);
+    for block_idx in 0..block_data.n_b as usize {
+        let block_size = block_data.block_sizes[block_idx] as usize;
+        let block_elements = block_result.best_block_array.row(block_idx);
+        for i in 0..block_size {
+            let elem_i = block_elements[i];
+            // Diagonal counts total appearances
+            coincidence[(elem_i, elem_i)] += 1;
+            
+            // Upper triangle counts pairwise coincidences
+            for j in (i+1)..block_size {
+                
+                let elem_j = block_elements[j];
+                debug_println!("i: {}, j: {}, elem_i: {}, elem_j: {}", i, j, elem_i, elem_j);
+                if elem_i < elem_j {
+                    coincidence[(elem_i, elem_j)] += 1;
+                } else {
+                    coincidence[(elem_j, elem_i)] += 1;
+                }
+            }
+        }
+    }
+
+    coincidence
+}
 pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes: Vec<u8>,  n_repeats: u8) -> Result<()> {
     
     let mut block_data = BlockData::new();
@@ -776,59 +704,19 @@ pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes:
 
 
     block_data.extra_block = if block_data.n_xb < block_data.n { true } else { false };
-    //block_data.x = block_data.x.transpose();
     block_data.n_t = if block_data.init_rows { block_data.n_xb } else { block_data.n };
     
-    /*
-    if do_whole_block == true {
-        if let Some(block_factors) = block_factors {
-            block_data.block_factors = Some(block_factors.transpose());
-        }
-    } */
-
-    //dbg!(&block_data);
-
-
     let block_result = block_optimize(&mut block_data, n_repeats).map_err(|e| anyhow!("Failed to optimize block: {}", e))?;
-    //block_result.best_block_array.apply(|x: &mut usize| { *x += 1 });
-    println!("block_result: {}", pretty_print!(&block_result.best_block_array));
+    println!("block_result: {}", pretty_print!(&block_result.best_block_array.add_scalar(1)));
     println!("block_result.best_log_det: {}", block_result.best_log_det);
     println!("block_result.best_d: {}", block_result.best_d);
     println!("block_result.best_diagonality: {}", block_result.best_diagonality);
     // Create coincidence matrix to store pairwise counts
-    let n = block_data.n as usize;
-    let mut coincidence: DMatrix<usize> = DMatrix::zeros(n, n);
+    
+    let coincidence = create_coincidence_matrix(&block_data, &block_result);
     //debug_println!("coincidence: {}", pretty_print!(&coincidence));
     // For each block, count coincidences between all pairs of elements
-    for block_idx in 0..block_data.n_b as usize {
-        let block_size = block_data.block_sizes[block_idx] as usize;
-        
-        // Get elements in this block
-        //let block_elements: Vec<usize> = (0..block_size)
-        //    .map(|i| block_result.best_block_array[block_idx * block_data.max_n as usize + i])
-        //    .collect();
-
-        let block_elements = block_result.best_block_array.row(block_idx);
-        //debug_println!("block_elements: {:?}", &block_elements);
-        // Update coincidence matrix
-        for i in 0..block_size {
-            let elem_i = block_elements[i];
-            // Diagonal counts total appearances
-            coincidence[(elem_i, elem_i)] += 1;
-            
-            // Upper triangle counts pairwise coincidences
-            for j in (i+1)..block_size {
-                
-                let elem_j = block_elements[j];
-                debug_println!("i: {}, j: {}, elem_i: {}, elem_j: {}", i, j, elem_i, elem_j);
-                if elem_i < elem_j {
-                    coincidence[(elem_i, elem_j)] += 1;
-                } else {
-                    coincidence[(elem_j, elem_i)] += 1;
-                }
-            }
-        }
-    }
+    
 
     println!("Coincidence matrix:");
     println!("{}", coincidence);
@@ -840,6 +728,7 @@ pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes:
 mod tests {
     use super::*;
 
+    #[allow(unused)]
     fn configure_block_data() -> BlockData {
         let mut block_data = BlockData::new();
         let x_i = dm7choose3();
