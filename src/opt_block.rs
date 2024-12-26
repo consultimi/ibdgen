@@ -1,4 +1,4 @@
-use nalgebra::{DMatrix, DVector, dmatrix};
+use nalgebra::{DMatrix, DVector};
 use pretty_print_nalgebra::*;
 use anyhow::*;
 
@@ -338,10 +338,10 @@ fn form_block_means(block_data: &mut BlockData) {
 fn initialize_b(block_data: &mut BlockData, first_repeat: bool) -> Result<()> {
 
     //let mut i = 0;
-    let mut j = 0;
-    let mut l = 0;
+    let j = 0;
+    let l = 0;
     let mut bs = 0;
-    let mut i_block = block_data.n_b * block_data.max_n;
+    let i_block = block_data.n_b * block_data.max_n;
     let mut t = 0;
 
 
@@ -586,16 +586,16 @@ struct BlockResult {
 // optimize determinant over all blocks using d-criterion
 fn block_optimize(block_data: &mut BlockData, n_repeats: u8) -> Result<BlockResult> {
 
-    let mut tip: DMatrix<f64> = DMatrix::zeros(block_data.n as usize, block_data.k as usize);
-    let mut w: DMatrix<f64> = DMatrix::zeros(block_data.k as usize * (block_data.k as usize + 1) / 2, 1);
-    let mut vec: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
-    let mut sc: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
+    let tip: DMatrix<f64> = DMatrix::zeros(block_data.n as usize, block_data.k as usize);
+    let w: DMatrix<f64> = DMatrix::zeros(block_data.k as usize * (block_data.k as usize + 1) / 2, 1);
+    let vec: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
+    let sc: DVector<f64> = DVector::zeros(2 * block_data.k as usize);
     let mut block_array: Vec<u8> = vec![0; block_data.n_b as usize * (*block_data.block_sizes.iter().max().unwrap()) as usize];
-    let mut var = 0.0;
+    let var = 0.0;
     let mut best_log_det = 0.0;
     let mut best_block_array = DMatrix::zeros(block_data.n_b as usize, block_data.max_n as usize);
     //let mut log_det = 0.0;
-    let mut singular = false;
+    let singular = false;
     let mut xnew = 0;
     let mut new_block = 0;
     let mut av_var = 0.0;
