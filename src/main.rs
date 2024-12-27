@@ -59,7 +59,17 @@ fn main() {
     //assert!(result.is_ok());
 
     //let x = dm12choose4();      
-    let result = opt_block(12,33, 4,10);
-    println!("result: {:?}", result);
-    assert!(result.is_ok());
+    let mut min_d = 0.0;
+    let mut best_solution = BlockResult::default();
+    for i in 1..10 {
+        let result = opt_block(21,21, 5,5).unwrap();
+        println!("result: {:?}", result);
+        if result.best_d > min_d {
+            min_d = result.best_d;
+            best_solution = result;
+        }
+    }
+    println!("min_d: {:?}", min_d);
+    println!("best_solution coincidence: {}", best_solution.best_coincidence);
+    
 }

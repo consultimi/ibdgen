@@ -449,8 +449,7 @@ impl BlockData {
                 av_var = self.make_ti_from_tb().map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
                 debug_println!("t_inv after first make_ti_from_tb: {}", pretty_print!(&self.t_inv));
                 debug_println!("t after first make_ti_from_tb: {}", pretty_print!(&self.t));
-                self.t_x = self.x.clone() * self.t_inv.transpose().clone();
-                self.t_block_means = self.block_means.clone() * self.t_inv.transpose().clone();
+                self.transform();
     
                 //debug_println!("420 block_data.t_x: {}", pretty_print!(&block_data.t_x));
                 //debug_println!("421block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
@@ -474,9 +473,8 @@ impl BlockData {
                                 debug_println!("t_inv after make_ti_from_tb: {}", pretty_print!(&self.t_inv));
                                 debug_println!("t after make_ti_from_tb: {}", pretty_print!(&self.t));
     
-                                //transform(block_data)?;
-                                self.t_x = self.x.clone() * self.t_inv.transpose().clone();
-                                self.t_block_means = self.block_means.clone() * self.t_inv.transpose().clone();
+                                self.transform();
+
     
                                 debug_println!("block_data.t_x: {}", pretty_print!(&self.t_x));
                                 debug_println!("block_data.t_block_means: {}", pretty_print!(&self.t_block_means));
@@ -508,16 +506,22 @@ impl BlockData {
         // 	*D=exp(logDbest/(double)k)/(double)Nxb;
         let best_d = (best_log_det / self.k as f64).exp() / self.n_xb as f64;
         let best_diagonality = 1.0 / (best_d * av_var * self.n_xb as f64);
+        let best_coincidence = self.create_coincidence_matrix(&best_block_array);
         debug_println!("best_log_det: {}", best_log_det);
         debug_println!("best_block_array: {}", best_block_array);
-        Ok(BlockResult { best_log_det, best_block_array, best_d, best_diagonality })
+        Ok(BlockResult { best_log_det, best_block_array, best_d, best_diagonality, best_coincidence })
     }
 
-    fn create_coincidence_matrix(&self, block_result: &BlockResult) -> DMatrix<usize> {
+    fn transform(&mut self) {
+        self.t_x = self.x.clone() * self.t_inv.transpose().clone();
+        self.t_block_means = self.block_means.clone() * self.t_inv.transpose().clone();
+    }
+
+    fn create_coincidence_matrix(&self, best_block_array: &DMatrix<usize>) -> DMatrix<usize> {
         let mut coincidence: DMatrix<usize> = DMatrix::zeros(self.n as usize, self.n as usize);
         for block_idx in 0..self.n_b as usize {
             let block_size = self.block_sizes[block_idx] as usize;
-            let block_elements = block_result.best_block_array.row(block_idx);
+            let block_elements = best_block_array.row(block_idx);
             for i in 0..block_size {
                 let elem_i = block_elements[i];
                 // Diagonal counts total appearances
@@ -611,12 +615,13 @@ impl RandomType {
 
 
 
-#[derive(Debug)]
-struct BlockResult {
-    best_log_det: f64,
-    best_block_array: DMatrix<usize>,
-    best_d: f64,
-    best_diagonality: f64
+#[derive(Debug, Default)]
+pub struct BlockResult {
+    pub best_log_det: f64,
+    pub best_block_array: DMatrix<usize>,
+    pub best_d: f64,
+    pub best_diagonality: f64,
+    pub best_coincidence: DMatrix<usize>
 }
 
 // optimize determinant over all blocks using d-criterion
@@ -644,6 +649,7 @@ struct BlockData {
     
     #[builder(setter(custom))]
     block_sizes: Vec<u8>, // block_sizes is a vector of block sizes
+
     n_repeat_counts: u8, // n_repeat_counts is the number of repeats
     rows: DVector<u8>,  // rows is a vector of row indices
 }
@@ -694,7 +700,7 @@ impl BlockDataBuilder {
 } 
 
 
-pub fn opt_block(v: u8, n_b: u8, block_size: u8,  n_repeats: u8) -> Result<()> {
+pub fn opt_block(v: u8, n_b: u8, block_size: u8,  n_repeats: u8) -> Result<BlockResult> {
     
     let mut block_data = BlockDataBuilder::default()
         .v(v)
@@ -713,14 +719,14 @@ pub fn opt_block(v: u8, n_b: u8, block_size: u8,  n_repeats: u8) -> Result<()> {
     println!("block_result.best_diagonality: {}", block_result.best_diagonality);
     // Create coincidence matrix to store pairwise counts
     
-    let coincidence = block_data.create_coincidence_matrix(&block_result);
+    //let coincidence = block_data.create_coincidence_matrix(&block_result);
     //debug_println!("coincidence: {}", pretty_print!(&coincidence));
     // For each block, count coincidences between all pairs of elements
     
 
     println!("Coincidence matrix:");
-    println!("{}", coincidence);
-    Ok(())
+    println!("{}", block_result.best_coincidence);
+    Ok(block_result)
 }
 
 
