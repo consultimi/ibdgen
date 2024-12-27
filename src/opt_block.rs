@@ -1,7 +1,7 @@
 use nalgebra::{DMatrix, DVector};
 use pretty_print_nalgebra::*;
 use anyhow::*;
-
+use derive_builder::Builder;
 const DESIGN_TOL: f64 = 1.0e-10;
 
 const DEBUG: bool = false;
@@ -28,20 +28,15 @@ impl BlockData {
             n: 0,
             k: 0,
             n_t: 0,
-            extra_block: false,
             n_xb: 0,
             n_b: 0,
             block_sizes: vec![0; 0],
             n_repeat_counts: 0,
-            init_rows: false,
             rows: DVector::zeros(0),
-            irows: DVector::zeros(0),
         }
     }
 
-    fn rows_vec_length(&self) -> usize {
-        std::cmp::max(self.n, self.n_xb) as usize
-    }
+
 
     fn reduce_x_to_t(&mut self) -> (f64, bool) {
         let mut p_mx: Vec<f64> = vec![-1e16; self.k as usize];
@@ -147,19 +142,14 @@ impl BlockData {
 
     fn initialize_block_array(&mut self, block_array: &mut Vec<u8>)  {
 
-        if self.init_rows {
-            for i in 0..self.n_xb {
-                self.rows[i as usize] = self.irows[i as usize];
-            }
-        } else {
-            for i in 0..self.n {
-                self.rows[i as usize] = i;
-            }
+        for i in 0..self.n {
+            self.rows[i as usize] = i;
         }
+    
     
         let mut l = 0;
         let mut m = 0;
-        let n_t = if self.init_rows { self.n_xb } else { self.n };
+        let n_t = self.n;
         for i in 0..self.n_b {
             let bs = self.block_sizes[i as usize];
             for _ in 0..bs {
@@ -222,24 +212,14 @@ impl BlockData {
     }
 
     
-    fn initialize_b(&mut self, first_repeat: bool) -> Result<()> {
+    fn initialize_b(&mut self) -> Result<()> {
 
         for i in 0..self.n_t {
             self.rows[i as usize] = i;
         }
 
-        if self.init_rows {
-            for i in 0..self.n_xb {
-                let t = self.rows[i as usize];
-                self.rows[i as usize] = self.irows[i as usize];
-                self.rows[self.irows[i as usize] as usize] = t;
-            }
-            if !first_repeat {
-                permute_b(&mut self.rows, self.n_xb).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
-            }
-        } else {
-            permute_b(&mut self.rows, self.n_t).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
-        }
+
+        permute_b(&mut self.rows, self.n_t).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
 
         /*	for (i=0;i<nB*MAXN;i++)
             B[i]=-1; */
@@ -454,7 +434,7 @@ impl BlockData {
             debug_println!("block_data.block_means: {}", pretty_print!(&self.block_means));
             debug_println!("block_data.b: {}", pretty_print!(&self.b));
     
-            self.initialize_b(repeat_num == 0).map_err(|e| anyhow!("Failed to initialize b: {}", e))?;
+            self.initialize_b().map_err(|e| anyhow!("Failed to initialize b: {}", e))?;
     
             debug_println!("block_data.b after initialize_b: {}", pretty_print!(&self.b));
     
@@ -625,7 +605,8 @@ struct BlockResult {
 // optimize determinant over all blocks using d-criterion
 
 
-#[derive(Debug)]
+#[derive(Builder, Debug)]
+#[builder(build_fn(error = "anyhow::Error"))]
 struct BlockData {
     x: DMatrix<f64>,    // x is the input matrix, typically it'll be a dummy coded design matrix (diag is 1, off-diag is 0, first row all 0)
     t_x: DMatrix<f64>,  // x_t is the transpose of x
@@ -638,45 +619,60 @@ struct BlockData {
     n: u8,              // n is the number of rows in x
     k: u8,              // k is the number of columns in x
     n_t: u8,            // n_t is the number of rows to use. If init_rows is true, n_t = n_xb, otherwise n_t = n
-    extra_block: bool,   // extra_block is true if there are extra rows in x that are not used in the blocks
     n_xb: u8,           // n_xb is the number of rows in x that are used in the blocks
     n_b: u8,            // n_b is the number of blocks
+    
+    #[builder(setter(custom))]
     block_sizes: Vec<u8>, // block_sizes is a vector of block sizes
     n_repeat_counts: u8, // n_repeat_counts is the number of repeats
-    init_rows: bool,     // init_rows is true if the rows are initialized from irows
     rows: DVector<u8>,  // rows is a vector of row indices
-    irows: DVector<u8>
 }
 
 
+impl BlockDataBuilder {
 
-pub fn opt_block(x_i: DMatrix<f64>, rows: Option<Vec<u8>>, n_b: u8, block_sizes: Vec<u8>,  n_repeats: u8) -> Result<()> {
-    
-    let mut block_data = BlockData::new();
-    block_data.x = x_i.clone();
-    block_data.n = x_i.nrows() as u8;
-    block_data.k = x_i.ncols() as u8;
-    block_data.block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
-    block_data.t_block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
-    block_data.t = DMatrix::zeros(block_data.k as usize, block_data.k as usize);
-    block_data.t_inv = DMatrix::zeros(block_data.k as usize, block_data.k as usize);
-    block_data.n_repeat_counts = n_repeats;
-    block_data.max_n = *block_sizes.iter().max().unwrap();
-    block_data.block_sizes = block_sizes;
-    block_data.n_xb = block_data.block_sizes.iter().sum();
-    block_data.n_b = n_b;
-    if let Some(rows) = rows {
-        block_data.init_rows = true;
-        block_data.rows = rows.into();
-    } else {
-        block_data.init_rows = false;
-        block_data.rows = DVector::zeros(block_data.rows_vec_length());
+    fn configure_remaining(&mut self) -> &mut Self {
+        let block_data = self;
+        if let (Some(n_b), Some(k), Some(block_sizes), Some(n)) = (block_data.n_b, block_data.k, &block_data.block_sizes, block_data.n) {
+            block_data.block_means = Some(DMatrix::zeros(n_b as usize, k as usize));
+            block_data.t_block_means = Some(DMatrix::zeros(n_b as usize, k as usize));
+            block_data.t = Some(DMatrix::zeros(k as usize, k as usize));
+            block_data.t_inv = Some(DMatrix::zeros(k as usize, k as usize));
+            let n_xb = block_sizes.iter().sum();
+            block_data.n_xb = Some(n_xb);
+            block_data.rows = Some(DVector::zeros(std::cmp::max(n, n_xb) as usize));
+            block_data.b = Some(DMatrix::zeros(n_b as usize, block_sizes[0] as usize));
+            block_data.n_t = Some(n);
+        }
+
+        block_data
     }
-    block_data.b = DMatrix::zeros(n_b as usize, block_data.max_n as usize);
+
+    fn blocksize(&mut self, value: u8) -> &mut Self {
+        if let Some(n_b) = self.n_b {
+            self.block_sizes = Some(vec![value; n_b as usize]);
+            self.max_n = Some(value);
+            self
+        } else {
+            self
+        }
+    }
+} 
 
 
-    block_data.extra_block = if block_data.n_xb < block_data.n { true } else { false };
-    block_data.n_t = if block_data.init_rows { block_data.n_xb } else { block_data.n };
+pub fn opt_block(x_i: DMatrix<f64>, n_b: u8, block_size: u8,  n_repeats: u8) -> Result<()> {
+    
+    let mut block_data = BlockDataBuilder::default()
+        .x(x_i.clone())
+        .n(x_i.nrows() as u8)
+        .k(x_i.ncols() as u8)
+        .n_b(n_b)
+        .blocksize(block_size)
+        .n_repeat_counts(n_repeats)
+        .configure_remaining()
+        .build()
+        .map_err(|e| anyhow!("Failed to build block_data: {}", e))?;
+
     
     let block_result = block_data.block_optimize(n_repeats).map_err(|e| anyhow!("Failed to optimize block: {}", e))?;
     println!("block_result: {}", pretty_print!(&block_result.best_block_array.add_scalar(1)));
@@ -718,7 +714,6 @@ mod tests {
         block_data.max_n = *block_sizes.iter().max().unwrap();
         block_data.n_xb = block_data.block_sizes.iter().sum();
         block_data.n_b = n_b;
-        block_data.init_rows = false;
         block_data.rows = DVector::zeros(block_data.n as usize);
         block_data.b = DMatrix::zeros(n_b as usize, block_data.max_n as usize);
         block_data.n_t = block_data.n;
@@ -748,7 +743,7 @@ mod tests {
         block_data.initialize_block_array(&mut block_array);
         //assert_eq!(block_array, expected.to_vec());
 
-        block_data.initialize_b(true).unwrap();
+        block_data.initialize_b().unwrap();
 
         let expected = nalgebra::dmatrix![
             0.0,2.0,4.0;
@@ -765,7 +760,7 @@ mod tests {
 
     #[test]
     fn test_form_block_means() {
-        let x = dm7choose3();
+        //let x = dm7choose3();
         let mut block_data = configure_block_data();
         block_data.b = nalgebra::dmatrix![
             0.0,2.0,4.0;
@@ -834,7 +829,7 @@ mod tests {
             0.0,           0.0,   1.769547, -0.018605, -0.193023, -0.695349;
             0.0,           0.0,   0.0,       1.756589, -0.465137, -0.031774;
             0.0,           0.0,   0.0,       0.0,       1.434687, -0.421716;
-            0.0,           0.0,   0.0,       0.0,       0.0,       0.657029;
+            0.0,           0.0,       0.0,       0.0,       0.0,       0.657029;
         ]; 
         expected.apply(|x: &mut f64| { *x = (*x * 1000.0).round() });
 

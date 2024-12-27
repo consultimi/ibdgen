@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.93"
+derive_builder = "0.20.2"
 nalgebra = "0.33.1"
 pretty-print-nalgebra = "0.1.0"
 rand = "0.8.5"

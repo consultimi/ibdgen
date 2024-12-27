@@ -59,6 +59,6 @@ fn main() {
     //assert!(result.is_ok());
 
     let x = dm12choose4();      
-    let result = opt_block(x.cast::<f64>(), None, 33, vec![4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],10 );
+    let result = opt_block(x.cast::<f64>(),33, 4,10);
     assert!(result.is_ok());
 }
