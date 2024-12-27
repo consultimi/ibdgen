@@ -31,6 +31,7 @@ impl BlockData {
             n_xb: 0,
             n_b: 0,
             block_sizes: vec![0; 0],
+            random_type: RandomType::Uniform,
             n_repeat_counts: 0,
             rows: DVector::zeros(0),
         }
@@ -169,7 +170,7 @@ impl BlockData {
         loop {
             //dbg!(&block_data.rows);
             let mut nodup = true;
-            permute_b(&mut self.rows, self.n).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
+            permute_b(&mut self.rows, self.n, self.random_type).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
             for i in 0..little_n {
                 debug_println!("bs: {}, little_n: {}, offset: {}, i: {}", bs, little_n, offset, i);
                 let index = offset * self.max_n + i;
@@ -219,7 +220,7 @@ impl BlockData {
         }
 
 
-        permute_b(&mut self.rows, self.n_t).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
+        permute_b(&mut self.rows, self.n_t, self.random_type).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
 
         /*	for (i=0;i<nB*MAXN;i++)
             B[i]=-1; */
@@ -557,10 +558,10 @@ fn get_range_b(p_mx: &mut Vec<f64>, p_mn: &mut Vec<f64>, vec: &DVector<f64>, k: 
 |	algorithm.  See Fike, "A permutation generation method"  The Computer
 |	Journal, 18-1, Feb 75, 21-22.
 */
-fn permute_b(a: &mut DVector<u8>, n: u8) -> Result<()> {
+fn permute_b(a: &mut DVector<u8>, n: u8, random_type: RandomType) -> Result<()> {
 
     for i in 1..n {
-        let rnd = rand::random::<f64>();
+        let rnd = random_type.random();
         //let rnd = 0.5;
         let j = (((1 + i) as f64) * rnd) as i32;
         let temp = a[j as usize];
@@ -589,6 +590,22 @@ fn rmi_from_cmi(column_major_index: usize , width: usize, height: usize) -> usiz
 fn cmi_from_rmi(row_major_index: usize, width: usize, height: usize) -> usize {
     return rmi_from_cmi(row_major_index, height, width);
 }
+
+#[derive(Debug, Clone, Copy)]
+enum RandomType {
+    Uniform,
+    Fixed(f64)
+}
+
+impl RandomType {
+    fn random(&self) -> f64 {
+        match self {
+            RandomType::Uniform => rand::random::<f64>(),
+            RandomType::Fixed(value) => *value
+        }
+    }
+}
+
 
 
 
@@ -621,6 +638,9 @@ struct BlockData {
     n_t: u8,            // n_t is the number of rows to use. If init_rows is true, n_t = n_xb, otherwise n_t = n
     n_xb: u8,           // n_xb is the number of rows in x that are used in the blocks
     n_b: u8,            // n_b is the number of blocks
+    
+    #[builder(default = "RandomType::Uniform")]
+    random_type: RandomType, // random_type is the type of randomization
     
     #[builder(setter(custom))]
     block_sizes: Vec<u8>, // block_sizes is a vector of block sizes
@@ -657,15 +677,27 @@ impl BlockDataBuilder {
             self
         }
     }
+
+    fn v(&mut self, value: u8) -> &mut Self {
+        let mut x = DMatrix::zeros(value as usize, value as usize);
+        x.fill_diagonal(1.0);
+        // remove the first column by subsetting the remaining columns
+        let x_sub = x.columns(1, (value - 1) as usize);
+        self.x = Some(x_sub.into());
+        self.n = Some(value as u8);
+        self.k = Some((value - 1) as u8);
+        self.t_x =Some(DMatrix::zeros(value as usize, (value - 1) as usize));
+
+        println!("x: {}", pretty_print!(&x_sub));
+        self
+    }
 } 
 
 
-pub fn opt_block(x_i: DMatrix<f64>, n_b: u8, block_size: u8,  n_repeats: u8) -> Result<()> {
+pub fn opt_block(v: u8, n_b: u8, block_size: u8,  n_repeats: u8) -> Result<()> {
     
     let mut block_data = BlockDataBuilder::default()
-        .x(x_i.clone())
-        .n(x_i.nrows() as u8)
-        .k(x_i.ncols() as u8)
+        .v(v)
         .n_b(n_b)
         .blocksize(block_size)
         .n_repeat_counts(n_repeats)
@@ -698,26 +730,15 @@ mod tests {
 
     #[allow(unused)]
     fn configure_block_data() -> BlockData {
-        let mut block_data = BlockData::new();
-        let x_i = dm7choose3();
-        let n_b = 7;
-        let block_sizes = vec![3, 3, 3, 3, 3, 3, 3];
-        block_data.x = x_i.clone();
-        block_data.n = x_i.nrows() as u8;
-        block_data.k = x_i.ncols() as u8;
-        block_data.block_sizes = block_sizes.clone();
-        block_data.block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
-        block_data.t_block_means = DMatrix::zeros(n_b as usize, block_data.k as usize);
-        block_data.t = DMatrix::zeros(block_data.k as usize, block_data.k as usize);
-        block_data.t_inv = DMatrix::zeros(block_data.k as usize, block_data.k as usize);
-        block_data.n_repeat_counts = 1;
-        block_data.max_n = *block_sizes.iter().max().unwrap();
-        block_data.n_xb = block_data.block_sizes.iter().sum();
-        block_data.n_b = n_b;
-        block_data.rows = DVector::zeros(block_data.n as usize);
-        block_data.b = DMatrix::zeros(n_b as usize, block_data.max_n as usize);
-        block_data.n_t = block_data.n;
-        block_data
+        let mut block_data = BlockDataBuilder::default()
+            .v(7)
+            .n_b(7)
+            .blocksize(3)
+            .random_type(RandomType::Fixed(0.5))
+            .n_repeat_counts(1)
+            .configure_remaining()
+            .build();
+        block_data.unwrap()
     }
 
     #[allow(unused)]
@@ -829,7 +850,7 @@ mod tests {
             0.0,           0.0,   1.769547, -0.018605, -0.193023, -0.695349;
             0.0,           0.0,   0.0,       1.756589, -0.465137, -0.031774;
             0.0,           0.0,   0.0,       0.0,       1.434687, -0.421716;
-            0.0,           0.0,       0.0,       0.0,       0.0,       0.657029;
+            0.0,           0.0,   0.0,       0.0,       0.0,       0.657029;
         ]; 
         expected.apply(|x: &mut f64| { *x = (*x * 1000.0).round() });
 
