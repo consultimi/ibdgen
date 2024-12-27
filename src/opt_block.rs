@@ -506,7 +506,7 @@ impl BlockData {
         // 	*D=exp(logDbest/(double)k)/(double)Nxb;
         let best_d = (best_log_det / self.k as f64).exp() / self.n_xb as f64;
         let best_diagonality = 1.0 / (best_d * av_var * self.n_xb as f64);
-        let best_coincidence = self.create_coincidence_matrix(&best_block_array);
+        let best_coincidence = CoincidenceMatrix::from_block_array(&best_block_array);
         debug_println!("best_log_det: {}", best_log_det);
         debug_println!("best_block_array: {}", best_block_array);
         Ok(BlockResult { best_log_det, best_block_array, best_d, best_diagonality, best_coincidence })
@@ -517,32 +517,6 @@ impl BlockData {
         self.t_block_means = self.block_means.clone() * self.t_inv.transpose().clone();
     }
 
-    fn create_coincidence_matrix(&self, best_block_array: &DMatrix<usize>) -> DMatrix<usize> {
-        let mut coincidence: DMatrix<usize> = DMatrix::zeros(self.n as usize, self.n as usize);
-        for block_idx in 0..self.n_b as usize {
-            let block_size = self.block_sizes[block_idx] as usize;
-            let block_elements = best_block_array.row(block_idx);
-            for i in 0..block_size {
-                let elem_i = block_elements[i];
-                // Diagonal counts total appearances
-                coincidence[(elem_i, elem_i)] += 1;
-                
-                // Upper triangle counts pairwise coincidences
-                for j in (i+1)..block_size {
-                    
-                    let elem_j = block_elements[j];
-                    debug_println!("i: {}, j: {}, elem_i: {}, elem_j: {}", i, j, elem_i, elem_j);
-                    if elem_i < elem_j {
-                        coincidence[(elem_i, elem_j)] += 1;
-                    } else {
-                        coincidence[(elem_j, elem_i)] += 1;
-                    }
-                }
-            }
-        }
-    
-        coincidence
-    }
     
 }
 
@@ -610,9 +584,41 @@ impl RandomType {
     }
 }
 
+#[derive(Default, Debug, Clone)]
+pub struct CoincidenceMatrix {
+    pub coincidence: DMatrix<usize>,
+}
 
+impl CoincidenceMatrix {
 
-
+    pub fn from_block_array(block_array: &DMatrix<usize>) -> Self {
+        //println!("block_array: {}", pretty_print!(&block_array));   
+        let n = block_array.nrows();
+        let block_size = block_array.ncols();
+        let mut coincidence: DMatrix<usize> = DMatrix::zeros(n, n);
+        for block_idx in 0..n {
+            let block_elements = block_array.row(block_idx);
+            for i in 0..block_size {
+                let elem_i = block_elements[i];
+                // Diagonal counts total appearances
+                coincidence[(elem_i, elem_i)] += 1;
+                
+                // Upper triangle counts pairwise coincidences
+                for j in (i+1)..block_size {
+                    
+                    let elem_j = block_elements[j];
+                    debug_println!("i: {}, j: {}, elem_i: {}, elem_j: {}", i, j, elem_i, elem_j);
+                    if elem_i < elem_j {
+                        coincidence[(elem_i, elem_j)] += 1;
+                    } else {
+                        coincidence[(elem_j, elem_i)] += 1;
+                    }
+                }
+            }
+        }
+        Self { coincidence }
+    }
+}
 
 
 #[derive(Debug, Default)]
@@ -621,7 +627,7 @@ pub struct BlockResult {
     pub best_block_array: DMatrix<usize>,
     pub best_d: f64,
     pub best_diagonality: f64,
-    pub best_coincidence: DMatrix<usize>
+    pub best_coincidence: CoincidenceMatrix
 }
 
 // optimize determinant over all blocks using d-criterion
@@ -725,7 +731,7 @@ pub fn opt_block(v: u8, n_b: u8, block_size: u8,  n_repeats: u8) -> Result<Block
     
 
     println!("Coincidence matrix:");
-    println!("{}", block_result.best_coincidence);
+    println!("{}", pretty_print!(&block_result.best_coincidence.coincidence));
     Ok(block_result)
 }
 

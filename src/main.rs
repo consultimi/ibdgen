@@ -2,6 +2,7 @@ mod opt_block;
 
 use nalgebra::DMatrix;
 use opt_block::*;
+use pretty_print_nalgebra::*;
 
 #[allow(unused)]
 fn dm7choose3() -> DMatrix<u8> {
@@ -70,6 +71,6 @@ fn main() {
         }
     }
     println!("min_d: {:?}", min_d);
-    println!("best_solution coincidence: {}", best_solution.best_coincidence);
+    println!("best_solution coincidence: {}", pretty_print!(&best_solution.best_coincidence.coincidence));
     
 }
