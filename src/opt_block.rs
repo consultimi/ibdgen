@@ -299,10 +299,11 @@ impl BlockData {
                     let row_no = b_transpose[(i * self.max_n + j) as usize] as usize;
                     let fj = self.t_x.row(row_no);
                     
-                    let mut g = 0.0;
-                    let mut h = 0.0;
+                    //let mut g = 0.0;
+                    //let mut h = 0.0;
                     
                     // Calculate cross terms between means and points
+                    /*
                     for l in 0..self.k {
                         //debug_println!("row_no: {}, i: {}, j: {}, l: {}, fmi: {}, fmj: {}, fi: {}, fj: {}", row_no, i, j, l, fmi[l as usize], fmj[l as usize], fi[l as usize], fj[l as usize]);
 
@@ -310,9 +311,12 @@ impl BlockData {
                         let dif2 = fj[l as usize] - fi[l as usize];
                         g += dif1 * dif2;
                         h += dif2 * dif2;
-                    }
-                    let mi1 = g;
-                    let mi2 = h;
+                    } */
+
+                   let mi1 = (fmj - fmi).component_mul(&(fj - fi)).sum();
+                   let mi2 = (fj - fi).component_mul(&(fj - fi)).sum();
+                   // let mi1 = g;
+                    //let mi2 = h;
                     
                     // Combine geometric and moment terms
                     let m1i0 = gi0 + mi0;
