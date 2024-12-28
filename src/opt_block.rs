@@ -15,6 +15,7 @@ macro_rules! debug_println {
 }
 
 impl BlockData {
+    /*
     fn new() -> Self {
         BlockData { 
             x: DMatrix::zeros(0, 0),
@@ -36,7 +37,7 @@ impl BlockData {
             rows: DVector::zeros(0),
         }
     }
-
+ */
 
 
     fn reduce_x_to_t(&mut self) -> (f64, bool) {
@@ -281,14 +282,17 @@ impl BlockData {
                 let fmj = self.t_block_means.row(i as usize);
                 
                 // Calculate squared distance between block means
+                /*
                 let mut g = 0.0;
                 for l in 0..self.k {
                     debug_println!("fmj[{}]: {}, fmi[{}]: {}", l, fmj[l as usize], l, fmi[l as usize]);
                     let dif = fmj[l as usize] - fmi[l as usize];
                     g += dif * dif;
-                }
-                let mi0 = g;
-
+                } 
+                let mi0 = g;*/
+                let diff = fmj - fmi;
+                let mi0 = diff.component_mul(&diff).sum();
+                //let mi0 = diff.pow(2).sum::<f64>();
                 
                 // Try exchanging with each point in candidate block
                 for j in 0..nj {
@@ -595,6 +599,7 @@ impl CoincidenceMatrix {
     pub fn from_block_array(block_array: &DMatrix<usize>) -> Self {
         //println!("block_array: {}", pretty_print!(&block_array));   
         //let n = block_array.max() + 1;
+        let true_n = block_array.max() + 1;
         let n = block_array.nrows();
         let block_size = block_array.ncols();
         let mut coincidence: DMatrix<usize> = DMatrix::zeros(n, n);
@@ -618,7 +623,7 @@ impl CoincidenceMatrix {
                 }
             }
         }
-        Self { coincidence }
+        Self { coincidence: coincidence.view((0,0),(true_n,true_n)).into() }
     }
 }
 
