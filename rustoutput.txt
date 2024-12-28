@@ -1,210 +1,5683 @@
-    Blocking waiting for file lock on build directory
-   Compiling celldesigner v0.1.0 (C:\Users\Miles\Documents\GitHub\celldesigner)
-warning: unused variable: `i`
-   --> src\opt_block.rs:655:13
-    |
-655 |         for i in 0..block_array_out.ncols() {
-    |             ^ help: if this is intentional, prefix it with an underscore: `_i`
-    |
-    = note: `#[warn(unused_variables)]` on by default
-
 warning: fields `best_log_det` and `best_diagonality` are never read
-   --> src\opt_block.rs:680:9
+   --> src\opt_block.rs:592:9
     |
-679 | pub struct BlockResult {
+591 | pub struct BlockResult {
     |            ----------- fields in this struct
-680 |     pub best_log_det: f64,
+592 |     pub best_log_det: f64,
     |         ^^^^^^^^^^^^
 ...
-683 |     pub best_diagonality: f64,
+595 |     pub best_diagonality: f64,
     |         ^^^^^^^^^^^^^^^^
     |
     = note: `BlockResult` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
     = note: `#[warn(dead_code)]` on by default
 
 warning: field `n_repeat_counts` is never read
-   --> src\opt_block.rs:713:5
+   --> src\opt_block.rs:625:5
     |
-692 | struct BlockData {
+604 | struct BlockData {
     |        --------- field in this struct
 ...
-713 |     n_repeat_counts: u8, // n_repeat_counts is the number of repeats
+625 |     n_repeat_counts: u8, // n_repeat_counts is the number of repeats
     |     ^^^^^^^^^^^^^^^
     |
     = note: `BlockData` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
 
-warning: `celldesigner` (bin "celldesigner") generated 3 warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.74s
+warning: `celldesigner` (bin "celldesigner") generated 2 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.08s
      Running `target\debug\celldesigner.exe`
-x: 
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           1.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        1.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        1.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        1.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        1.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        1.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        1.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        1.000
 REPEAT NUMBER: 0
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               6
+               5
+               4
+               3
+               2
+               0
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 6
+j: 1, cur_val: 0, self.rows[j as usize]: 5
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               5
+               3
+               6
+               1
+               2
+               0
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 5
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 1, self.rows[j as usize]: 5
 REPEAT NUMBER: 1
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 2 Γöé
+  Γöé 6 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 1 Γöé
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               5
+               1
+               0
+               3
+               2
+               4
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 5
+j: 1, cur_val: 4, self.rows[j as usize]: 1
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               1
+               5
+               0
+               3
+               2
+               4
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 1
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 6, self.rows[j as usize]: 1
 REPEAT NUMBER: 2
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               0
+               1
+               3
+               6
+               2
+               5
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 0
+j: 1, cur_val: 4, self.rows[j as usize]: 1
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 1 Γöé
+  Γöé 3 Γöé
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               4
+               0
+               1
+               3
+               5
+               2
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 4
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 4, self.rows[j as usize]: 4
+rows after permute: 
+               6
+               5
+               4
+               0
+               1
+               3
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 4, self.rows[j as usize]: 6
 REPEAT NUMBER: 3
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               4
+               2
+               6
+               1
+               3
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 4
+j: 1, cur_val: 0, self.rows[j as usize]: 2
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 2 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 3 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               0
+               5
+               2
+               4
+               6
+               3
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 0
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 0, self.rows[j as usize]: 0
+rows after permute: 
+               6
+               5
+               4
+               2
+               0
+               3
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 0, self.rows[j as usize]: 6
 REPEAT NUMBER: 4
-x: 
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           1.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        1.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        1.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        1.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        1.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        1.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        1.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        1.000
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 2 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               6
+               2
+               4
+               1
+               0
+               5
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 6
+j: 1, cur_val: 0, self.rows[j as usize]: 2
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               3
+               2
+               0
+               4
+               5
+               6
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 3
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 3, self.rows[j as usize]: 3
+rows after permute: 
+               0
+               4
+               5
+               2
+               3
+               1
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 0
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 3, self.rows[j as usize]: 0
 REPEAT NUMBER: 0
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               3
+               2
+               4
+               5
+               6
+               0
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 3
+rows after permute: 
+               5
+               4
+               3
+               6
+               2
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 5
+j: 1, cur_val: 3, self.rows[j as usize]: 4
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               3
+               5
+               4
+               2
+               1
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 1, self.rows[j as usize]: 3
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 0, self.rows[j as usize]: 3
 REPEAT NUMBER: 1
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               0
+               1
+               5
+               6
+               2
+               3
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 0
+j: 1, cur_val: 3, self.rows[j as usize]: 1
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 1 Γöé
+  Γöé 5 Γöé
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               0
+               5
+               3
+               1
+               4
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 4, self.rows[j as usize]: 6
 REPEAT NUMBER: 2
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               1
+               4
+               5
+               0
+               3
+               2
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 1, self.rows[j as usize]: 1
+rows after permute: 
+               4
+               2
+               0
+               6
+               1
+               5
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 1, self.rows[j as usize]: 4
+j: 1, cur_val: 1, self.rows[j as usize]: 2
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               4
+               1
+               2
+               0
+               3
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 3, self.rows[j as usize]: 6
 REPEAT NUMBER: 3
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               6
+               3
+               2
+               5
+               1
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 6
+j: 1, cur_val: 5, self.rows[j as usize]: 3
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               4
+               5
+               1
+               6
+               2
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 4
+rows after permute: 
+               2
+               5
+               0
+               3
+               1
+               6
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 2
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 0, self.rows[j as usize]: 2
 REPEAT NUMBER: 4
-x: 
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           1.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        1.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        1.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        1.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        1.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        1.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        1.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        1.000
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 1 Γöé
+  Γöé 5 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               5
+               4
+               3
+               2
+               0
+               6
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 5
+j: 1, cur_val: 3, self.rows[j as usize]: 4
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               5
+               1
+               3
+               4
+               2
+               0
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 5
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 1, self.rows[j as usize]: 5
 REPEAT NUMBER: 0
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               1
+               5
+               0
+               3
+               4
+               2
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 1, self.rows[j as usize]: 1
+rows after permute: 
+               0
+               6
+               1
+               2
+               3
+               5
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 1, self.rows[j as usize]: 0
+j: 1, cur_val: 1, self.rows[j as usize]: 6
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               5
+               4
+               2
+               1
+               0
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 4, self.rows[j as usize]: 6
 REPEAT NUMBER: 1
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 3 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               6
+               4
+               1
+               2
+               5
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 6
+j: 1, cur_val: 5, self.rows[j as usize]: 4
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 4 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               0
+               3
+               1
+               2
+               6
+               4
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 0
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 0, self.rows[j as usize]: 0
+rows after permute: 
+               4
+               2
+               1
+               6
+               3
+               0
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 4
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 0, self.rows[j as usize]: 4
 REPEAT NUMBER: 2
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               2
+               4
+               1
+               3
+               6
+               0
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 2
+j: 1, cur_val: 6, self.rows[j as usize]: 4
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 1 Γöé
+  Γöé 3 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               3
+               1
+               0
+               2
+               6
+               5
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 3
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 5, self.rows[j as usize]: 3
 REPEAT NUMBER: 3
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               3
+               2
+               0
+               4
+               5
+               6
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 3
+j: 1, cur_val: 5, self.rows[j as usize]: 2
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               1
+               0
+               4
+               3
+               2
+               6
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 1
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 1, self.rows[j as usize]: 1
+rows after permute: 
+               4
+               2
+               1
+               3
+               5
+               0
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 4
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 1, self.rows[j as usize]: 4
 REPEAT NUMBER: 4
-x: 
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           1.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        1.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        1.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        1.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        1.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        1.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        1.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        1.000
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 4 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               3
+               2
+               4
+               5
+               1
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 3
+j: 1, cur_val: 5, self.rows[j as usize]: 2
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               5
+               0
+               2
+               4
+               3
+               6
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 5
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 0, self.rows[j as usize]: 5
 REPEAT NUMBER: 0
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               5
+               6
+               1
+               0
+               2
+               3
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 5
+rows after permute: 
+               2
+               5
+               3
+               0
+               4
+               6
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 2
+j: 1, cur_val: 5, self.rows[j as usize]: 5
+rows after permute: 
+               6
+               3
+               1
+               0
+               5
+               4
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 6
+j: 1, cur_val: 5, self.rows[j as usize]: 3
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               2
+               3
+               1
+               0
+               5
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 2, self.rows[j as usize]: 6
 REPEAT NUMBER: 1
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               1
+               6
+               5
+               2
+               0
+               3
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 1
+j: 1, cur_val: 0, self.rows[j as usize]: 6
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 3 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               1
+               4
+               5
+               6
+               0
+               3
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 1
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 4, self.rows[j as usize]: 1
 REPEAT NUMBER: 2
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               4
+               3
+               0
+               2
+               5
+               6
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 4
+j: 1, cur_val: 6, self.rows[j as usize]: 3
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 2 Γöé
+  Γöé 5 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               3
+               4
+               5
+               6
+               2
+               0
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 3
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 1, self.rows[j as usize]: 3
 REPEAT NUMBER: 3
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               5
+               0
+               4
+               2
+               1
+               6
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 5
+j: 1, cur_val: 0, self.rows[j as usize]: 0
+rows after permute: 
+               5
+               1
+               2
+               3
+               4
+               0
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 5
+j: 1, cur_val: 0, self.rows[j as usize]: 1
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               0
+               1
+               3
+               5
+               6
+               2
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 0
+rows after permute: 
+               0
+               6
+               4
+               2
+               1
+               5
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 0
+rows after permute: 
+               1
+               3
+               6
+               4
+               5
+               0
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 1
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 6, self.rows[j as usize]: 1
 REPEAT NUMBER: 4
-x: 
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           1.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        1.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        1.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        1.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        1.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        1.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        1.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        1.000
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               2
+               0
+               6
+               1
+               3
+               5
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 2
+j: 1, cur_val: 0, self.rows[j as usize]: 0
+rows after permute: 
+               4
+               5
+               2
+               1
+               6
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 4
+j: 1, cur_val: 0, self.rows[j as usize]: 5
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               0
+               6
+               1
+               3
+               2
+               5
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 0
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 0, self.rows[j as usize]: 0
+rows after permute: 
+               3
+               1
+               5
+               2
+               4
+               0
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 3
+rows after permute: 
+               5
+               1
+               3
+               0
+               6
+               4
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 5
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 0, self.rows[j as usize]: 5
 REPEAT NUMBER: 0
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 1 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 3 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               1
+               2
+               4
+               6
+               3
+               0
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 1
+j: 1, cur_val: 2, self.rows[j as usize]: 2
+rows after permute: 
+               0
+               1
+               6
+               3
+               2
+               4
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 0
+j: 1, cur_val: 2, self.rows[j as usize]: 1
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               2
+               1
+               4
+               3
+               0
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 5, self.rows[j as usize]: 6
 REPEAT NUMBER: 1
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               5
+               1
+               3
+               0
+               2
+               6
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 5
+j: 1, cur_val: 0, self.rows[j as usize]: 1
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 2 Γöé
+  Γöé 6 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               2
+               5
+               3
+               6
+               4
+               0
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 2
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 4, self.rows[j as usize]: 2
 REPEAT NUMBER: 2
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 2 Γöé
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               0
+               4
+               1
+               5
+               3
+               2
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 0
+j: 1, cur_val: 6, self.rows[j as usize]: 4
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 4 Γöé
+  Γöé 1 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               1
+               2
+               6
+               3
+               0
+               4
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 1
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 6, self.rows[j as usize]: 1
 REPEAT NUMBER: 3
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               1
+               6
+               2
+               5
+               3
+               0
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 1
+j: 1, cur_val: 0, self.rows[j as usize]: 6
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               1
+               0
+               2
+               5
+               3
+               4
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 1
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 4, self.rows[j as usize]: 1
 REPEAT NUMBER: 4
-x: 
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           1.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        1.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        1.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        1.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        1.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        1.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        1.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        1.000
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 1 Γöé
+  Γöé 3 Γöé
+  Γöé 5 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               6
+               1
+               0
+               2
+               3
+               5
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 6
+rows after permute: 
+               5
+               0
+               4
+               3
+               1
+               2
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 5
+j: 1, cur_val: 6, self.rows[j as usize]: 0
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               5
+               0
+               4
+               1
+               2
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 6, self.rows[j as usize]: 6
+rows after permute: 
+               6
+               1
+               4
+               5
+               3
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 6, self.rows[j as usize]: 6
+rows after permute: 
+               5
+               3
+               4
+               2
+               1
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 5
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 6, self.rows[j as usize]: 5
 REPEAT NUMBER: 0
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 1 Γöé
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               6
+               2
+               3
+               1
+               0
+               5
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 6
+j: 1, cur_val: 2, self.rows[j as usize]: 2
+rows after permute: 
+               6
+               1
+               4
+               5
+               2
+               0
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 6
+j: 1, cur_val: 2, self.rows[j as usize]: 1
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               0
+               6
+               5
+               1
+               3
+               4
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 0
+rows after permute: 
+               1
+               5
+               6
+               0
+               3
+               4
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 1
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 3, self.rows[j as usize]: 1
 REPEAT NUMBER: 1
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               1
+               0
+               6
+               4
+               3
+               2
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 1
+j: 1, cur_val: 5, self.rows[j as usize]: 0
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               2
+               6
+               3
+               1
+               5
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 2
+rows after permute: 
+               1
+               6
+               0
+               4
+               2
+               5
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 1
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 5, self.rows[j as usize]: 1
 REPEAT NUMBER: 2
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               4
+               5
+               2
+               1
+               6
+               0
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 4
+j: 1, cur_val: 0, self.rows[j as usize]: 5
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               2
+               5
+               4
+               1
+               0
+               6
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 2
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 3, self.rows[j as usize]: 2
 REPEAT NUMBER: 3
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 2 Γöé
+  Γöé 5 Γöé
+  Γöé 6 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 4 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               0
+               2
+               1
+               6
+               4
+               3
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 1, self.rows[j as usize]: 0
+j: 1, cur_val: 1, self.rows[j as usize]: 2
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               1
+               4
+               3
+               5
+               0
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 5, self.rows[j as usize]: 6
 REPEAT NUMBER: 4
-x: 
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           1.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        1.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        1.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        1.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        1.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        1.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        1.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        1.000
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 3 Γöé
+  Γöé 4 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               4
+               5
+               3
+               1
+               0
+               2
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 4
+j: 1, cur_val: 2, self.rows[j as usize]: 5
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 2 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               5
+               2
+               3
+               4
+               0
+               6
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 5
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 6, self.rows[j as usize]: 5
 REPEAT NUMBER: 0
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               2
+               6
+               3
+               1
+               0
+               5
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 1, self.rows[j as usize]: 2
+j: 1, cur_val: 1, self.rows[j as usize]: 6
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 2 Γöé
+  Γöé 6 Γöé
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               4
+               3
+               6
+               1
+               0
+               5
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 4
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 4, self.rows[j as usize]: 4
+rows after permute: 
+               6
+               0
+               3
+               2
+               1
+               4
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 5, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 4, self.rows[j as usize]: 6
 REPEAT NUMBER: 1
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               3
+               5
+               6
+               2
+               0
+               4
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 3
+j: 1, cur_val: 4, self.rows[j as usize]: 5
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 5 Γöé
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 4 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               3
+               0
+               5
+               6
+               2
+               1
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 3
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 1, self.rows[j as usize]: 3
 REPEAT NUMBER: 2
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               2
+               6
+               1
+               3
+               4
+               0
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 2
+j: 1, cur_val: 6, self.rows[j as usize]: 6
+rows after permute: 
+               5
+               0
+               2
+               3
+               1
+               4
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 5
+j: 1, cur_val: 6, self.rows[j as usize]: 0
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               2
+               1
+               5
+               4
+               0
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 6, self.rows[j as usize]: 6
+rows after permute: 
+               2
+               4
+               5
+               0
+               6
+               3
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 2
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 6, self.rows[j as usize]: 2
 REPEAT NUMBER: 3
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 3 Γöé
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               5
+               4
+               3
+               2
+               1
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 5
+j: 1, cur_val: 6, self.rows[j as usize]: 4
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               0
+               1
+               4
+               5
+               6
+               3
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 0
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 0, self.rows[j as usize]: 0
+rows after permute: 
+               3
+               2
+               0
+               5
+               1
+               6
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 3
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 0, self.rows[j as usize]: 3
 REPEAT NUMBER: 4
-x: 
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           1.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        1.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        1.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        1.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        1.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        1.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        1.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        1.000
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 4 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               0
+               2
+               3
+               4
+               5
+               6
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 0
+j: 1, cur_val: 2, self.rows[j as usize]: 2
+rows after permute: 
+               2
+               1
+               4
+               0
+               6
+               3
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 2
+rows after permute: 
+               1
+               0
+               5
+               2
+               6
+               3
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 1
+j: 1, cur_val: 2, self.rows[j as usize]: 0
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 6 Γöé
+  Γöé 3 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               2
+               3
+               4
+               5
+               1
+               0
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 2
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 4, self.rows[j as usize]: 2
 REPEAT NUMBER: 0
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               6
+               3
+               2
+               1
+               4
+               0
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 1, self.rows[j as usize]: 6
+j: 1, cur_val: 1, self.rows[j as usize]: 3
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               2
+               3
+               1
+               4
+               0
+               6
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 2
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 5, self.rows[j as usize]: 2
 REPEAT NUMBER: 1
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               6
+               5
+               1
+               4
+               2
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 6
+j: 1, cur_val: 4, self.rows[j as usize]: 5
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 4 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               0
+               1
+               3
+               4
+               2
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 0, self.rows[j as usize]: 6
 REPEAT NUMBER: 2
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               1
+               4
+               5
+               0
+               3
+               6
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 1
+j: 1, cur_val: 4, self.rows[j as usize]: 4
+rows after permute: 
+               5
+               1
+               4
+               6
+               3
+               0
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 5
+j: 1, cur_val: 4, self.rows[j as usize]: 1
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               3
+               4
+               0
+               5
+               1
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 2, self.rows[j as usize]: 6
 REPEAT NUMBER: 3
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               0
+               5
+               4
+               6
+               2
+               1
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 6, self.rows[j as usize]: 0
+j: 1, cur_val: 6, self.rows[j as usize]: 5
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               5
+               6
+               3
+               1
+               4
+               0
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 1, self.rows[j as usize]: 5
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 3, self.rows[j as usize]: 5
 REPEAT NUMBER: 4
-x: 
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           1.000        0.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        1.000        0.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        1.000        0.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        1.000        0.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        1.000        0.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        1.000        0.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        1.000        0.000
-           0.000        0.000        0.000        0.000        0.000        0.000        0.000        1.000
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 4 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               0
+               5
+               3
+               6
+               2
+               1
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 0
+j: 1, cur_val: 3, self.rows[j as usize]: 5
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 6 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               1
+               5
+               2
+               0
+               4
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 1, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 4, self.rows[j as usize]: 6
 REPEAT NUMBER: 0
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 2 Γöé
+  Γöé 6 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               2
+               4
+               6
+               3
+               1
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 2
+j: 1, cur_val: 4, self.rows[j as usize]: 4
+rows after permute: 
+               3
+               2
+               6
+               5
+               4
+               0
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 3
+j: 1, cur_val: 4, self.rows[j as usize]: 2
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 2 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               3
+               4
+               6
+               5
+               1
+               2
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 3
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 1, self.rows[j as usize]: 3
 REPEAT NUMBER: 1
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 2 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               5
+               3
+               6
+               2
+               4
+               0
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 5
+j: 1, cur_val: 3, self.rows[j as usize]: 3
+rows after permute: 
+               5
+               3
+               4
+               1
+               0
+               2
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 5
+j: 1, cur_val: 3, self.rows[j as usize]: 3
+rows after permute: 
+               5
+               6
+               1
+               2
+               0
+               3
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 5
+j: 1, cur_val: 3, self.rows[j as usize]: 6
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 5 Γöé
+  Γöé 6 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 3 Γöé
+  Γöé 4 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               1
+               3
+               2
+               4
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 4, self.rows[j as usize]: 6
 REPEAT NUMBER: 2
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 4 Γöé
+  Γöé 2 Γöé
+  Γöé 1 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               1
+               6
+               4
+               2
+               3
+               0
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 3, self.rows[j as usize]: 1
+j: 1, cur_val: 3, self.rows[j as usize]: 6
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 1 Γöé
+  Γöé 6 Γöé
+  Γöé 4 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               2
+               5
+               0
+               4
+               1
+               3
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 2
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 5, self.rows[j as usize]: 2
 REPEAT NUMBER: 3
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 0 Γöé
+  Γöé 3 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 1 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               1
+               2
+               3
+               0
+               5
+               4
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 1
+j: 1, cur_val: 2, self.rows[j as usize]: 2
+rows after permute: 
+               1
+               5
+               2
+               3
+               0
+               4
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 1
+j: 1, cur_val: 2, self.rows[j as usize]: 5
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 1 Γöé
+  Γöé 5 Γöé
+  Γöé 2 Γöé
+  Γöé 3 Γöé
+  Γöé 0 Γöé
+  Γöé 4 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               4
+               0
+               2
+               3
+               1
+               5
+               6
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 4
+rows after permute: 
+               6
+               0
+               1
+               3
+               4
+               2
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 6, self.rows[j as usize]: 6
+rows after permute: 
+               6
+               4
+               0
+               3
+               2
+               5
+               1
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 6, self.rows[j as usize]: 6
+rows after permute: 
+               1
+               2
+               4
+               5
+               0
+               6
+               3
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 4, self.rows[j as usize]: 1
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 6, self.rows[j as usize]: 1
 REPEAT NUMBER: 4
-min_d: 0.06331964047096607
+no_dup_permute_b called with little_n: 1, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 1 Γöé
+  Γöé 0 Γöé
+  Γöé 6 Γöé
+  Γöé 5 Γöé
+  Γöé 3 Γöé
+  Γöé 4 Γöé
+  Γöé 2 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 2
+rows after permute: 
+               3
+               1
+               4
+               2
+               6
+               0
+               5
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 1, offset: 2, i: 0
+j: 0, cur_val: 2, self.rows[j as usize]: 3
+j: 1, cur_val: 2, self.rows[j as usize]: 1
+no_dup_permute_b called with little_n: 2, bs: 3, block_data.rows: 
+  Γöî   ΓöÉ
+  Γöé 3 Γöé
+  Γöé 1 Γöé
+  Γöé 4 Γöé
+  Γöé 2 Γöé
+  Γöé 6 Γöé
+  Γöé 0 Γöé
+  Γöé 5 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöé 0 Γöé
+  Γöö   Γöÿ
+
+, offset: 4
+rows after permute: 
+               6
+               3
+               0
+               5
+               1
+               2
+               4
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+               0
+bs: 3, little_n: 2, offset: 4, i: 0
+j: 0, cur_val: 0, self.rows[j as usize]: 6
+bs: 3, little_n: 2, offset: 4, i: 1
+j: 0, cur_val: 5, self.rows[j as usize]: 6
+min_d: 0.08033555848883156
 best_solution coincidence: 
-               4            1            1            1            1            1            1            1            1
-               0            4            1            1            1            1            1            1            1
-               0            0            4            1            1            1            1            1            1
-               0            0            0            4            1            1            1            1            1
-               0            0            0            0            4            1            1            1            1
-               0            0            0            0            0            4            1            1            1
-               0            0            0            0            0            0            4            1            1
-               0            0            0            0            0            0            0            4            1
-               0            0            0            0            0            0            0            0            4
+               3            1            1            1            1            1            1
+               0            3            1            1            1            1            1
+               0            0            3            1            1            1            1
+               0            0            0            3            1            1            1
+               0            0            0            0            3            1            1
+               0            0            0            0            0            3            1
+               0            0            0            0            0            0            3
 block_array before sort: 
-               7            1            4
-               7            2            6
-               3            1            2
-               3            8            7
-               6            5            1
-               0            2            4
-               4            8            6
-               6            3            0
-               0            5            7
-               8            0            1
-               4            3            5
-               2            8            5
+               2            1            5
+               2            3            4
+               1            0            4
+               1            3            6
+               0            5            3
+               6            0            2
+               6            5            4
 best_solution block_array: 
-               0            1            8
-               0            2            4
-               0            3            6
-               0            5            7
-               1            2            3
-               1            4            7
-               1            5            6
-               2            5            8
-               2            6            7
+               1            2            5
+               1            3            7
+               1            4            6
+               2            3            6
+               2            4            7
                3            4            5
-               3            7            8
-               4            6            8
+               5            6            7

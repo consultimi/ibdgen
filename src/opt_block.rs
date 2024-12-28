@@ -15,29 +15,6 @@ macro_rules! debug_println {
 }
 
 impl BlockData {
-    /*
-    fn new() -> Self {
-        BlockData { 
-            x: DMatrix::zeros(0, 0),
-            t_x: DMatrix::zeros(0, 0),
-            b: DMatrix::zeros(0, 0), 
-            block_means: DMatrix::zeros(0, 0), 
-            t_block_means: DMatrix::zeros(0, 0), 
-            t: DMatrix::zeros(0, 0),
-            t_inv: DMatrix::zeros(0, 0),
-            max_n: 0,
-            n: 0,
-            k: 0,
-            n_t: 0,
-            n_xb: 0,
-            n_b: 0,
-            block_sizes: vec![0; 0],
-            random_type: RandomType::Uniform,
-            n_repeat_counts: 0,
-            rows: DVector::zeros(0),
-        }
-    }
- */
 
 
     fn reduce_x_to_t(&mut self) -> (f64, bool) {
@@ -107,7 +84,6 @@ impl BlockData {
     
             k_index += 1;
             for j in (i+1)..self.k {
-                debug_println!("i: {}, j: {}, k_index: {}, s: {}, t_vec[{}]: {}, c: {}, r: {}", i, j, k_index, s, j, t_vec[j as usize], c, self.t[k_index]);
                 let r = self.t[k_index];
                 self.t[k_index] = s * t_vec[j as usize] + c * r;
                 t_vec[j as usize] -= t_vec[i as usize] * r;
@@ -129,9 +105,11 @@ impl BlockData {
         
         let scale_vec = t_inv.diagonal().map(|x| x.sqrt());
         t_inv.fill_diagonal(1.0);
+
+        
         for (i, mut row) in t_inv.row_iter_mut().enumerate() {
             row *= scale_vec[i];
-        }
+        } 
 
         let rowtally: Vec<f64> = t_inv.column_iter().map(|x| x.map(|x| x.powi(2)).sum()).collect::<Vec<_>>();
 
@@ -147,7 +125,6 @@ impl BlockData {
         for i in 0..self.n {
             self.rows[i as usize] = i;
         }
-    
     
         let mut l = 0;
         let mut m = 0;
@@ -166,20 +143,19 @@ impl BlockData {
     }
 
     fn no_dup_permute_b(&mut self, offset: u8, little_n: u8, bs: u8) -> Result<()> {
-        //debug_println!("no_dup_permute_b called with little_n: {}, bs: {}, block_data.rows: {}, offset: {}", little_n, bs, &block_data.rows, offset);
+        //eprintln!("no_dup_permute_b called with little_n: {}, bs: {}, block_data.rows: {}, offset: {}", little_n, bs, &self.rows, offset);
         //debug_println!("b: {}", pretty_print!(&block_data.b));
         loop {
             //dbg!(&block_data.rows);
             let mut nodup = true;
             permute_b(&mut self.rows, self.n, self.random_type).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
+            //eprintln!("rows after permute: {}", pretty_print!(&self.rows));
             for i in 0..little_n {
-                debug_println!("bs: {}, little_n: {}, offset: {}, i: {}", bs, little_n, offset, i);
+                //eprintln!("bs: {}, little_n: {}, offset: {}, i: {}", bs, little_n, offset, i);
                 let index = offset * self.max_n + i;
                 let cur_val = self.b[cmi_from_rmi(index as usize, self.max_n as usize, self.n_b as usize) as usize];
-                //let index = offset * block_data.k + i;
-                //debug_println!("index: {}", index);
-                //let cur_val = block_data.b[index as usize];
                 for j in 0..(bs - little_n) {
+                    //eprintln!("j: {}, cur_val: {}, self.rows[j as usize]: {}", j, cur_val, self.rows[j as usize]);
                     if self.rows[j as usize] as f64 == cur_val {
                         nodup = false;
                         break;
@@ -315,7 +291,7 @@ impl BlockData {
 
     
     fn exchange_block(&mut self, xcur: u8, xnew: u8, cur_block: u8, new_block: &mut u8) -> Result<()> {
-        let mut vec = DVector::zeros(self.k as usize);
+        //let mut vec = DVector::zeros(self.k as usize);
         //let b_transpose = block_data.b.transpose();
         let row_no_i = self.b[cmi_from_rmi(
             (cur_block * self.max_n + xcur) as usize,
@@ -341,47 +317,22 @@ impl BlockData {
         let c = (ni + nj) as f64 / (ni * nj) as f64;
 
         // vec = xmj - xmi
-        vec = (xmj - xmi).transpose();
-        debug_println!("t before rotate: {}", pretty_print!(&self.t));
+        let mut vec = (xmj - xmi).transpose();
         self.rotate_b(&vec, 1.0);
-        debug_println!("t after rotate: {}", pretty_print!(&self.t));
-
-        // vec -= xrj - xri
-        /*
-        for i in 0..self.k {
-            vec[i as usize] -= xrj[i as usize] - xri[i as usize];
-        } */
         vec -= (xrj - xri).transpose();
-
-        debug_println!("t before rotate: {}", pretty_print!(&self.t));
         self.rotate_b(&vec, -1.0);
-        debug_println!("t after rotate: {}", pretty_print!(&self.t));
-        // vec = xrj - xri
-        /*
-        for i in 0..self.k {
-            vec[i as usize] = xrj[i as usize] - xri[i as usize];
-        } */
         vec = (xrj - xri).transpose();
-        debug_println!("t before rotate: {}", pretty_print!(&self.t));
         self.rotate_b(&vec, 1.0 - c);
-        debug_println!("t after rotate: {}", pretty_print!(&self.t));
-
-        debug_println!("block_data.block_means before update: {}", pretty_print!(&self.block_means));
+        
         // Update block means
-        debug_println!("block_data.k: {}", self.k);
         for i in 0..self.k {
             let idx = cmi_from_rmi((cur_block as usize * self.k as usize + i as usize) as usize, self.k as usize, self.n_b as usize);
             let newsum = (xrj[i as usize] - xri[i as usize]) / ni as f64;
-            debug_println!("idx: {}, xrj[i]: {}, xri[i]: {}, ni: {}, newsum: {}", idx, xrj[i as usize], xri[i as usize], ni, newsum);
             self.block_means[idx as usize] += newsum;
             let idx = cmi_from_rmi((*new_block as usize * self.k as usize + i as usize) as usize, self.k as usize, self.n_b as usize);
-            //let idx = row_no_j as u8 + i as u8;
             let newsum = (xri[i as usize] - xrj[i as usize]) / nj as f64;
-            debug_println!("idx: {}, xrj[i]: {}, xri[i]: {}, nj: {}, newsum: {}", idx, xrj[i as usize], xri[i as usize], nj, newsum);
             self.block_means[idx as usize] = self.block_means[idx as usize] + newsum;
         }
-
-        debug_println!("block_data.block_means after update: {}", pretty_print!(&self.block_means));
 
         self.b[cmi_from_rmi(
             (*new_block * self.max_n + xnew) as usize,
@@ -411,63 +362,19 @@ impl BlockData {
     
         for repeat_num in 0..n_repeats {
             println!("REPEAT NUMBER: {}", repeat_num);
-            debug_println!("t_inv after beginning of loop: {}", pretty_print!(&self.t_inv));
-            debug_println!("t after first beginning of loop: {}", pretty_print!(&self.t));
-            debug_println!("block_data.t_x: {}", pretty_print!(&self.t_x));
-            debug_println!("block_data.t_block_means: {}", pretty_print!(&self.t_block_means));
-            debug_println!("block_data.block_means: {}", pretty_print!(&self.block_means));
-            debug_println!("block_data.b: {}", pretty_print!(&self.b));
-    
             self.initialize_b().map_err(|e| anyhow!("Failed to initialize b: {}", e))?;
-    
-            debug_println!("block_data.b after initialize_b: {}", pretty_print!(&self.b));
-    
-            //dbg!(&block_data.b);
             self.form_block_means();
             let (mut log_det, singular) = self.reduce_x_to_t();
             if singular {
                 return Err(anyhow!("Singular matrix"));
             } else {
-                debug_println!("t_inv before first make_ti_from_tb: {}", pretty_print!(&self.t_inv));
                 av_var = self.make_ti_from_tb().map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
-                debug_println!("t_inv after first make_ti_from_tb: {}", pretty_print!(&self.t_inv));
-                debug_println!("t after first make_ti_from_tb: {}", pretty_print!(&self.t));
                 self.transform();
-    
-                //debug_println!("420 block_data.t_x: {}", pretty_print!(&block_data.t_x));
-                //debug_println!("421block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
                 loop {  
                     let mut exchanged = false;
-                    let mut cur_block = 0;
-                    loop {
+                    for cur_block in 0..self.n_b {
                         for xcur in 0..self.block_sizes[cur_block as usize] {
-                            debug_println!("BEING LOOP xcur: {}, curBlock: {}, newBlock: {}", xcur, cur_block, new_block);
-                            let delta = self.find_delta_block(xcur, &mut xnew, cur_block, &mut new_block).map_err(|e| anyhow!("Failed to find delta block: {}", e))?;
-                            debug_println!("delta: {}", delta);
-                            if delta < 10.0 && delta > DESIGN_TOL {
-    
-                                debug_println!("t before exchange: {}", pretty_print!(&self.t));
-                                debug_println!("t_inv before exchange: {}", pretty_print!(&self.t_inv));
-                                self.exchange_block(xcur, xnew, cur_block, &mut new_block).map_err(|e| anyhow!("Failed to exchange block: {}", e))?;
-                                debug_println!("t_inv after exchange: {}", pretty_print!(&self.t_inv));
-                                exchanged = true;
-                                log_det += (1.0 + delta).ln();      
-                                av_var = self.make_ti_from_tb().map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
-                                debug_println!("t_inv after make_ti_from_tb: {}", pretty_print!(&self.t_inv));
-                                debug_println!("t after make_ti_from_tb: {}", pretty_print!(&self.t));
-    
-                                self.transform();
-
-    
-                                debug_println!("block_data.t_x: {}", pretty_print!(&self.t_x));
-                                debug_println!("block_data.t_block_means: {}", pretty_print!(&self.t_block_means));
-                                debug_println!("block_data.block_means: {}", pretty_print!(&self.block_means));
-                            }
-                        }
-                        if cur_block == self.n_b - 1 {
-                            break;
-                        } else {
-                            cur_block += 1;
+                            self.try_exchange_block(&mut xnew, &mut new_block, &mut av_var, &mut log_det, &mut exchanged, cur_block, xcur)?;
                         }
                     }
                     if !exchanged {
@@ -477,7 +384,6 @@ impl BlockData {
                     if log_det > best_log_det {
                         best_log_det = log_det;
                         best_block_array = self.b.clone().try_cast::<usize>().unwrap();
-    
                     }
                 }
             }
@@ -491,11 +397,35 @@ impl BlockData {
         let best_diagonality = 1.0 / (best_d * av_var * self.n_xb as f64);
         let best_coincidence = CoincidenceMatrix::from_block_array(&best_block_array);
         let best_block_array = BlockArray::from_block_array(&best_block_array);
-        //debug_println!("best_log_det: {}", best_log_det);
-        //debug_println!("best_block_array: {}", best_block_array.block_array);
+
         Ok(BlockResult { best_log_det, best_block_array, best_d, best_diagonality, best_coincidence })
     }
 
+    fn try_exchange_block(&mut self, xnew: &mut u8, new_block: &mut u8, av_var: &mut f64, log_det: &mut f64, exchanged: &mut bool, cur_block: u8, xcur: u8) -> Result<(), Error> {
+        debug_println!("BEING LOOP xcur: {}, curBlock: {}, newBlock: {}", xcur, cur_block, new_block);
+        let delta = self.find_delta_block(xcur, xnew, cur_block, new_block).map_err(|e| anyhow!("Failed to find delta block: {}", e))?;
+        debug_println!("delta: {}", delta);
+        Ok(if delta < 10.0 && delta > DESIGN_TOL {
+    
+            debug_println!("t before exchange: {}", pretty_print!(&self.t));
+            debug_println!("t_inv before exchange: {}", pretty_print!(&self.t_inv));
+            self.exchange_block(xcur, *xnew, cur_block, new_block).map_err(|e| anyhow!("Failed to exchange block: {}", e))?;
+            debug_println!("t_inv after exchange: {}", pretty_print!(&self.t_inv));
+            *exchanged = true;
+            *log_det += (1.0 + delta).ln();      
+            *av_var = self.make_ti_from_tb().map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
+            debug_println!("t_inv after make_ti_from_tb: {}", pretty_print!(&self.t_inv));
+            debug_println!("t after make_ti_from_tb: {}", pretty_print!(&self.t));
+    
+            self.transform();
+    
+    
+            debug_println!("block_data.t_x: {}", pretty_print!(&self.t_x));
+            debug_println!("block_data.t_block_means: {}", pretty_print!(&self.t_block_means));
+            debug_println!("block_data.block_means: {}", pretty_print!(&self.block_means));
+        })
+    }
+    
     fn transform(&mut self) {
         self.t_x = self.x.clone() * self.t_inv.transpose().clone();
         self.t_block_means = self.block_means.clone() * self.t_inv.transpose().clone();
@@ -634,7 +564,7 @@ impl BlockArray {
             }
         }
 
-        for i in 0..block_array_out.ncols() {
+        for _ in 0..block_array_out.ncols() {
             let mut swapped = true;
             while swapped {
                 swapped = false;
@@ -736,7 +666,7 @@ impl BlockDataBuilder {
         self.k = Some((value - 1) as u8);
         self.t_x =Some(DMatrix::zeros(value as usize, (value - 1) as usize));
 
-        println!("x: {}", pretty_print!(&x_sub));
+        //println!("x: {}", pretty_print!(&x_sub));
         self
     }
 } 
@@ -755,19 +685,6 @@ pub fn opt_block(v: u8, n_b: u8, block_size: u8,  n_repeats: u8) -> Result<Block
 
     
     let block_result = block_data.block_optimize(n_repeats).map_err(|e| anyhow!("Failed to optimize block: {}", e))?;
-    //println!("block_result: {}", pretty_print!(&block_result.best_block_array.block_array.add_scalar(1)));
-    //println!("block_result.best_log_det: {}", block_result.best_log_det);
-    //println!("block_result.best_d: {}", block_result.best_d);
-    //println!("block_result.best_diagonality: {}", block_result.best_diagonality);
-    // Create coincidence matrix to store pairwise counts
-    
-    //let coincidence = block_data.create_coincidence_matrix(&block_result);
-    //debug_println!("coincidence: {}", pretty_print!(&coincidence));
-    // For each block, count coincidences between all pairs of elements
-    
-
-    //println!("Coincidence matrix:");
-    //println!("{}", pretty_print!(&block_result.best_coincidence.coincidence));
     Ok(block_result)
 }
 
@@ -1140,5 +1057,81 @@ mod tests {
         assert_eq!(block_result.best_log_det, 3.1378770132679095);
     }
 
+    #[test]
+    fn test_permute_b() {
+        // Create a vector with sequential numbers 0..5
+        let mut a = DVector::from_vec(vec![0, 1, 2, 3, 4]);
+        let n = 5;
+        
+        // Use fixed random value of 0.5 to make test deterministic
+        let random_type = RandomType::Fixed(0.5);
+        
+        permute_b(&mut a, n, random_type).unwrap();
+
+        // With fixed random value 0.5, we can predict the exact permutation:
+        // i=1: j=floor((1+1)*0.5)=1 -> swap a[1] with a[1] -> [0,1,2,3,4]
+        // i=2: j=floor((1+2)*0.5)=1 -> swap a[2] with a[1] -> [0,2,1,3,4]
+        // i=3: j=floor((1+3)*0.5)=2 -> swap a[3] with a[2] -> [0,2,3,1,4]
+        // i=4: j=floor((1+4)*0.5)=2 -> swap a[4] with a[2] -> [0,2,4,1,3]
+        let expected = DVector::from_vec(vec![0, 2, 4, 1, 3]);
+        
+        assert_eq!(a, expected);
+    }
+
+    #[test]
+    fn test_no_dup_permute_b() {
+        let mut block_data = configure_block_data();
+        
+        // Initialize rows with sequential numbers
+        block_data.rows = DVector::from_vec(vec![6, 5, 4, 3, 2, 1, 0]);
+        
+        // Set up b matrix with some initial values
+        block_data.b = nalgebra::dmatrix![
+            0.0, 2.0, 4.0;
+            6.0, 3.0, 1.0;
+            5.0, 0.0, 4.0;
+            3.0, 5.0, 6.0;
+            2.0, 1.0, 0.0;
+            3.0, 6.0, 1.0;
+            5.0, 4.0, 2.0;
+        ];
+
+
+        // Call no_dup_permute_b with test parameters
+        // offset: 0, little_n: 2, bs: 3
+        block_data.no_dup_permute_b(0, 2, 3).unwrap();
+
+        // After permutation:
+        // 1. The permuted rows should all be different numbers
+        // 2. None of the first (bs - little_n) elements should match the values
+        //    in block_data.b at the specified offset
+        
+        // Get the first block row from b matrix
+        let first_block = block_data.b.row(0);
+        
+        // Check that none of the first (bs - little_n = 1) elements in rows
+        // match the values in the first block of b
+        
+        let non_matching = (0..1).all(|j| {
+            !first_block.iter().take(2).any(|&val| {
+                block_data.rows[j] as f64 == val
+            })
+        });
+ 
+        assert!(non_matching, "Found matching values between permuted rows and block values");
+        
+        // Check that all values in rows are unique
+        let mut seen = vec![false; 7];
+        let all_unique = block_data.rows.iter().all(|&x| {
+            if seen[x as usize] {
+                false
+            } else {
+                seen[x as usize] = true;
+                true
+            }
+        }); 
+
+        assert!(all_unique, "Permuted rows contain duplicate values");
+    }
 }
 
