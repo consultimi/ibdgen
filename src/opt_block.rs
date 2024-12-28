@@ -1,4 +1,4 @@
-use nalgebra::{DMatrix, DVector};
+use nalgebra::{DMatrix, DVector, SVector};
 use pretty_print_nalgebra::*;
 use anyhow::*;
 use derive_builder::Builder;
@@ -242,38 +242,31 @@ impl BlockData {
         let fi = self.t_x.row(cur_row_no);
         let fmi = self.t_block_means.row(cur_block as usize);
         let b_transpose = self.b.transpose();
-        debug_println!("t_block_means inside find_delta_blocks: {}", pretty_print!(&self.t_block_means));
-        debug_println!("b_transpose inside find_delta_blocks: {}", pretty_print!(&b_transpose));
-        debug_println!("b inside find_delta_blocks: {}", pretty_print!(&self.b));
         // Loop through all blocks except current
         for i in 0..self.n_b {
             if i != cur_block {
                 let nj = self.block_sizes[i as usize];
                 
+                let g_vec: SVector<f64, 3> = SVector::from_vec(vec![(ni + nj) as f64 / (ni * nj) as f64, 1.0, 0.0]);
                 // Calculate geometric coefficient based on block sizes
-                let gi0 = (ni + nj) as f64 / (ni * nj) as f64;
-                let gi1 = 1.0;
-                let gi2 = 0.0;
 
                 let fmj = self.t_block_means.row(i as usize);
                 let diff = fmj - fmi;
-                let mi0 = diff.component_mul(&diff).sum();
-                
+                let mut mi_vec: SVector<f64, 3> = SVector::from_vec(vec![diff.component_mul(&diff).sum(), 0.0, 0.0]);
+
                 // Try exchanging with each point in candidate block
                 for j in 0..nj {
                     let row_no = b_transpose[(i * self.max_n + j) as usize] as usize;
                     let fj = self.t_x.row(row_no);
-                   let mi1 = (fmj - fmi).component_mul(&(fj - fi)).sum();
-                   let mi2 = (fj - fi).component_mul(&(fj - fi)).sum();
+                    mi_vec[1] = (fmj - fmi).component_mul(&(fj - fi)).sum();
+                    mi_vec[2] = (fj - fi).component_mul(&(fj - fi)).sum();
 
                     
                     // Combine geometric and moment terms
-                    let m1i0 = gi0 + mi0;
-                    let m1i1 = gi1 + mi1;
-                    let m1i2 = gi2 + mi2;
+                    let mlivec = g_vec + mi_vec;
 
                     // Calculate improvement in criterion
-                    let d = -(1.0 + m1i0 * m1i2 - m1i1 * m1i1);
+                    let d = -(1.0 + mlivec[0] * mlivec[2] - mlivec[1] * mlivec[1]);
                     debug_println!("d: {}, i: {}, j: {}", d, i, j);
                     // Update best exchange if improvement is large enough
                     if (d - delta) > DELTA_TOL {
@@ -622,7 +615,6 @@ struct BlockData {
     #[builder(setter(custom))]
     block_sizes: Vec<u8>, // block_sizes is a vector of block sizes
 
-    n_repeat_counts: u8, // n_repeat_counts is the number of repeats
     rows: DVector<u8>,  // rows is a vector of row indices
 }
 
@@ -678,7 +670,6 @@ pub fn opt_block(v: u8, n_b: u8, block_size: u8,  n_repeats: u8) -> Result<Block
         .v(v)
         .n_b(n_b)
         .blocksize(block_size)
-        .n_repeat_counts(n_repeats)
         .configure_remaining()
         .build()
         .map_err(|e| anyhow!("Failed to build block_data: {}", e))?;
@@ -700,7 +691,6 @@ mod tests {
             .n_b(7)
             .blocksize(3)
             .random_type(RandomType::Fixed(0.5))
-            .n_repeat_counts(1)
             .configure_remaining()
             .build();
         block_data.unwrap()
@@ -721,13 +711,7 @@ mod tests {
 
     #[test]
     fn test_initialize_b() {
-        let x = dm7choose3();
         let mut block_data = configure_block_data();
-        //let mut block_array = vec![0; block_data.n_b as usize * block_data.max_n as usize];
-
-       
-        //block_data.initialize_block_array(&mut block_array);
-        //assert_eq!(block_array, expected.to_vec());
 
         block_data.initialize_b().unwrap();
 
