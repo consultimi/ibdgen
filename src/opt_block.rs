@@ -146,16 +146,13 @@ impl BlockData {
         //eprintln!("no_dup_permute_b called with little_n: {}, bs: {}, block_data.rows: {}, offset: {}", little_n, bs, &self.rows, offset);
         //debug_println!("b: {}", pretty_print!(&block_data.b));
         loop {
-            //dbg!(&block_data.rows);
             let mut nodup = true;
             permute_b(&mut self.rows, self.n, self.random_type).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
             //eprintln!("rows after permute: {}", pretty_print!(&self.rows));
             for i in 0..little_n {
-                //eprintln!("bs: {}, little_n: {}, offset: {}, i: {}", bs, little_n, offset, i);
                 let index = offset * self.max_n + i;
                 let cur_val = self.b[cmi_from_rmi(index as usize, self.max_n as usize, self.n_b as usize) as usize];
                 for j in 0..(bs - little_n) {
-                    //eprintln!("j: {}, cur_val: {}, self.rows[j as usize]: {}", j, cur_val, self.rows[j as usize]);
                     if self.rows[j as usize] as f64 == cur_val {
                         nodup = false;
                         break;
@@ -169,7 +166,7 @@ impl BlockData {
                 break;
             }
         }
-    
+
         Ok(())
     }
     
@@ -226,49 +223,89 @@ impl BlockData {
     }
 
     
-    fn find_delta_block(&mut self, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8) -> Result<f64> {
+    fn find_delta_block(&mut self, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8, 
+        prohibited_pairs: &[(u8, u8)]) -> Result<f64> {
         const DELTA_TOL: f64 = 1e-12;  // Minimum improvement threshold
         let mut delta = 0.0;  // Tracks best improvement found
         
-        debug_println!("find_delta_block called with xcur: {}, xnew: {}, cur_block: {}, new_block: {}", xcur, xnew, cur_block, new_block);
         // Get current point's row number and block size
         //let cur_row_no = block_data.b[(cur_block * block_data.max_n + xcur) as usize] as usize;
         let cur_row_no = self.b[cmi_from_rmi((cur_block * self.max_n + xcur) as usize, self.max_n as usize, self.n_b as usize) as usize] as usize;
         debug_println!("cur_row_no: {}", cur_row_no);
         let ni = self.block_sizes[cur_block as usize];
-        //debug_println!("transposed block means: {}", &block_data.t_block_means);
 
+
+        // Get pointers to current point and its block mean
+        
         // Get pointers to current point and its block mean
         let fi = self.t_x.row(cur_row_no);
         let fmi = self.t_block_means.row(cur_block as usize);
         let b_transpose = self.b.transpose();
+
         // Loop through all blocks except current
         for i in 0..self.n_b {
             if i != cur_block {
                 let nj = self.block_sizes[i as usize];
                 
-                let g_vec: SVector<f64, 3> = SVector::from_vec(vec![(ni + nj) as f64 / (ni * nj) as f64, 1.0, 0.0]);
-                // Calculate geometric coefficient based on block sizes
+                // Check if exchange would create prohibited combination
+                let would_violate_constraints = |candidate_row: u8| {
+                    // Get all points in the target block except the one we're exchanging
+                    let block_points: Vec<u8> = b_transpose.row(i as usize)
+                        .iter()
+                        .take(nj as usize)
+                        .filter(|&&x| x >= 0.0)  // Filter out empty slots (-1.0)
+                        .map(|&x| x as u8)
+                        .filter(|&x| x != candidate_row)  // Exclude the point we're exchanging
+                        .collect();
+
+                    // Check if current point would violate constraints with any point in the block
+                    for &point in &block_points {
+                        if prohibited_pairs.iter().any(|&(a, b)| 
+                            (cur_row_no as u8 == a && point == b) || 
+                            (cur_row_no as u8 == b && point == a)
+                        ) {
+                            return true;
+                        }
+                    }
+                    false
+                };
+
+                let g_vec: SVector<f64, 3> = SVector::from_vec(vec![
+                    (ni + nj) as f64 / (ni * nj) as f64, 
+                    1.0, 
+                    0.0
+                ]);
 
                 let fmj = self.t_block_means.row(i as usize);
                 let diff = fmj - fmi;
-                let mut mi_vec: SVector<f64, 3> = SVector::from_vec(vec![diff.component_mul(&diff).sum(), 0.0, 0.0]);
+                let mut mi_vec: SVector<f64, 3> = SVector::from_vec(vec![
+                    diff.component_mul(&diff).sum(), 
+                    0.0, 
+                    0.0
+                ]);
 
                 // Try exchanging with each point in candidate block
                 for j in 0..nj {
                     let row_no = b_transpose[(i * self.max_n + j) as usize] as usize;
+                    
+                    // Skip if exchange would create prohibited combination
+                    if prohibited_pairs.len() > 0 && would_violate_constraints(row_no as u8) {
+                        continue;
+                    }
+
                     let fj = self.t_x.row(row_no);
                     mi_vec[1] = (fmj - fmi).component_mul(&(fj - fi)).sum();
                     mi_vec[2] = (fj - fi).component_mul(&(fj - fi)).sum();
 
+
+                    
+                    // Combine geometric and moment terms
+                    
                     
                     // Combine geometric and moment terms
                     let mlivec = g_vec + mi_vec;
-
-                    // Calculate improvement in criterion
                     let d = -(1.0 + mlivec[0] * mlivec[2] - mlivec[1] * mlivec[1]);
-                    debug_println!("d: {}, i: {}, j: {}", d, i, j);
-                    // Update best exchange if improvement is large enough
+
                     if (d - delta) > DELTA_TOL {
                         delta = d;
                         *new_block = i;
@@ -277,7 +314,6 @@ impl BlockData {
                 }
             }
         }
-
 
         Ok(delta)
     }
@@ -327,6 +363,8 @@ impl BlockData {
             self.block_means[idx as usize] = self.block_means[idx as usize] + newsum;
         }
 
+        println!("new_block: {}, xnew: {}, b before exchange: {}", *new_block, xnew, pretty_print!(&self.b));
+
         self.b[cmi_from_rmi(
             (*new_block * self.max_n + xnew) as usize,
             self.max_n as usize,
@@ -338,6 +376,8 @@ impl BlockData {
             self.max_n as usize,
             self.n_b as usize
         ) as usize] = row_no_j as f64;
+
+        println!("cur_block: {}, xcur: {}, b after exchange: {}", cur_block, xcur, pretty_print!(&self.b));
 
         Ok(())
     }
@@ -396,7 +436,7 @@ impl BlockData {
 
     fn try_exchange_block(&mut self, xnew: &mut u8, new_block: &mut u8, av_var: &mut f64, log_det: &mut f64, exchanged: &mut bool, cur_block: u8, xcur: u8) -> Result<(), Error> {
         debug_println!("BEING LOOP xcur: {}, curBlock: {}, newBlock: {}", xcur, cur_block, new_block);
-        let delta = self.find_delta_block(xcur, xnew, cur_block, new_block).map_err(|e| anyhow!("Failed to find delta block: {}", e))?;
+        let delta = self.find_delta_block(xcur, xnew, cur_block, new_block, &[]).map_err(|e| anyhow!("Failed to find delta block: {}", e))?;
         debug_println!("delta: {}", delta);
         Ok(if delta < 10.0 && delta > DESIGN_TOL {
     
@@ -983,7 +1023,7 @@ mod tests {
         debug_println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
         debug_println!("block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
         //find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8)  
-        block_data.find_delta_block(0, &mut x_new, 0, &mut new_block).unwrap();
+        block_data.find_delta_block(0, &mut x_new, 0, &mut new_block, &[]).unwrap();
         assert_eq!(new_block, 1);
         assert_eq!(x_new, 0);
     }

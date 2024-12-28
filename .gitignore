@@ -25,3 +25,4 @@ R/.Rhistory
 **/*.obj
 ~*
 zig-out
+rustoutput.txt
