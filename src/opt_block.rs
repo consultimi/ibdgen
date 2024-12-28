@@ -14,6 +14,64 @@ macro_rules! debug_println {
     };
 }
 
+#[derive(Builder, Debug)]
+#[builder(build_fn(error = "anyhow::Error"))]
+struct BlockData {
+
+    /* x is the input matrix, typically it'll be a dummy coded design matrix (diag is 1, off-diag is 0, first row all 0) */
+    x: DMatrix<f64>,   
+
+    /* t_x is the transpose of x */
+    t_x: DMatrix<f64>,  
+
+    /* b is a matrix of block factors. ncols is max(blocksizes) */
+    b: DMatrix<f64>,    
+
+    /* block_means is a matrix of block means */
+    block_means: DMatrix<f64>, 
+
+    /* t_block_means is a matrix of transformed block means */
+    t_block_means: DMatrix<f64>, 
+
+    /* t is a matrix of transformed data. It's upper triangular and has scale values on the diagonal */
+    t: DMatrix<f64>, 
+
+    /* t_inv is the inverse of t */
+    t_inv: DMatrix<f64>,
+
+    /* max_n is the maximum block size */
+    max_n: u8,
+
+    /* n is the number of rows in x */
+    n: u8,
+
+    /* k is the number of columns in x */
+    k: u8, 
+
+    /* n_t is the number of rows to use. If init_rows is true, n_t = n_xb, otherwise n_t = n */
+    n_t: u8,
+
+    /* n_xb is the number of rows in x that are used in the blocks */
+    n_xb: u8,           
+
+    /* n_b is the number of blocks */
+    n_b: u8,           
+    
+    #[builder(default = "RandomType::Uniform")]
+    random_type: RandomType, // random_type is the type of randomization
+    
+    #[builder(setter(custom))]
+    block_sizes: Vec<u8>, // block_sizes is a vector of block sizes
+
+    /* rows is a vector of row indices */
+    rows: DVector<u8>, 
+
+    /* prohibited_pairs is a vector of prohibited pairs */
+    #[builder(default = "vec![]")]
+    prohibited_pairs: Vec<(u8, u8)>,
+
+}
+
 impl BlockData {
 
 
@@ -223,8 +281,7 @@ impl BlockData {
     }
 
     
-    fn find_delta_block(&mut self, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8, 
-        prohibited_pairs: &[(u8, u8)]) -> Result<f64> {
+    fn find_delta_block(&mut self, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8) -> Result<f64> {
         const DELTA_TOL: f64 = 1e-12;  // Minimum improvement threshold
         let mut delta = 0.0;  // Tracks best improvement found
         
@@ -250,7 +307,7 @@ impl BlockData {
                 // Check if exchange would create prohibited combination
                 let would_violate_constraints = |candidate_row: u8| {
                     // Get all points in the target block except the one we're exchanging
-                    let block_points: Vec<u8> = b_transpose.row(i as usize)
+                    let block_points: Vec<u8> = self.b.row(i as usize)
                         .iter()
                         .take(nj as usize)
                         .filter(|&&x| x >= 0.0)  // Filter out empty slots (-1.0)
@@ -260,7 +317,7 @@ impl BlockData {
 
                     // Check if current point would violate constraints with any point in the block
                     for &point in &block_points {
-                        if prohibited_pairs.iter().any(|&(a, b)| 
+                        if self.prohibited_pairs.iter().any(|&(a, b)| 
                             (cur_row_no as u8 == a && point == b) || 
                             (cur_row_no as u8 == b && point == a)
                         ) {
@@ -289,7 +346,7 @@ impl BlockData {
                     let row_no = b_transpose[(i * self.max_n + j) as usize] as usize;
                     
                     // Skip if exchange would create prohibited combination
-                    if prohibited_pairs.len() > 0 && would_violate_constraints(row_no as u8) {
+                    if self.prohibited_pairs.len() > 0 && would_violate_constraints(row_no as u8) {
                         continue;
                     }
 
@@ -436,7 +493,7 @@ impl BlockData {
 
     fn try_exchange_block(&mut self, xnew: &mut u8, new_block: &mut u8, av_var: &mut f64, log_det: &mut f64, exchanged: &mut bool, cur_block: u8, xcur: u8) -> Result<(), Error> {
         debug_println!("BEING LOOP xcur: {}, curBlock: {}, newBlock: {}", xcur, cur_block, new_block);
-        let delta = self.find_delta_block(xcur, xnew, cur_block, new_block, &[]).map_err(|e| anyhow!("Failed to find delta block: {}", e))?;
+        let delta = self.find_delta_block(xcur, xnew, cur_block, new_block).map_err(|e| anyhow!("Failed to find delta block: {}", e))?;
         debug_println!("delta: {}", delta);
         Ok(if delta < 10.0 && delta > DESIGN_TOL {
     
@@ -632,31 +689,7 @@ pub struct BlockResult {
 // optimize determinant over all blocks using d-criterion
 
 
-#[derive(Builder, Debug)]
-#[builder(build_fn(error = "anyhow::Error"))]
-struct BlockData {
-    x: DMatrix<f64>,    // x is the input matrix, typically it'll be a dummy coded design matrix (diag is 1, off-diag is 0, first row all 0)
-    t_x: DMatrix<f64>,  // x_t is the transpose of x
-    b: DMatrix<f64>,    // b is a matrix of block factors. ncols is max(blocksizes)
-    block_means: DMatrix<f64>, // block_means is a vector of block means
-    t_block_means: DMatrix<f64>, // t_block_means is a vector of transformed block means
-    t: DMatrix<f64>,    // t is a matrix of transformed data. It's upper triangular and has scale values on the diagonal
-    t_inv: DMatrix<f64>, // t_inv is the inverse of t
-    max_n: u8,          // max_n is the maximum block size
-    n: u8,              // n is the number of rows in x
-    k: u8,              // k is the number of columns in x
-    n_t: u8,            // n_t is the number of rows to use. If init_rows is true, n_t = n_xb, otherwise n_t = n
-    n_xb: u8,           // n_xb is the number of rows in x that are used in the blocks
-    n_b: u8,            // n_b is the number of blocks
-    
-    #[builder(default = "RandomType::Uniform")]
-    random_type: RandomType, // random_type is the type of randomization
-    
-    #[builder(setter(custom))]
-    block_sizes: Vec<u8>, // block_sizes is a vector of block sizes
 
-    rows: DVector<u8>,  // rows is a vector of row indices
-}
 
 
 impl BlockDataBuilder {
@@ -704,13 +737,14 @@ impl BlockDataBuilder {
 } 
 
 
-pub fn opt_block(v: u8, n_b: u8, block_size: u8,  n_repeats: u8) -> Result<BlockResult> {
+pub fn opt_block(v: u8, n_b: u8, block_size: u8,  n_repeats: u8, prohibited_pairs: Vec<(u8, u8)>) -> Result<BlockResult> {
     
     let mut block_data = BlockDataBuilder::default()
         .v(v)
         .n_b(n_b)
         .blocksize(block_size)
         .configure_remaining()
+        .prohibited_pairs(prohibited_pairs)
         .build()
         .map_err(|e| anyhow!("Failed to build block_data: {}", e))?;
 
@@ -1023,9 +1057,116 @@ mod tests {
         debug_println!("block_data.t_x: {}", pretty_print!(&block_data.t_x));
         debug_println!("block_data.t_block_means: {}", pretty_print!(&block_data.t_block_means));
         //find_delta_block(block_data: &mut BlockData, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8)  
-        block_data.find_delta_block(0, &mut x_new, 0, &mut new_block, &[]).unwrap();
+        block_data.find_delta_block(0, &mut x_new, 0, &mut new_block).unwrap();
         assert_eq!(new_block, 1);
         assert_eq!(x_new, 0);
+    }
+
+    #[test]
+    fn test_find_delta_block_with_prohibited_pairs() {
+        let mut block_data = configure_block_data();
+        block_data.b = nalgebra::dmatrix![
+            0.0,2.0,4.0;
+            6.0,3.0,1.0;
+            5.0,0.0,4.0;
+            3.0,5.0,6.0;
+            2.0,1.0,0.0;
+            3.0,6.0,1.0;
+            5.0,4.0,2.0;
+        ];
+        block_data.t_x = nalgebra::dmatrix![  
+            0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000;
+            0.707107, 0.119523, 0.257603, 0.048485, 0.101746, 0.781205; 
+            0.000000, 0.717137, 0.042934, 0.258586, 0.272416, 0.304621; 
+            0.000000, 0.000000, 0.751343, 0.016162, 0.169029, 0.960265; 
+            0.000000, 0.000000, 0.000000, 0.751517, 0.361033, 0.270228; 
+            0.000000, 0.000000, 0.000000, 0.000000, 0.810683, 0.506063; 
+            0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 1.231039; 
+        ];
+
+        block_data.t_inv = nalgebra::dmatrix![
+            0.707107, 0.0, 0.0, 0.0, 0.0, 0.0;
+            0.119523, 0.717137, 0.0, 0.0, 0.0, 0.0;
+            0.257603, 0.042934, 0.751343, 0.0, 0.0, 0.0;
+            0.048485, 0.258586, 0.016162, 0.751517, 0.0, 0.0;
+            0.101746, 0.272416, 0.169029, 0.361033, 0.810683, 0.0;
+            0.781205, 0.304621, 0.960265, 0.270228, 0.506063, 1.231039;
+        ];
+
+        block_data.t_block_means = nalgebra::dmatrix![
+            0.000000, 0.239046, 0.014311, 0.336701, 0.211149, 0.191616;
+            0.235702, 0.039841, 0.336315, 0.021549, 0.090258, 0.990836;
+            0.000000, 0.000000, 0.000000, 0.250506, 0.390572, 0.258764; 
+            0.000000, 0.000000, 0.250448, 0.005387, 0.326571, 0.899122;
+            0.235702, 0.278887, 0.100179, 0.102357, 0.124720, 0.361942;
+            0.235702, 0.039841, 0.336315, 0.021549, 0.090258, 0.990836;
+            0.000000, 0.239046, 0.014311, 0.336701, 0.481377, 0.360304;
+        ];
+
+        let mut new_block = 0;
+        let mut x_new = 0;
+        
+        // Define prohibited pairs: (0,4) and (2,5) can't be in same block
+        block_data.prohibited_pairs = vec![(0, 4), (2, 5)];
+        
+        // Test with xcur=0, cur_block=0
+        let delta = block_data.find_delta_block(0, &mut x_new, 0, &mut new_block).unwrap();
+        
+        // The original test found new_block=1, x_new=0 as optimal
+        // With prohibited pairs, it should find a different solution or no solution
+        // Check that the solution doesn't violate constraints
+        if delta > DESIGN_TOL {
+            // Get the points in the proposed new block
+            let block_row = block_data.b.row(new_block as usize);
+            let points: Vec<u8> = block_row.iter()
+                .take(block_data.block_sizes[new_block as usize] as usize)
+                .map(|&x| x as u8)
+                .collect();
+            
+            // Check that the exchange wouldn't create prohibited pairs
+            let cur_point = block_data.b[cmi_from_rmi(
+                (0 * block_data.max_n + 0) as usize,
+                block_data.max_n as usize,
+                block_data.n_b as usize
+            ) as usize] as u8;
+            
+            for &point in &points {
+                assert!(!block_data.prohibited_pairs.iter().any(|&(a, b)| 
+                    (cur_point == a && point == b) || 
+                    (cur_point == b && point == a)
+                ), "Found solution violates prohibited pairs constraint");
+            }
+        }
+        
+        // Additional check: try with a point that would definitely violate constraints
+        // Find a block that contains one of the prohibited pairs
+        let test_block = (0..block_data.n_b)
+            .find(|&i| {
+                let block_row = block_data.b.row(i as usize);
+                let points: Vec<u8> = block_row.iter()
+                    .take(block_data.block_sizes[i as usize] as usize)
+                    .map(|&x| x as u8)
+                    .collect();
+                points.contains(&4)  // Looking for block containing point 4
+            })
+            .unwrap();
+        
+        // Try to exchange point 0 into this block
+        let mut test_new_block = 0;
+        let mut test_x_new = 0;
+        let test_delta = block_data.find_delta_block(
+            0, 
+            &mut test_x_new, 
+            0, 
+            &mut test_new_block
+        ).unwrap();
+        
+        // Either delta should be negative (no valid exchange found)
+        // or the proposed exchange should not violate constraints
+        assert!(
+            test_delta < DESIGN_TOL || test_new_block != test_block,
+            "Algorithm proposed invalid exchange that would violate constraints"
+        );
     }
 
     #[test]
