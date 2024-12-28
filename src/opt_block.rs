@@ -280,43 +280,16 @@ impl BlockData {
                 let gi2 = 0.0;
 
                 let fmj = self.t_block_means.row(i as usize);
-                
-                // Calculate squared distance between block means
-                /*
-                let mut g = 0.0;
-                for l in 0..self.k {
-                    debug_println!("fmj[{}]: {}, fmi[{}]: {}", l, fmj[l as usize], l, fmi[l as usize]);
-                    let dif = fmj[l as usize] - fmi[l as usize];
-                    g += dif * dif;
-                } 
-                let mi0 = g;*/
                 let diff = fmj - fmi;
                 let mi0 = diff.component_mul(&diff).sum();
-                //let mi0 = diff.pow(2).sum::<f64>();
                 
                 // Try exchanging with each point in candidate block
                 for j in 0..nj {
                     let row_no = b_transpose[(i * self.max_n + j) as usize] as usize;
                     let fj = self.t_x.row(row_no);
-                    
-                    //let mut g = 0.0;
-                    //let mut h = 0.0;
-                    
-                    // Calculate cross terms between means and points
-                    /*
-                    for l in 0..self.k {
-                        //debug_println!("row_no: {}, i: {}, j: {}, l: {}, fmi: {}, fmj: {}, fi: {}, fj: {}", row_no, i, j, l, fmi[l as usize], fmj[l as usize], fi[l as usize], fj[l as usize]);
-
-                        let dif1 = fmj[l as usize] - fmi[l as usize];
-                        let dif2 = fj[l as usize] - fi[l as usize];
-                        g += dif1 * dif2;
-                        h += dif2 * dif2;
-                    } */
-
                    let mi1 = (fmj - fmi).component_mul(&(fj - fi)).sum();
                    let mi2 = (fj - fi).component_mul(&(fj - fi)).sum();
-                   // let mi1 = g;
-                    //let mi2 = h;
+
                     
                     // Combine geometric and moment terms
                     let m1i0 = gi0 + mi0;
@@ -368,25 +341,27 @@ impl BlockData {
         let c = (ni + nj) as f64 / (ni * nj) as f64;
 
         // vec = xmj - xmi
-        for i in 0..self.k {
-            vec[i as usize] = xmj[i as usize] - xmi[i as usize];
-        }
+        vec = (xmj - xmi).transpose();
         debug_println!("t before rotate: {}", pretty_print!(&self.t));
         self.rotate_b(&vec, 1.0);
         debug_println!("t after rotate: {}", pretty_print!(&self.t));
 
         // vec -= xrj - xri
+        /*
         for i in 0..self.k {
             vec[i as usize] -= xrj[i as usize] - xri[i as usize];
-        }
+        } */
+        vec -= (xrj - xri).transpose();
 
         debug_println!("t before rotate: {}", pretty_print!(&self.t));
         self.rotate_b(&vec, -1.0);
         debug_println!("t after rotate: {}", pretty_print!(&self.t));
         // vec = xrj - xri
+        /*
         for i in 0..self.k {
             vec[i as usize] = xrj[i as usize] - xri[i as usize];
-        }
+        } */
+        vec = (xrj - xri).transpose();
         debug_println!("t before rotate: {}", pretty_print!(&self.t));
         self.rotate_b(&vec, 1.0 - c);
         debug_println!("t after rotate: {}", pretty_print!(&self.t));
