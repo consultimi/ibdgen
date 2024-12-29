@@ -208,11 +208,11 @@ impl BlockData {
             permute_b(&mut self.rows, self.n, self.random_type).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
             //eprintln!("rows after permute: {}", pretty_print!(&self.rows));
             for i in 0..little_n {
-                let index = offset * self.max_n + i;
-                let cur_val = self.b[cmi_from_rmi(index as usize, self.max_n as usize, self.n_b as usize) as usize];
+                //let index = offset * self.max_n + i;
+                let cur_val = self.b[(offset as usize, i as usize)] as i32;
                 for j in 0..(bs - little_n) {
                     if self.rows[j as usize] as i32 == cur_val {
-                        nodup = false;
+                        nodup = false; 
                         break;
                     }
                 }
@@ -246,37 +246,81 @@ impl BlockData {
 
     
     fn initialize_b(&mut self) -> Result<()> {
-
+        // 1. Initialize sequential numbers 0..n_t
         for i in 0..self.n_t {
             self.rows[i as usize] = i;
         }
 
+        // 2. Randomly permute these numbers
+        permute_b(&mut self.rows, self.n_t, self.random_type)?;
 
-        permute_b(&mut self.rows, self.n_t, self.random_type).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
-
-        /*	for (i=0;i<nB*MAXN;i++)
-            B[i]=-1; */
+        // 3. Initialize b matrix with -1 (empty slots)
         for i in 0..self.n_b * self.max_n {
-            self.b[i as usize] = -1;
+            self.b[((i / self.max_n) as usize, (i % self.max_n) as usize)] = -1;
         }
 
-        let mut l = 0;
-        for i in 0..self.n_b {
-            let bs = self.block_sizes[i as usize];
-            debug_println!("bs: {}", bs);
-            for j in 0..bs {
+        let mut l = 0;  // Index into rows array
+        
+        // 4. For each block
+        'block_loop: for i in 0..self.n_b {
+            let bs = self.block_sizes[i as usize];  // Size of current block
+            let mut retry_count = 0;
+            
+            // 5. Fill each position in the block
+            let mut j = 0;
+            while j < bs {
+                // 6. If we've used all available points, reset and reshuffle
                 if l >= self.n_t {
                     l = 0;
-                    self.no_dup_permute_b(i, j, bs)?;
+                    permute_b(&mut self.rows, self.n_t, self.random_type)?;
                 }
-                let index = (i * self.max_n + j) as usize;
-                let column_major_index = cmi_from_rmi(index, self.max_n as usize, self.n_b as usize);
-                //debug_println!("column_major_index: {}, block_data.rows[l as usize]: {}", column_major_index, block_data.rows[l as usize]);
-                self.b[column_major_index] = self.rows[l as usize] as i32;
-                l += 1;
+
+                // 7. Get next candidate point
+                let candidate = self.rows[l as usize];
+                let mut is_valid = true;
+
+                // 8. Check if candidate violates any prohibited pairs
+                for k in 0..j {
+                    let existing_point = self.b[(i as usize, k as usize)] as u8;
+                    if self.prohibited_pairs.iter().any(|&(a, b)| 
+                        (candidate == a && existing_point == b) || 
+                        (candidate == b && existing_point == a)
+                    ) {
+                        is_valid = false;
+                        break;
+                    }
+                }
+
+                // 9a. If valid, place point and move to next position
+                if is_valid {
+                    self.b[(i as usize, j as usize)] = candidate as i32;
+                    l += 1;
+                    j += 1;
+                    retry_count = 0;
+                } 
+                // 9b. If invalid, try next point
+                else {
+                    l += 1;
+                    
+                    const MAX_RETRIES: u8 = 10;
+                    // 10. If we've tried all points, restart block
+                    if l >= self.n_t {
+                        retry_count += 1;
+                        if retry_count >= MAX_RETRIES {
+                            return Err(anyhow!("Unable to find valid configuration"));
+                        }
+                        
+                        // Reset and try again
+                        l = 0;
+                        permute_b(&mut self.rows, self.n_t, self.random_type)?;
+                        for k in 0..j {
+                            self.b[(i as usize, k as usize)] = -1;
+                        }
+                        j = 0;
+                    }
+                }
             }
         }
-        debug_println!("block_data.b after initialize_b: {}", pretty_print!(&self.b));
         Ok(())
     }
 
@@ -286,47 +330,57 @@ impl BlockData {
         let mut delta = 0.0;  // Tracks best improvement found
         
         // Get current point's row number and block size
-        //let cur_row_no = block_data.b[(cur_block * block_data.max_n + xcur) as usize] as usize;
-        //let cur_row_no = self.b[cmi_from_rmi((cur_block * self.max_n + xcur) as usize, self.max_n as usize, self.n_b as usize) as usize] as usize;
         let cur_row_no = self.b[(cur_block as usize, xcur as usize)] as usize;
-        debug_println!("cur_row_no: {}", cur_row_no);
         let ni = self.block_sizes[cur_block as usize];
 
-
-        // Get pointers to current point and its block mean
-        
-        // Get pointers to current point and its block mean
         let fi = self.t_x.row(cur_row_no);
         let fmi = self.t_block_means.row(cur_block as usize);
-        //let b_transpose = self.b.transpose();
 
         // Loop through all blocks except current
         for i in 0..self.n_b {
             if i != cur_block {
                 let nj = self.block_sizes[i as usize];
                 
-                // Check if exchange would create prohibited combination
+                // Check if exchange would create prohibited combination in either block
                 let would_violate_constraints = |candidate_row: u8| {
-                    // Get all points in the target block except the one we're exchanging
-                    let block_points: Vec<u8> = self.b.row(i as usize)
+                    // Check target block - get all points except the one we're exchanging
+                    let target_block_points: Vec<u8> = self.b.row(i as usize)
                         .iter()
                         .take(nj as usize)
-                        .filter(|&&x| x >= 0)  // Filter out empty slots (-1.0)
+                        .filter(|&&x| x >= 0)  // Filter out empty slots (-1)
                         .map(|&x| x as u8)
                         .filter(|&x| x != candidate_row)  // Exclude the point we're exchanging
                         .collect();
 
-                    //println!("block_points: {:?}", block_points);
-                    // Check if current point would violate constraints with any point in the block
-                    for &point in &block_points {
+                    // Check current block - get all points except the one being moved
+                    let current_block_points: Vec<u8> = self.b.row(cur_block as usize)
+                        .iter()
+                        .take(self.block_sizes[cur_block as usize] as usize)
+                        .filter(|&&x| x >= 0)
+                        .map(|&x| x as u8)
+                        .filter(|&x| x != cur_row_no as u8)  // Exclude the point we're moving out
+                        .collect();
+
+                    // Check if current point would violate constraints with target block
+                    for &point in &target_block_points {
                         if self.prohibited_pairs.iter().any(|&(a, b)| 
                             (cur_row_no as u8 == a && point == b) || 
                             (cur_row_no as u8 == b && point == a)
                         ) {
-                            //println!("cur_row_no: {}, point: {}, candidate_row: {}, block_points: {:?}", cur_row_no, point, candidate_row, block_points);
                             return true;
                         }
                     }
+
+                    // Check if candidate point would violate constraints with current block
+                    for &point in &current_block_points {
+                        if self.prohibited_pairs.iter().any(|&(a, b)| 
+                            (candidate_row == a && point == b) || 
+                            (candidate_row == b && point == a)
+                        ) {
+                            return true;
+                        }
+                    }
+                    
                     false
                 };
 
@@ -350,8 +404,10 @@ impl BlockData {
                     let row_no = self.b[(i as usize, j as usize)] as usize;
                     // Skip if exchange would create prohibited combination
                     if self.prohibited_pairs.len() > 0 && would_violate_constraints(row_no as u8) {
+                        //println!("proposed swap from block {} ({}) idx {} val {} with block {} ({}) idx {} val {} skipped", cur_block, self.b.row(cur_block as usize), xcur, cur_row_no, i, self.b.row(i as usize), j, row_no);
                         continue;
                     }
+                    //println!("i is {}, j is {}", i, j);
 
                     let fj = self.t_x.row(row_no);
                     mi_vec[1] = (fmj - fmi).component_mul(&(fj - fi)).sum();
@@ -380,14 +436,6 @@ impl BlockData {
 
     
     fn exchange_block(&mut self, xcur: u8, xnew: u8, cur_block: u8, new_block: &mut u8) -> Result<()> {
-        //let mut vec = DVector::zeros(self.k as usize);
-        //let b_transpose = block_data.b.transpose();
-        /*
-        let row_no_i = self.b[cmi_from_rmi(
-            (cur_block * self.max_n + xcur) as usize,
-            self.max_n as usize,
-            self.n_b as usize
-        ) as usize] as usize; */
         let row_no_i = self.b[(cur_block as usize, xcur as usize)] as usize;
         let ni = self.block_sizes[cur_block as usize];
 
@@ -416,7 +464,6 @@ impl BlockData {
         // Update block means
         for i in 0..self.k {
             //let idx = cmi_from_rmi((cur_block as usize * self.k as usize + i as usize) as usize, self.k as usize, self.n_b as usize);
-            let newsum = 
             //self.block_means[idx as usize] += newsum;
             self.block_means[(cur_block as usize, i as usize)] += (xrj[i as usize] - xri[i as usize]) / ni as f64;
             //let idx = cmi_from_rmi((*new_block as usize * self.k as usize + i as usize) as usize, self.k as usize, self.n_b as usize);
@@ -425,17 +472,8 @@ impl BlockData {
 
         println!("new_block: {}, xnew: {}, b before exchange: {}", *new_block, xnew, pretty_print!(&self.b));
 
-        self.b[cmi_from_rmi(
-            (*new_block * self.max_n + xnew) as usize,
-            self.max_n as usize,
-            self.n_b as usize
-        ) as usize] = row_no_i as i32;
-
-        self.b[cmi_from_rmi(
-            (cur_block * self.max_n + xcur) as usize,
-            self.max_n as usize,
-            self.n_b as usize
-        ) as usize] = row_no_j as i32;
+        self.b[(*new_block as usize, xnew as usize)] = row_no_i as i32;
+        self.b[(cur_block as usize, xcur as usize)] = row_no_j as i32;
 
         println!("cur_block: {}, xcur: {}, b after exchange: {}", cur_block, xcur, pretty_print!(&self.b));
 
@@ -455,7 +493,11 @@ impl BlockData {
     
         for repeat_num in 0..n_repeats {
             println!("REPEAT NUMBER: {}", repeat_num);
+
+            println!("b before initialize_b: {}", pretty_print!(&self.b));
             self.initialize_b().map_err(|e| anyhow!("Failed to initialize b: {}", e))?;
+            println!("b after initialize_b: {}", pretty_print!(&self.b));
+
             self.form_block_means();
             let (mut log_det, singular) = self.reduce_x_to_t();
             if singular {
@@ -565,7 +607,7 @@ const TOLROT: f64 = 1.0e-12;
 
 
 
-
+/*
 fn rmi_from_cmi(column_major_index: usize , width: usize, height: usize) -> usize {
     let row = column_major_index % height;
     let column = column_major_index / height;
@@ -574,7 +616,7 @@ fn rmi_from_cmi(column_major_index: usize , width: usize, height: usize) -> usiz
 
 fn cmi_from_rmi(row_major_index: usize, width: usize, height: usize) -> usize {
     return rmi_from_cmi(row_major_index, height, width);
-}
+} */
 
 #[derive(Debug, Clone, Copy)]
 enum RandomType {
@@ -1127,11 +1169,7 @@ mod tests {
                 .collect();
             
             // Check that the exchange wouldn't create prohibited pairs
-            let cur_point = block_data.b[cmi_from_rmi(
-                (0 * block_data.max_n + 0) as usize,
-                block_data.max_n as usize,
-                block_data.n_b as usize
-            ) as usize] as u8;
+            let cur_point = block_data.b[(0 as usize, 0 as usize)] as u8;
             
             for &point in &points {
                 assert!(!block_data.prohibited_pairs.iter().any(|&(a, b)| 
