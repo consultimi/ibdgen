@@ -297,7 +297,7 @@ impl BlockData {
         // Get pointers to current point and its block mean
         let fi = self.t_x.row(cur_row_no);
         let fmi = self.t_block_means.row(cur_block as usize);
-        let b_transpose = self.b.transpose();
+        //let b_transpose = self.b.transpose();
 
         // Loop through all blocks except current
         for i in 0..self.n_b {
@@ -315,12 +315,14 @@ impl BlockData {
                         .filter(|&x| x != candidate_row)  // Exclude the point we're exchanging
                         .collect();
 
+                    //println!("block_points: {:?}", block_points);
                     // Check if current point would violate constraints with any point in the block
                     for &point in &block_points {
                         if self.prohibited_pairs.iter().any(|&(a, b)| 
                             (cur_row_no as u8 == a && point == b) || 
                             (cur_row_no as u8 == b && point == a)
                         ) {
+                            //println!("cur_row_no: {}, point: {}, candidate_row: {}, block_points: {:?}", cur_row_no, point, candidate_row, block_points);
                             return true;
                         }
                     }
@@ -343,8 +345,8 @@ impl BlockData {
 
                 // Try exchanging with each point in candidate block
                 for j in 0..nj {
-                    let row_no = b_transpose[(i * self.max_n + j) as usize] as usize;
-                    
+                    //let row_no = b_transpose[(i * self.max_n + j) as usize] as usize;
+                    let row_no = self.b[(i as usize, j as usize)] as usize;
                     // Skip if exchange would create prohibited combination
                     if self.prohibited_pairs.len() > 0 && would_violate_constraints(row_no as u8) {
                         continue;

@@ -9,7 +9,7 @@ fn main() {
     let mut best_solution = BlockResult::default();
     for _ in 1..10 {
         //let result = opt_block(21,21, 5,5).unwrap();
-        let result = opt_block(9,12, 3,5, vec![]).unwrap();
+        let result = opt_block(9,12, 3,5, vec![(0, 4), (2, 5)]).unwrap();
         //let result = opt_block(7,7, 3,5).unwrap();
         
         //println!("result: {:?}", result);
