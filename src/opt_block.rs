@@ -395,12 +395,10 @@ impl BlockData {
         let xri = x_clone.row(row_no_i);
         let xmi = self.block_means.row(cur_block as usize);
         //debug_println!("xri: {}\nxmi: {}\nrowNoi: {}", pretty_print!(&xri), pretty_print!(&xmi), row_no_i);
+
+        let row_no_j = self.b[(*new_block as usize, xnew as usize)] as usize;
         // Handle normal block exchange case
-        let row_no_j = self.b[cmi_from_rmi(
-            (*new_block * self.max_n + xnew) as usize,
-            self.max_n as usize,
-            self.n_b as usize
-        ) as usize] as usize;
+
         let xrj = x_clone.row(row_no_j);
         let xmj = self.block_means.row(*new_block as usize);
         debug_println!("xmi: {}\nxmj: {}\nxri: {}\nxrj: {}\nrowNoj: {}", pretty_print!(&xmi), pretty_print!(&xmj), pretty_print!(&xri), pretty_print!(&xrj), row_no_j);
@@ -417,12 +415,12 @@ impl BlockData {
         
         // Update block means
         for i in 0..self.k {
-            let idx = cmi_from_rmi((cur_block as usize * self.k as usize + i as usize) as usize, self.k as usize, self.n_b as usize);
-            let newsum = (xrj[i as usize] - xri[i as usize]) / ni as f64;
-            self.block_means[idx as usize] += newsum;
-            let idx = cmi_from_rmi((*new_block as usize * self.k as usize + i as usize) as usize, self.k as usize, self.n_b as usize);
-            let newsum = (xri[i as usize] - xrj[i as usize]) / nj as f64;
-            self.block_means[idx as usize] = self.block_means[idx as usize] + newsum;
+            //let idx = cmi_from_rmi((cur_block as usize * self.k as usize + i as usize) as usize, self.k as usize, self.n_b as usize);
+            let newsum = 
+            //self.block_means[idx as usize] += newsum;
+            self.block_means[(cur_block as usize, i as usize)] += (xrj[i as usize] - xri[i as usize]) / ni as f64;
+            //let idx = cmi_from_rmi((*new_block as usize * self.k as usize + i as usize) as usize, self.k as usize, self.n_b as usize);
+            self.block_means[(*new_block as usize, i as usize)] += (xri[i as usize] - xrj[i as usize]) / nj as f64;
         }
 
         println!("new_block: {}, xnew: {}, b before exchange: {}", *new_block, xnew, pretty_print!(&self.b));
