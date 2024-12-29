@@ -25,7 +25,7 @@ struct BlockData {
     t_x: DMatrix<f64>,  
 
     /* b is a matrix of block factors. ncols is max(blocksizes) */
-    b: DMatrix<f64>,    
+    b: DMatrix<i32>,    
 
     /* block_means is a matrix of block means */
     block_means: DMatrix<f64>, 
@@ -211,7 +211,7 @@ impl BlockData {
                 let index = offset * self.max_n + i;
                 let cur_val = self.b[cmi_from_rmi(index as usize, self.max_n as usize, self.n_b as usize) as usize];
                 for j in 0..(bs - little_n) {
-                    if self.rows[j as usize] as f64 == cur_val {
+                    if self.rows[j as usize] as i32 == cur_val {
                         nodup = false;
                         break;
                     }
@@ -257,7 +257,7 @@ impl BlockData {
         /*	for (i=0;i<nB*MAXN;i++)
             B[i]=-1; */
         for i in 0..self.n_b * self.max_n {
-            self.b[i as usize] = -1.0;
+            self.b[i as usize] = -1;
         }
 
         let mut l = 0;
@@ -272,7 +272,7 @@ impl BlockData {
                 let index = (i * self.max_n + j) as usize;
                 let column_major_index = cmi_from_rmi(index, self.max_n as usize, self.n_b as usize);
                 //debug_println!("column_major_index: {}, block_data.rows[l as usize]: {}", column_major_index, block_data.rows[l as usize]);
-                self.b[column_major_index] = self.rows[l as usize] as f64;
+                self.b[column_major_index] = self.rows[l as usize] as i32;
                 l += 1;
             }
         }
@@ -311,7 +311,7 @@ impl BlockData {
                     let block_points: Vec<u8> = self.b.row(i as usize)
                         .iter()
                         .take(nj as usize)
-                        .filter(|&&x| x >= 0.0)  // Filter out empty slots (-1.0)
+                        .filter(|&&x| x >= 0)  // Filter out empty slots (-1.0)
                         .map(|&x| x as u8)
                         .filter(|&x| x != candidate_row)  // Exclude the point we're exchanging
                         .collect();
@@ -429,13 +429,13 @@ impl BlockData {
             (*new_block * self.max_n + xnew) as usize,
             self.max_n as usize,
             self.n_b as usize
-        ) as usize] = row_no_i as f64;
+        ) as usize] = row_no_i as i32;
 
         self.b[cmi_from_rmi(
             (cur_block * self.max_n + xcur) as usize,
             self.max_n as usize,
             self.n_b as usize
-        ) as usize] = row_no_j as f64;
+        ) as usize] = row_no_j as i32;
 
         println!("cur_block: {}, xcur: {}, b after exchange: {}", cur_block, xcur, pretty_print!(&self.b));
 
@@ -793,13 +793,13 @@ mod tests {
         block_data.initialize_b().unwrap();
 
         let expected = nalgebra::dmatrix![
-            0.0,2.0,4.0;
-            6.0,3.0,1.0;
-            5.0,0.0,4.0;
-            3.0,5.0,6.0;
-            2.0,1.0,0.0;
-            3.0,6.0,1.0;
-            5.0,4.0,2.0;
+            0,2,4;
+            6,3,1;
+            5,0,4;
+            3,5,6;
+            2,1,0;
+            3,6,1;
+            5,4,2;
         ];
         debug_println!("block_data.b: {}", pretty_print!(&block_data.b));
         assert_eq!(block_data.b, expected);
@@ -810,13 +810,13 @@ mod tests {
         //let x = dm7choose3();
         let mut block_data = configure_block_data();
         block_data.b = nalgebra::dmatrix![
-            0.0,2.0,4.0;
-            6.0,3.0,1.0;
-            5.0,0.0,4.0;
-            3.0,5.0,6.0;
-            2.0,1.0,0.0;
-            3.0,6.0,1.0;
-            5.0,4.0,2.0;
+            0,2,4;
+            6,3,1;
+            5,0,4;
+            3,5,6;
+            2,1,0;
+            3,6,1;
+            5,4,2;
         ];
         block_data.form_block_means();
         debug_println!("block_data.block_means: {}", pretty_print!(&block_data.block_means));
@@ -839,13 +839,13 @@ mod tests {
     fn test_rotate_b() {
         let mut block_data = configure_block_data();
         block_data.b = nalgebra::dmatrix![
-            0.0,2.0,4.0;
-            6.0,3.0,1.0;
-            5.0,0.0,4.0;
-            3.0,5.0,6.0;
-            2.0,1.0,0.0;
-            3.0,6.0,1.0;
-            5.0,4.0,2.0;
+            0,2,4;
+            6,3,1;
+            5,0,4;
+            3,5,6;
+            2,1,0;
+            3,6,1;
+            5,4,2;
         ];
 
         block_data.block_means = nalgebra::dmatrix![    
@@ -893,13 +893,13 @@ mod tests {
         //let x = dm7choose3();
         let mut block_data = configure_block_data();
         block_data.b = nalgebra::dmatrix![
-            0.0,2.0,4.0;
-            6.0,3.0,1.0;
-            5.0,0.0,4.0;
-            3.0,5.0,6.0;
-            2.0,1.0,0.0;
-            3.0,6.0,1.0;
-            5.0,4.0,2.0;
+            0,2,4;
+            6,3,1;
+            5,0,4;
+            3,5,6;
+            2,1,0;
+            3,6,1;
+            5,4,2;
         ];
 
         block_data.block_means = nalgebra::dmatrix![    
@@ -1019,13 +1019,13 @@ mod tests {
     fn test_find_delta_block() {
         let mut block_data = configure_block_data();
         block_data.b = nalgebra::dmatrix![
-            0.0,2.0,4.0;
-            6.0,3.0,1.0;
-            5.0,0.0,4.0;
-            3.0,5.0,6.0;
-            2.0,1.0,0.0;
-            3.0,6.0,1.0;
-            5.0,4.0,2.0;
+            0,2,4;
+            6,3,1;
+            5,0,4;
+            3,5,6;
+            2,1,0;
+            3,6,1;
+            5,4,2;
         ];
         block_data.t_x = nalgebra::dmatrix![  
             0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000;
@@ -1069,13 +1069,13 @@ mod tests {
     fn test_find_delta_block_with_prohibited_pairs() {
         let mut block_data = configure_block_data();
         block_data.b = nalgebra::dmatrix![
-            0.0,2.0,4.0;
-            6.0,3.0,1.0;
-            5.0,0.0,4.0;
-            3.0,5.0,6.0;
-            2.0,1.0,0.0;
-            3.0,6.0,1.0;
-            5.0,4.0,2.0;
+            0,2,4;
+            6,3,1;
+            5,0,4;
+            3,5,6;
+            2,1,0;
+            3,6,1;
+            5,4,2;
         ];
         block_data.t_x = nalgebra::dmatrix![  
             0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000;
@@ -1176,13 +1176,13 @@ mod tests {
     fn test_exchange_blocks() {
         let mut block_data = configure_block_data();
         block_data.b = nalgebra::dmatrix![
-            0.0,2.0,4.0;
-            6.0,3.0,1.0;
-            5.0,0.0,4.0;
-            3.0,5.0,6.0;
-            2.0,1.0,0.0;
-            3.0,6.0,1.0;
-            5.0,4.0,2.0;
+            0,2,4;
+            6,3,1;
+            5,0,4;
+            3,5,6;
+            2,1,0;
+            3,6,1;
+            5,4,2;
         ];
         block_data.t = nalgebra::dmatrix![
             2.000000, -0.166667, -0.333333, 0.000000,   0.000000, -0.333333;
@@ -1194,13 +1194,13 @@ mod tests {
         ];
 
         let expected_b = nalgebra::dmatrix![
-            6.0,2.0,4.0;
-            0.0,3.0,1.0;
-            5.0,0.0,4.0;
-            3.0,5.0,6.0;
-            2.0,1.0,0.0;
-            3.0,6.0,1.0;
-            5.0,4.0,2.0;
+            6,2,4;
+            0,3,1;
+            5,0,4;
+            3,5,6;
+            2,1,0;
+            3,6,1;
+            5,4,2;
         ];
 
         let xcur = 0;
@@ -1255,13 +1255,13 @@ mod tests {
         
         // Set up b matrix with some initial values
         block_data.b = nalgebra::dmatrix![
-            0.0, 2.0, 4.0;
-            6.0, 3.0, 1.0;
-            5.0, 0.0, 4.0;
-            3.0, 5.0, 6.0;
-            2.0, 1.0, 0.0;
-            3.0, 6.0, 1.0;
-            5.0, 4.0, 2.0;
+            0,2,4;
+            6,3,1;
+            5,0,4;
+            3,5,6;
+            2,1,0;
+            3,6,1;
+            5,4,2;
         ];
 
 
@@ -1282,7 +1282,7 @@ mod tests {
         
         let non_matching = (0..1).all(|j| {
             !first_block.iter().take(2).any(|&val| {
-                block_data.rows[j] as f64 == val
+                block_data.rows[j] as i32 == val
             })
         });
  
