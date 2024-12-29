@@ -287,7 +287,8 @@ impl BlockData {
         
         // Get current point's row number and block size
         //let cur_row_no = block_data.b[(cur_block * block_data.max_n + xcur) as usize] as usize;
-        let cur_row_no = self.b[cmi_from_rmi((cur_block * self.max_n + xcur) as usize, self.max_n as usize, self.n_b as usize) as usize] as usize;
+        //let cur_row_no = self.b[cmi_from_rmi((cur_block * self.max_n + xcur) as usize, self.max_n as usize, self.n_b as usize) as usize] as usize;
+        let cur_row_no = self.b[(cur_block as usize, xcur as usize)] as usize;
         debug_println!("cur_row_no: {}", cur_row_no);
         let ni = self.block_sizes[cur_block as usize];
 
@@ -381,11 +382,13 @@ impl BlockData {
     fn exchange_block(&mut self, xcur: u8, xnew: u8, cur_block: u8, new_block: &mut u8) -> Result<()> {
         //let mut vec = DVector::zeros(self.k as usize);
         //let b_transpose = block_data.b.transpose();
+        /*
         let row_no_i = self.b[cmi_from_rmi(
             (cur_block * self.max_n + xcur) as usize,
             self.max_n as usize,
             self.n_b as usize
-        ) as usize] as usize;
+        ) as usize] as usize; */
+        let row_no_i = self.b[(cur_block as usize, xcur as usize)] as usize;
         let ni = self.block_sizes[cur_block as usize];
 
         let x_clone = self.x.clone();
