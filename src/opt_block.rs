@@ -470,12 +470,12 @@ impl BlockData {
             self.block_means[(*new_block as usize, i as usize)] += (xri[i as usize] - xrj[i as usize]) / nj as f64;
         }
 
-        println!("new_block: {}, xnew: {}, b before exchange: {}", *new_block, xnew, pretty_print!(&self.b));
+        //println!("new_block: {}, xnew: {}, b before exchange: {}", *new_block, xnew, pretty_print!(&self.b));
 
         self.b[(*new_block as usize, xnew as usize)] = row_no_i as i32;
         self.b[(cur_block as usize, xcur as usize)] = row_no_j as i32;
 
-        println!("cur_block: {}, xcur: {}, b after exchange: {}", cur_block, xcur, pretty_print!(&self.b));
+        //println!("cur_block: {}, xcur: {}, b after exchange: {}", cur_block, xcur, pretty_print!(&self.b));
 
         Ok(())
     }
@@ -494,9 +494,9 @@ impl BlockData {
         for repeat_num in 0..n_repeats {
             println!("REPEAT NUMBER: {}", repeat_num);
 
-            println!("b before initialize_b: {}", pretty_print!(&self.b));
+            //rintln!("b before initialize_b: {}", pretty_print!(&self.b));
             self.initialize_b().map_err(|e| anyhow!("Failed to initialize b: {}", e))?;
-            println!("b after initialize_b: {}", pretty_print!(&self.b));
+            //println!("b after initialize_b: {}", pretty_print!(&self.b));
 
             self.form_block_means();
             let (mut log_det, singular) = self.reduce_x_to_t();
@@ -683,7 +683,7 @@ impl BlockArray {
 
     pub fn as_sorted(&mut self) -> DMatrix<usize> {
         let mut block_array_out = self.block_array.clone(); 
-        println!("block_array before sort: {}", pretty_print!(&block_array_out));
+        //println!("block_array before sort: {}", pretty_print!(&block_array_out));
         // first, sort each row ascending
         for mut row in block_array_out.row_iter_mut() {
             let mut swapped = true;
