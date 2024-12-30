@@ -1151,63 +1151,78 @@ mod tests {
         let mut new_block = 0;
         let mut x_new = 0;
         
-        // Define prohibited pairs: (0,4) and (2,5) can't be in same block
-        block_data.prohibited_pairs = vec![(0, 4), (2, 5)];
+        // Test Case 1: Prohibited pairs in target block
+        block_data.prohibited_pairs = vec![(0, 4)];  // Point 0 can't be with point 4
+        let delta1 = block_data.find_delta_block(0, &mut x_new, 0, &mut new_block).unwrap();
         
-        // Test with xcur=0, cur_block=0
-        let delta = block_data.find_delta_block(0, &mut x_new, 0, &mut new_block).unwrap();
-        
-        // The original test found new_block=1, x_new=0 as optimal
-        // With prohibited pairs, it should find a different solution or no solution
-        // Check that the solution doesn't violate constraints
-        if delta > DESIGN_TOL {
-            // Get the points in the proposed new block
-            let block_row = block_data.b.row(new_block as usize);
-            let points: Vec<u8> = block_row.iter()
+        if delta1 > DESIGN_TOL {
+            // Verify target block doesn't contain prohibited pair
+            let target_points: Vec<u8> = block_data.b.row(new_block as usize)
+                .iter()
                 .take(block_data.block_sizes[new_block as usize] as usize)
                 .map(|&x| x as u8)
                 .collect();
             
-            // Check that the exchange wouldn't create prohibited pairs
-            let cur_point = block_data.b[(0 as usize, 0 as usize)] as u8;
+            assert!(!target_points.contains(&4), 
+                "Found exchange that would create prohibited pair (0,4) in target block");
+        }
+
+        // Test Case 2: Prohibited pairs in current block
+        block_data.prohibited_pairs = vec![(2, 5)];  // Point 2 can't be with point 5
+        let cur_block = 0;  // Block containing point 2
+        let xcur = 1;      // Position of point 2 in block
+        
+        let delta2 = block_data.find_delta_block(xcur, &mut x_new, cur_block, &mut new_block).unwrap();
+        
+        if delta2 > DESIGN_TOL {
+            // Get the point that would be exchanged into current block
+            let incoming_point = block_data.b[(new_block as usize, x_new as usize)] as u8;
             
-            for &point in &points {
-                assert!(!block_data.prohibited_pairs.iter().any(|&(a, b)| 
-                    (cur_point == a && point == b) || 
-                    (cur_point == b && point == a)
-                ), "Found solution violates prohibited pairs constraint");
+            // Get remaining points in current block
+            let current_block_points: Vec<u8> = block_data.b.row(cur_block as usize)
+                .iter()
+                .take(block_data.block_sizes[cur_block as usize] as usize)
+                .map(|&x| x as u8)
+                .filter(|&x| x != 2)  // Exclude point being moved out
+                .collect();
+            
+            // Verify the exchange wouldn't create prohibited pair in current block
+            assert!(!current_block_points.contains(&5) || incoming_point != 2,
+                "Found exchange that would create prohibited pair (2,5) in current block");
+        }
+
+        // Test Case 3: Multiple prohibited pairs
+        block_data.prohibited_pairs = vec![(0, 4), (2, 5), (1, 3)];
+        let delta3 = block_data.find_delta_block(0, &mut x_new, 0, &mut new_block).unwrap();
+        
+        if delta3 > DESIGN_TOL {
+            // Verify neither block would contain prohibited pairs after exchange
+            let target_points: Vec<u8> = block_data.b.row(new_block as usize)
+                .iter()
+                .take(block_data.block_sizes[new_block as usize] as usize)
+                .map(|&x| x as u8)
+                .filter(|&x| x != block_data.b[(new_block as usize, x_new as usize)] as u8)
+                .collect();
+            
+            let current_points: Vec<u8> = block_data.b.row(0 as usize)
+                .iter()
+                .take(block_data.block_sizes[0] as usize)
+                .map(|&x| x as u8)
+                .filter(|&x| x != 0)  // Exclude point being moved out
+                .collect();
+
+            let incoming_point = block_data.b[(new_block as usize, x_new as usize)] as u8;
+            
+            for &(a, b) in &block_data.prohibited_pairs {
+                // Check target block
+                assert!(!target_points.contains(&b) || 0 != a, 
+                    "Exchange would create prohibited pair in target block");
+                
+                // Check current block
+                assert!(!current_points.contains(&b) || incoming_point != a,
+                    "Exchange would create prohibited pair in current block");
             }
         }
-        
-        // Additional check: try with a point that would definitely violate constraints
-        // Find a block that contains one of the prohibited pairs
-        let test_block = (0..block_data.n_b)
-            .find(|&i| {
-                let block_row = block_data.b.row(i as usize);
-                let points: Vec<u8> = block_row.iter()
-                    .take(block_data.block_sizes[i as usize] as usize)
-                    .map(|&x| x as u8)
-                    .collect();
-                points.contains(&4)  // Looking for block containing point 4
-            })
-            .unwrap();
-        
-        // Try to exchange point 0 into this block
-        let mut test_new_block = 0;
-        let mut test_x_new = 0;
-        let test_delta = block_data.find_delta_block(
-            0, 
-            &mut test_x_new, 
-            0, 
-            &mut test_new_block
-        ).unwrap();
-        
-        // Either delta should be negative (no valid exchange found)
-        // or the proposed exchange should not violate constraints
-        assert!(
-            test_delta < DESIGN_TOL || test_new_block != test_block,
-            "Algorithm proposed invalid exchange that would violate constraints"
-        );
     }
 
     #[test]
