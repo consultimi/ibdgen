@@ -1,3 +1,13 @@
+use std::collections::btree_map::IterMut;
+
+/**
+ * opt_block.rs - Design of optimal IBDs with prohibitions
+ * Based on the original opt_block.c C code in the AlgDesign R package
+ * The original C code is Copyright (c) 2002-2004, Bob Wheeler
+ * AlgDesign now maintained by Jerome Braun https://github.com/jvbraun/AlgDesign
+ */
+
+
 use nalgebra::{DMatrix, DVector, SVector};
 use pretty_print_nalgebra::*;
 use anyhow::*;
@@ -200,6 +210,7 @@ impl BlockData {
         }
     }
 
+    /*
     fn no_dup_permute_b(&mut self, offset: u8, little_n: u8, bs: u8) -> Result<()> {
         //eprintln!("no_dup_permute_b called with little_n: {}, bs: {}, block_data.rows: {}, offset: {}", little_n, bs, &self.rows, offset);
         //debug_println!("b: {}", pretty_print!(&block_data.b));
@@ -226,7 +237,7 @@ impl BlockData {
         }
 
         Ok(())
-    }
+    } */
     
     fn form_block_means(&mut self) {
         // divide block_data.b into block_data.n_b equal sized blocks of max_n rows
@@ -262,7 +273,7 @@ impl BlockData {
         let mut l = 0;  // Index into rows array
         
         // 4. For each block
-        'block_loop: for i in 0..self.n_b {
+        for i in 0..self.n_b {
             let bs = self.block_sizes[i as usize];  // Size of current block
             let mut retry_count = 0;
             
@@ -624,6 +635,37 @@ pub struct CoincidenceMatrix {
 }
 
 impl CoincidenceMatrix {
+
+    pub fn reps(&self) -> DVector<usize> {
+        self.coincidence.diagonal()
+    }
+
+    pub fn r(&self) -> f64 {
+        self.coincidence.diagonal().cast::<f64>().mean()
+    }
+
+    pub fn lambda(&self) -> f64 {
+        let mut upper_try_f = self.coincidence.upper_triangle().cast::<f64>();
+        upper_try_f.fill_diagonal(0.0);
+
+        let cells = upper_try_f.ncols() * (upper_try_f.ncols() - 1) / 2;
+        let lambda = upper_try_f.sum() / cells as f64;
+        lambda
+    }
+
+    pub fn is_bibd(&self) -> bool {
+        let diagonal_f = self.coincidence.diagonal().cast::<f64>();
+        
+        let mut upper_try_f = self.coincidence.upper_triangle().cast::<f64>();
+        upper_try_f.fill_diagonal(self.lambda());
+        upper_try_f.fill_lower_triangle_with_upper_triangle();
+
+        // Ensuring lambda is a constant should be enough but 
+
+        println!("diagonal_f: {}", pretty_print!(&diagonal_f));
+        println!("upper_try_f: {}", pretty_print!(&upper_try_f));
+        (diagonal_f.max() == diagonal_f.min()) && (upper_try_f.max() == upper_try_f.min())
+    }
 
     pub fn from_block_array(block_array: &DMatrix<usize>) -> Self {
         //println!("block_array: {}", pretty_print!(&block_array));   
