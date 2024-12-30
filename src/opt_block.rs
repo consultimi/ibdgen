@@ -329,7 +329,6 @@ impl BlockData {
         const DELTA_TOL: f64 = 1e-12;  // Minimum improvement threshold
         let mut delta = 0.0;  // Tracks best improvement found
         
-        // Get current point's row number and block size
         let cur_row_no = self.b[(cur_block as usize, xcur as usize)] as usize;
         let ni = self.block_sizes[cur_block as usize];
 
@@ -341,80 +340,66 @@ impl BlockData {
             if i != cur_block {
                 let nj = self.block_sizes[i as usize];
                 
-                // Check if exchange would create prohibited combination in either block
-                let would_violate_constraints = |candidate_row: u8| {
-                    // Check target block - get all points except the one we're exchanging
-                    let target_block_points: Vec<u8> = self.b.row(i as usize)
-                        .iter()
-                        .take(nj as usize)
-                        .filter(|&&x| x >= 0)  // Filter out empty slots (-1)
-                        .map(|&x| x as u8)
-                        .filter(|&x| x != candidate_row)  // Exclude the point we're exchanging
-                        .collect();
-
-                    // Check current block - get all points except the one being moved
-                    let current_block_points: Vec<u8> = self.b.row(cur_block as usize)
-                        .iter()
-                        .take(self.block_sizes[cur_block as usize] as usize)
-                        .filter(|&&x| x >= 0)
-                        .map(|&x| x as u8)
-                        .filter(|&x| x != cur_row_no as u8)  // Exclude the point we're moving out
-                        .collect();
-
-                    // Check if current point would violate constraints with target block
-                    for &point in &target_block_points {
-                        if self.prohibited_pairs.iter().any(|&(a, b)| 
-                            (cur_row_no as u8 == a && point == b) || 
-                            (cur_row_no as u8 == b && point == a)
-                        ) {
-                            return true;
-                        }
-                    }
-
-                    // Check if candidate point would violate constraints with current block
-                    for &point in &current_block_points {
-                        if self.prohibited_pairs.iter().any(|&(a, b)| 
-                            (candidate_row == a && point == b) || 
-                            (candidate_row == b && point == a)
-                        ) {
-                            return true;
-                        }
-                    }
-                    
-                    false
-                };
-
-                let g_vec: SVector<f64, 3> = SVector::from_vec(vec![
-                    (ni + nj) as f64 / (ni * nj) as f64, 
-                    1.0, 
-                    0.0
-                ]);
-
-                let fmj = self.t_block_means.row(i as usize);
-                let diff = fmj - fmi;
-                let mut mi_vec: SVector<f64, 3> = SVector::from_vec(vec![
-                    diff.component_mul(&diff).sum(), 
-                    0.0, 
-                    0.0
-                ]);
-
                 // Try exchanging with each point in candidate block
                 for j in 0..nj {
-                    //let row_no = b_transpose[(i * self.max_n + j) as usize] as usize;
-                    let row_no = self.b[(i as usize, j as usize)] as usize;
-                    // Skip if exchange would create prohibited combination
-                    if self.prohibited_pairs.len() > 0 && would_violate_constraints(row_no as u8) {
-                        //println!("proposed swap from block {} ({}) idx {} val {} with block {} ({}) idx {} val {} skipped", cur_block, self.b.row(cur_block as usize), xcur, cur_row_no, i, self.b.row(i as usize), j, row_no);
-                        continue;
+                    let candidate_row = self.b[(i as usize, j as usize)] as u8;
+
+                    // Skip if prohibited pairs exist
+                    if !self.prohibited_pairs.is_empty() {
+                        // Check if exchange would create prohibited pairs in either block
+                        let mut is_valid = true;
+
+                        // Check target block (only need to check up to j)
+                        for k in 0..nj {
+                            if k != j {  // Skip the point being exchanged
+                                let point = self.b[(i as usize, k as usize)] as u8;
+                                if self.prohibited_pairs.iter().any(|&(a, b)| 
+                                    (cur_row_no as u8 == a && point == b) || 
+                                    (cur_row_no as u8 == b && point == a)
+                                ) {
+                                    is_valid = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Check current block if target block check passed
+                        if is_valid {
+                            for k in 0..ni {
+                                if k != xcur {  // Skip the point being exchanged
+                                    let point = self.b[(cur_block as usize, k as usize)] as u8;
+                                    if self.prohibited_pairs.iter().any(|&(a, b)| 
+                                        (candidate_row == a && point == b) || 
+                                        (candidate_row == b && point == a)
+                                    ) {
+                                        is_valid = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if !is_valid {
+                            continue;
+                        }
                     }
-                    //println!("i is {}, j is {}", i, j);
 
-                    let fj = self.t_x.row(row_no);
-                    mi_vec[1] = (fmj - fmi).component_mul(&(fj - fi)).sum();
-                    mi_vec[2] = (fj - fi).component_mul(&(fj - fi)).sum();
+                    let fj = self.t_x.row(candidate_row as usize);
 
+                    let g_vec: SVector<f64, 3> = SVector::from_vec(vec![
+                        (ni + nj) as f64 / (ni * nj) as f64, 
+                        1.0, 
+                        0.0
+                    ]);
 
-                    
+                    let fmj = self.t_block_means.row(i as usize);
+                    let diff = fmj - fmi;
+                    let mi_vec: SVector<f64, 3> = SVector::from_vec(vec![
+                        diff.component_mul(&diff).sum(), 
+                        (fmj - fmi).component_mul(&(fj - fi)).sum(), 
+                        (fj - fi).component_mul(&(fj - fi)).sum()
+                    ]);
+
                     // Combine geometric and moment terms
                     
                     
@@ -1129,15 +1114,6 @@ mod tests {
             0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 1.231039; 
         ];
 
-        block_data.t_inv = nalgebra::dmatrix![
-            0.707107, 0.0, 0.0, 0.0, 0.0, 0.0;
-            0.119523, 0.717137, 0.0, 0.0, 0.0, 0.0;
-            0.257603, 0.042934, 0.751343, 0.0, 0.0, 0.0;
-            0.048485, 0.258586, 0.016162, 0.751517, 0.0, 0.0;
-            0.101746, 0.272416, 0.169029, 0.361033, 0.810683, 0.0;
-            0.781205, 0.304621, 0.960265, 0.270228, 0.506063, 1.231039;
-        ];
-
         block_data.t_block_means = nalgebra::dmatrix![
             0.000000, 0.239046, 0.014311, 0.336701, 0.211149, 0.191616;
             0.235702, 0.039841, 0.336315, 0.021549, 0.090258, 0.990836;
@@ -1150,77 +1126,105 @@ mod tests {
 
         let mut new_block = 0;
         let mut x_new = 0;
-        
-        // Test Case 1: Prohibited pairs in target block
-        block_data.prohibited_pairs = vec![(0, 4)];  // Point 0 can't be with point 4
-        let delta1 = block_data.find_delta_block(0, &mut x_new, 0, &mut new_block).unwrap();
-        
-        if delta1 > DESIGN_TOL {
-            // Verify target block doesn't contain prohibited pair
-            let target_points: Vec<u8> = block_data.b.row(new_block as usize)
-                .iter()
-                .take(block_data.block_sizes[new_block as usize] as usize)
-                .map(|&x| x as u8)
-                .collect();
+
+        // Test Case 1: Single prohibited pair in target block
+        {
+            block_data.prohibited_pairs = vec![(0, 4)];
+            let delta = block_data.find_delta_block(0, &mut x_new, 0, &mut new_block).unwrap();
             
-            assert!(!target_points.contains(&4), 
-                "Found exchange that would create prohibited pair (0,4) in target block");
+            if delta > DESIGN_TOL {
+                // Verify the proposed exchange doesn't put 0 and 4 together
+                let target_block = block_data.b.row(new_block as usize);
+                let has_four = (0..block_data.block_sizes[new_block as usize])
+                    .any(|k| k != x_new && target_block[k as usize] == 4);
+                assert!(!has_four, "Exchange would create prohibited pair (0,4) in target block");
+            }
         }
 
-        // Test Case 2: Prohibited pairs in current block
-        block_data.prohibited_pairs = vec![(2, 5)];  // Point 2 can't be with point 5
-        let cur_block = 0;  // Block containing point 2
-        let xcur = 1;      // Position of point 2 in block
-        
-        let delta2 = block_data.find_delta_block(xcur, &mut x_new, cur_block, &mut new_block).unwrap();
-        
-        if delta2 > DESIGN_TOL {
-            // Get the point that would be exchanged into current block
-            let incoming_point = block_data.b[(new_block as usize, x_new as usize)] as u8;
+        // Test Case 2: Single prohibited pair in current block
+        {
+            block_data.prohibited_pairs = vec![(2, 5)];
+            let cur_block = 0;
+            let xcur = 1;  // Position of point 2
             
-            // Get remaining points in current block
-            let current_block_points: Vec<u8> = block_data.b.row(cur_block as usize)
-                .iter()
-                .take(block_data.block_sizes[cur_block as usize] as usize)
-                .map(|&x| x as u8)
-                .filter(|&x| x != 2)  // Exclude point being moved out
-                .collect();
+            let delta = block_data.find_delta_block(xcur, &mut x_new, cur_block, &mut new_block).unwrap();
             
-            // Verify the exchange wouldn't create prohibited pair in current block
-            assert!(!current_block_points.contains(&5) || incoming_point != 2,
-                "Found exchange that would create prohibited pair (2,5) in current block");
+            if delta > DESIGN_TOL {
+                let incoming_point = block_data.b[(new_block as usize, x_new as usize)] as u8;
+                let has_five = (0..block_data.block_sizes[cur_block as usize])
+                    .any(|k| k != xcur && block_data.b[(cur_block as usize, k as usize)] == 5);
+                
+                assert!(!has_five || incoming_point != 2, 
+                    "Exchange would create prohibited pair (2,5) in current block");
+            }
         }
 
-        // Test Case 3: Multiple prohibited pairs
-        block_data.prohibited_pairs = vec![(0, 4), (2, 5), (1, 3)];
-        let delta3 = block_data.find_delta_block(0, &mut x_new, 0, &mut new_block).unwrap();
-        
-        if delta3 > DESIGN_TOL {
-            // Verify neither block would contain prohibited pairs after exchange
-            let target_points: Vec<u8> = block_data.b.row(new_block as usize)
-                .iter()
-                .take(block_data.block_sizes[new_block as usize] as usize)
-                .map(|&x| x as u8)
-                .filter(|&x| x != block_data.b[(new_block as usize, x_new as usize)] as u8)
-                .collect();
+        // Test Case 3: Multiple prohibited pairs affecting both blocks
+        {
+            block_data.prohibited_pairs = vec![(0, 4), (2, 5), (1, 3)];
+            let delta = block_data.find_delta_block(0, &mut x_new, 0, &mut new_block).unwrap();
             
-            let current_points: Vec<u8> = block_data.b.row(0 as usize)
-                .iter()
-                .take(block_data.block_sizes[0] as usize)
-                .map(|&x| x as u8)
-                .filter(|&x| x != 0)  // Exclude point being moved out
-                .collect();
-
-            let incoming_point = block_data.b[(new_block as usize, x_new as usize)] as u8;
-            
-            for &(a, b) in &block_data.prohibited_pairs {
+            if delta > DESIGN_TOL {
+                let incoming_point = block_data.b[(new_block as usize, x_new as usize)] as u8;
+                
                 // Check target block
-                assert!(!target_points.contains(&b) || 0 != a, 
-                    "Exchange would create prohibited pair in target block");
+                for k in 0..block_data.block_sizes[new_block as usize] {
+                    if k != x_new {
+                        let point = block_data.b[(new_block as usize, k as usize)] as u8;
+                        assert!(!block_data.prohibited_pairs.iter().any(|&(a, b)| 
+                            (0 == a && point == b) || (0 == b && point == a)
+                        ), "Exchange would create prohibited pair in target block");
+                    }
+                }
                 
                 // Check current block
-                assert!(!current_points.contains(&b) || incoming_point != a,
-                    "Exchange would create prohibited pair in current block");
+                for k in 0..block_data.block_sizes[0] {
+                    if k != 0 {
+                        let point = block_data.b[(0, k as usize)] as u8;
+                        assert!(!block_data.prohibited_pairs.iter().any(|&(a, b)| 
+                            (incoming_point == a && point == b) || 
+                            (incoming_point == b && point == a)
+                        ), "Exchange would create prohibited pair in current block");
+                    }
+                }
+            }
+        }
+
+        // Test Case 4: Performance - many prohibited pairs
+        {
+            // Create many prohibited pairs
+            block_data.prohibited_pairs = (0..6)
+                .flat_map(|i| (i+1..7).map(move |j| (i, j)))
+                .collect();
+            
+            use std::time::Instant;
+            let start = Instant::now();
+            let delta = block_data.find_delta_block(0, &mut x_new, 0, &mut new_block).unwrap();
+            let duration = start.elapsed();
+            
+            // Should complete in reasonable time (e.g., < 1ms)
+            assert!(duration.as_micros() < 1000, 
+                "find_delta_block took too long with many prohibited pairs");
+            
+            // Verify result if exchange found
+            if delta > DESIGN_TOL {
+                let incoming_point = block_data.b[(new_block as usize, x_new as usize)] as u8;
+                
+                // Quick check of one prohibited pair in each block
+                let target_has_violation = (0..block_data.block_sizes[new_block as usize])
+                    .any(|k| k != x_new && block_data.prohibited_pairs.contains(&(
+                        0,
+                        block_data.b[(new_block as usize, k as usize)] as u8
+                    )));
+                    
+                let current_has_violation = (0..block_data.block_sizes[0])
+                    .any(|k| k != 0 && block_data.prohibited_pairs.contains(&(
+                        incoming_point,
+                        block_data.b[(0, k as usize)] as u8
+                    )));
+                    
+                assert!(!target_has_violation && !current_has_violation,
+                    "Exchange with many prohibited pairs created violation");
             }
         }
     }
