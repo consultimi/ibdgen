@@ -1,5 +1,3 @@
-use std::collections::btree_map::IterMut;
-
 /**
  * opt_block.rs - Design of optimal IBDs with prohibitions
  * Based on the original opt_block.c C code in the AlgDesign R package
@@ -8,7 +6,8 @@ use std::collections::btree_map::IterMut;
  */
 
 
-use nalgebra::{DMatrix, DVector, SVector};
+use nalgebra::{DMatrix, DVector, Matrix3};
+use nalgebra::linalg::*;
 use pretty_print_nalgebra::*;
 use anyhow::*;
 use derive_builder::Builder;
@@ -80,6 +79,8 @@ struct BlockData {
     #[builder(default = "vec![]")]
     prohibited_pairs: Vec<(u8, u8)>,
 
+    /* moments contain the calculation for potential improvements */
+    moments: Matrix3<f64>,
 }
 
 impl BlockData {
@@ -339,87 +340,101 @@ impl BlockData {
     fn find_delta_block(&mut self, xcur: u8, xnew: &mut u8, cur_block: u8, new_block: &mut u8) -> Result<f64> {
         const DELTA_TOL: f64 = 1e-12;  // Minimum improvement threshold
         let mut delta = 0.0;  // Tracks best improvement found
-        let mut g_vec: SVector<f64, 3> = SVector::from_vec(vec![0.0, 1.0, 0.0]);
-        let mut mi_vec: SVector<f64, 3> = SVector::from_vec(vec![0.0, 0.0, 0.0]);
+        //let mut g_vec: SVector<f64, 3> = SVector::from_vec(vec![0.0, 1.0, 0.0]);
+        //let mut mi_vec: SVector<f64, 3> = SVector::from_vec(vec![0.0, 0.0, 0.0]);
 
 
-        let cur_row_no = self.b[(cur_block as usize, xcur as usize)] as usize;
+        let cur_treatment_rowno = self.b[(cur_block as usize, xcur as usize)] as usize;
         let ni = self.block_sizes[cur_block as usize];
 
-        let fi = self.t_x.row(cur_row_no);
+        let fi = self.t_x.row(cur_treatment_rowno);
         let fmi = self.t_block_means.row(cur_block as usize);
 
         // Loop through all blocks except current
         for i in 0..self.n_b {
-            if i != cur_block {
-                let nj = self.block_sizes[i as usize];
+            if i == cur_block {
+                continue;
+            }
+            let nj = self.block_sizes[i as usize];
                 
                 // Try exchanging with each point in candidate block
-                for j in 0..nj {
-                    let candidate_row = self.b[(i as usize, j as usize)] as u8;
+            for j in 0..nj {
+                let candidate_treatment_rowno = self.b[(i as usize, j as usize)] as u8;
 
-                    // Skip if prohibited pairs exist
-                    if !self.prohibited_pairs.is_empty() {
-                        // Check if exchange would create prohibited pairs in either block
-                        let mut is_valid = true;
+                // Skip if prohibited pairs exist
+                if !self.prohibited_pairs.is_empty() {
+                    // Check if exchange would create prohibited pairs in either block
+                    let mut is_valid = true;
 
-                        // Check target block (only need to check up to j)
-                        for k in 0..nj {
-                            if k != j {  // Skip the point being exchanged
-                                let point = self.b[(i as usize, k as usize)] as u8;
+                    // Check target block (only need to check up to j)
+                    for k in 0..nj {
+                        if k != j {  // Skip the point being exchanged
+                            let point = self.b[(i as usize, k as usize)] as u8;
+                            if self.prohibited_pairs.iter().any(|&(a, b)| 
+                                (cur_treatment_rowno as u8 == a && point == b) || 
+                                (cur_treatment_rowno as u8 == b && point == a)
+                            ) {
+                                is_valid = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Check current block if target block check passed
+                    if is_valid {
+                        for k in 0..ni {
+                            if k != xcur {  // Skip the point being exchanged
+                                let point = self.b[(cur_block as usize, k as usize)] as u8;
                                 if self.prohibited_pairs.iter().any(|&(a, b)| 
-                                    (cur_row_no as u8 == a && point == b) || 
-                                    (cur_row_no as u8 == b && point == a)
+                                    (candidate_treatment_rowno == a && point == b) || 
+                                    (candidate_treatment_rowno == b && point == a)
                                 ) {
                                     is_valid = false;
                                     break;
                                 }
                             }
                         }
-
-                        // Check current block if target block check passed
-                        if is_valid {
-                            for k in 0..ni {
-                                if k != xcur {  // Skip the point being exchanged
-                                    let point = self.b[(cur_block as usize, k as usize)] as u8;
-                                    if self.prohibited_pairs.iter().any(|&(a, b)| 
-                                        (candidate_row == a && point == b) || 
-                                        (candidate_row == b && point == a)
-                                    ) {
-                                        is_valid = false;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        if !is_valid {
-                            continue;
-                        }
                     }
 
-                    let fj = self.t_x.row(candidate_row as usize);
-
-                    g_vec[0] = (ni + nj) as f64 / (ni * nj) as f64;
-
-                    let fmj = self.t_block_means.row(i as usize);
-                    let diff = fmj - fmi;
-                    mi_vec[0] = diff.component_mul(&diff).sum();
-                    mi_vec[1] = (fmj - fmi).component_mul(&(fj - fi)).sum();
-                    mi_vec[2] = (fj - fi).component_mul(&(fj - fi)).sum();
-
-                    // Combine geometric and moment terms
-                    
-                    
-                    // Combine geometric and moment terms
-                    let mlivec = g_vec + mi_vec;
-                    let d = -(1.0 + mlivec[0] * mlivec[2] - mlivec[1] * mlivec[1]);
-
-                    if (d - delta) > DELTA_TOL {
-                        delta = d;
-                        *new_block = i;
-                        *xnew = j;
+                    if !is_valid {
+                        continue;
                     }
+                }
+
+                let fj = self.t_x.row(candidate_treatment_rowno as usize);
+
+                self.moments[0] = (ni + nj) as f64 / (ni * nj) as f64;
+
+                let fmj = self.t_block_means.row(i as usize);
+                let fmj_fmi_diff = fmj - fmi;
+                let fj_fi_diff = fj - fi;
+                //self.moments[1] = fmj_fmi_diff.component_mul(&fmj_fmi_diff).sum();
+                //println!("fmj_fmi_diff: {}", pretty_print!(&fmj_fmi_diff));
+                //println!("fj_fi_diff: {}", pretty_print!(&fj_fi_diff));
+
+                let vectors = DMatrix::from_rows(&[fmj_fmi_diff, fj_fi_diff]).transpose();
+                //println!("vectors: {}", &vectors);
+// Multiply with its transpose to get a 2×2 matrix of dot products
+                let dot_products = vectors.tr_mul(&vectors);
+                //let dot_products = vectors.clone() * vectors.transpose();
+
+                //println!("dot_products: {}", dot_products);
+                self.moments[1] = dot_products[0]; 
+                self.moments[4] = dot_products[2]; 
+                self.moments[7] = dot_products[3]; 
+
+                // Combine geometric and moment terms
+                
+                
+                // Combine geometric and moment terms
+                self.moments.set_row(2, &(self.moments.row(0) + self.moments.row(1)));
+                
+                let d = -(1.0 + self.moments[2] * self.moments[8] - self.moments[5] * self.moments[5]);
+
+                if (d - delta) > DELTA_TOL {
+                    delta = d;
+                    *new_block = i;
+                    *xnew = j;
                 }
             }
         }
@@ -775,6 +790,11 @@ impl BlockDataBuilder {
             block_data.rows = Some(DVector::zeros(std::cmp::max(n, n_xb) as usize));
             block_data.b = Some(DMatrix::zeros(n_b as usize, block_sizes[0] as usize));
             block_data.n_t = Some(n);
+            block_data.moments = Some(Matrix3::new(
+                0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0
+            ));
         }
 
         block_data
