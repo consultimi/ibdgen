@@ -500,7 +500,7 @@ impl BlockData {
         self.initialize_block_array(&mut block_array);
     
         for repeat_num in 0..n_repeats {
-            println!("REPEAT NUMBER: {}", repeat_num);
+            println!("REPEAT NUMBER: {}", repeat_num + 1);
 
             //rintln!("b before initialize_b: {}", pretty_print!(&self.b));
             self.initialize_b().map_err(|e| anyhow!("Failed to initialize b: {}", e))?;
