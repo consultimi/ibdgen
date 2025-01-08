@@ -43,8 +43,8 @@ fn main() {
         // args.prohibited_pairs is a comma-separated list of pairs, each odd and even entry are a pair
         // e.g. "1,2,3,4" -> (1,2) and (3,4)
         for i in (0..pairs.len()).step_by(2) {
-            let (a, b) = (pairs[i].parse().unwrap(), pairs[i+1].parse().unwrap());
-            prohibited_pairs.push((a, b));
+            let (a, b) = (pairs[i].parse::<u8>().unwrap(), pairs[i+1].parse::<u8>().unwrap());
+            prohibited_pairs.push((a - 1, b - 1));
         }
        
 
