@@ -51,7 +51,9 @@ fn main() {
     }
     let mut min_d = 0.0;
     let mut best_solution = BlockResult::default();
-    for _ in 1..=args.iter {
+    let mut best_iter = 0;
+    for i in 1..=args.iter {
+        println!("ITERATION: {}", i);
         let result = opt_block(
             args.v, 
             args.n_b, 
@@ -63,11 +65,12 @@ fn main() {
         if result.best_d > min_d {
             min_d = result.best_d;
             best_solution = result;
+            best_iter = i;
         }
     }
     
-    println!("Best solution found");
-    println!("-------------------");
+    println!("Best solution found at iteration: {}", best_iter);
+    println!("-------------------------------------");
 
     //let mut coincidence_f = best_solution.best_coincidence.coincidence.clone().cast::<f64>();
     //coincidence_f.fill_lower_triangle_with_upper_triangle();
