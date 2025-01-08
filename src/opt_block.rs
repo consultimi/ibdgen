@@ -398,11 +398,6 @@ impl BlockData {
                 }
 
                 let fj = self.t_x.row(candidate_treatment_rowno as usize);
-
-                //self.moments[0] = (ni + nj) as f64 / (ni * nj) as f64;
-
-                //let fmj = self.t_block_means.row(i as usize);
-                //let fmj_fmi_diff = fmj - fmi;
                 let fj_fi_diff = fj - fi;
                 self.diffs.set_column(1, &fj_fi_diff.transpose());
                 //self.moments[1] = fmj_fmi_diff.component_mul(&fmj_fmi_diff).sum();
@@ -442,7 +437,7 @@ impl BlockData {
     
     fn exchange_block(&mut self, xcur: u8, xnew: u8, cur_block: u8, new_block: &mut u8) -> Result<()> {
         let row_no_i = self.b[(cur_block as usize, xcur as usize)] as usize;
-        let ni = self.block_size;
+        //let ni = self.block_size;
 
         let x_clone = self.x.clone();
         let xri = x_clone.row(row_no_i);
@@ -455,8 +450,8 @@ impl BlockData {
         let xrj = x_clone.row(row_no_j);
         let xmj = self.block_means.row(*new_block as usize);
         debug_println!("xmi: {}\nxmj: {}\nxri: {}\nxrj: {}\nrowNoj: {}", pretty_print!(&xmi), pretty_print!(&xmj), pretty_print!(&xri), pretty_print!(&xrj), row_no_j);
-        let nj = self.block_size;
-        let c = (ni + nj) as f64 / (ni * nj) as f64;
+        //let nj = self.block_size;
+        //let c = (ni + nj) as f64 / (ni * nj) as f64;
 
         // vec = xmj - xmi
         let mut vec = (xmj - xmi).transpose();
@@ -464,15 +459,15 @@ impl BlockData {
         vec -= (xrj - xri).transpose();
         self.rotate_b(&vec, -1.0);
         vec = (xrj - xri).transpose();
-        self.rotate_b(&vec, 1.0 - c);
+        self.rotate_b(&vec, 1.0 - self.moments[0]);
         
         // Update block means
         for i in 0..self.k {
             //let idx = cmi_from_rmi((cur_block as usize * self.k as usize + i as usize) as usize, self.k as usize, self.n_b as usize);
             //self.block_means[idx as usize] += newsum;
-            self.block_means[(cur_block as usize, i as usize)] += (xrj[i as usize] - xri[i as usize]) / ni as f64;
+            self.block_means[(cur_block as usize, i as usize)] += (xrj[i as usize] - xri[i as usize]) / self.block_size as f64;
             //let idx = cmi_from_rmi((*new_block as usize * self.k as usize + i as usize) as usize, self.k as usize, self.n_b as usize);
-            self.block_means[(*new_block as usize, i as usize)] += (xri[i as usize] - xrj[i as usize]) / nj as f64;
+            self.block_means[(*new_block as usize, i as usize)] += (xri[i as usize] - xrj[i as usize]) / self.block_size as f64;
         }
 
         //println!("new_block: {}, xnew: {}, b before exchange: {}", *new_block, xnew, pretty_print!(&self.b));
