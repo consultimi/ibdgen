@@ -339,8 +339,6 @@ impl BlockData {
         let mut delta = 0.0;  // Tracks best improvement found
         //let mut g_vec: SVector<f64, 3> = SVector::from_vec(vec![0.0, 1.0, 0.0]);
         //let mut mi_vec: SVector<f64, 3> = SVector::from_vec(vec![0.0, 0.0, 0.0]);
-
-        let block_size_adj =  (2*self.block_size) as f64 / (self.block_size * self.block_size) as f64;
         let cur_treatment_rowno = self.b[(cur_block as usize, xcur as usize)] as usize;
 
         let fi = self.t_x.row(cur_treatment_rowno);
