@@ -1,13 +1,6 @@
-mod create_ibd;
-mod block_array;
-mod random_type;
-mod coincidence_matrix;
-mod block_result;
-
-use create_ibd::*;
 use pretty_print_nalgebra::*;
 use clap::Parser;
-use block_result::BlockResult;
+
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -51,47 +44,30 @@ fn main() {
             let (a, b) = (pairs[i].parse::<usize>().unwrap(), pairs[i+1].parse::<usize>().unwrap());
             prohibited_pairs.push((a - 1, b - 1));
         }
-       
-
     }
-    let mut min_d = 0.0;
-    let mut best_solution = BlockResult::default();
-    let mut best_iter = 0;
-    for i in 1..=args.iter {
-        println!("ITERATION: {}", i);
-        let result = opt_block(
-            args.v, 
-            args.n_b, 
-            args.block_size, 
-            args.n_repeats, 
-            prohibited_pairs.clone()
-        ).unwrap();
+
+    match ibdgen::find_best_ibd(args.v, args.n_b, args.block_size, args.iter, args.n_repeats, prohibited_pairs) {
+        Ok((mut best_solution, best_iter, min_d)) => {
+            println!("Best solution found at iteration: {}", best_iter);
+            println!("-------------------------------------");
         
-        if result.best_d > min_d {
-            min_d = result.best_d;
-            best_solution = result;
-            best_iter = i;
+            println!("Solution is {}BIBD  (v = {}, k = {}, r = {}, lambda = {}, off-diagonal variance = {})", 
+                if best_solution.best_coincidence.is_bibd() { "a" } else { "not a" },
+                args.v, args.block_size, best_solution.best_coincidence.r(), best_solution.best_coincidence.lambda(), best_solution.best_coincidence.variance());
+        
+            println!("Log Determinant: {:?}", best_solution.best_log_det);
+            println!("D-Optimality: {:?}", min_d);
+            println!("Diagonality: {:?}", best_solution.best_diagonality);    
+            println!("best_solution coincidence: {}", pretty_print!(&best_solution.best_coincidence.coincidence));
+            let sorted_block_array = best_solution.best_block_array.as_sorted();
+            println!("best_solution block_array: {}", pretty_print!(&sorted_block_array.add_scalar(1)));
+        
+        }
+        Err(e) => {
+            println!("Error running ibdgen: {:?}", e);
+            std::process::exit(1);
         }
     }
-    
-    println!("Best solution found at iteration: {}", best_iter);
-    println!("-------------------------------------");
 
-    //let mut coincidence_f = best_solution.best_coincidence.coincidence.clone().cast::<f64>();
-    //coincidence_f.fill_lower_triangle_with_upper_triangle();
-
-    //println!("SINGVAL: {}", pretty_print!(&coincidence_f.singular_values()));
-    if best_solution.best_coincidence.is_bibd() {
-        println!("Solution is a BIBD with v = {}, k = {}, r = {}, lambda = {}, off-diagonal variance = {}", args.v, args.block_size, best_solution.best_coincidence.r(), best_solution.best_coincidence.lambda(), best_solution.best_coincidence.variance());
-    } else {
-        println!("Solution is not a BIBD (v = {}, k = {}, r = {}, lambda = {}, off-diagonal variance = {})", args.v, args.block_size, best_solution.best_coincidence.r(), best_solution.best_coincidence.lambda(), best_solution.best_coincidence.variance());
-    }
-
-    println!("Log Determinant: {:?}", best_solution.best_log_det);
-    println!("D-Optimality: {:?}", min_d);
-    println!("Diagonality: {:?}", best_solution.best_diagonality);    
-    println!("best_solution coincidence: {}", pretty_print!(&best_solution.best_coincidence.coincidence));
-    let sorted_block_array = best_solution.best_block_array.as_sorted();
-    println!("best_solution block_array: {}", pretty_print!(&sorted_block_array.add_scalar(1)));
-    
 }
+
