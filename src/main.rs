@@ -1,8 +1,13 @@
 mod create_ibd;
 mod block_array;
+mod random_type;
+mod coincidence_matrix;
+mod block_result;
+
 use create_ibd::*;
 use pretty_print_nalgebra::*;
 use clap::Parser;
+use block_result::BlockResult;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]

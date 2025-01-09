@@ -10,10 +10,15 @@ use pretty_print_nalgebra::*;
 use anyhow::*;
 use derive_builder::Builder;
 use crate::block_array::BlockArray;
-
-const DESIGN_TOL: f64 = 1.0e-10;
+use crate::random_type::RandomType;
+use crate::block_result::BlockResult;
+use crate::coincidence_matrix::CoincidenceMatrix;
 
 const DEBUG: bool = false;
+const TOLROT: f64 = 1.0e-12;
+const DESIGN_TOL: f64 = 1.0e-10;
+const DELTA_TOL: f64 = 1e-12;  // Minimum improvement threshold for find_delta_block
+const MAX_RETRIES: u8 = 10;
 
 macro_rules! debug_println {
     ($($arg:tt)*) => {
@@ -83,7 +88,6 @@ struct BlockData {
 }
 
 impl BlockData {
-
 
     fn reduce_x_to_t(&mut self) -> (f64, bool) {
         let mut p_mx: Vec<f64> = vec![-1e16; self.k as usize];
@@ -208,35 +212,6 @@ impl BlockData {
             }
         }
     }
-
-    /*
-    fn no_dup_permute_b(&mut self, offset: u8, little_n: u8, bs: u8) -> Result<()> {
-        //eprintln!("no_dup_permute_b called with little_n: {}, bs: {}, block_data.rows: {}, offset: {}", little_n, bs, &self.rows, offset);
-        //debug_println!("b: {}", pretty_print!(&block_data.b));
-        loop {
-            let mut nodup = true;
-            permute_b(&mut self.rows, self.n, self.random_type).map_err(|e| anyhow!("Failed to permute rows: {}", e))?;
-            //eprintln!("rows after permute: {}", pretty_print!(&self.rows));
-            for i in 0..little_n {
-                //let index = offset * self.max_n + i;
-                let cur_val = self.b[(offset as usize, i as usize)] as i32;
-                for j in 0..(bs - little_n) {
-                    if self.rows[j as usize] as i32 == cur_val {
-                        nodup = false; 
-                        break;
-                    }
-                }
-                if !nodup {
-                    break;
-                }
-            }
-            if nodup {
-                break;
-            }
-        }
-
-        Ok(())
-    } */
     
     fn form_block_means(&mut self) {
         // divide block_data.b into block_data.n_b equal sized blocks of max_n rows
@@ -311,7 +286,7 @@ impl BlockData {
                 else {
                     l += 1;
                     
-                    const MAX_RETRIES: u8 = 10;
+                    
                     // 10. If we've tried all points, restart block
                     if l >= self.n_t {
                         retry_count += 1;
@@ -335,7 +310,7 @@ impl BlockData {
 
     
     fn find_delta_block(&mut self, xcur: usize, xnew: &mut usize, cur_block: usize, new_block: &mut usize) -> Result<f64> {
-        const DELTA_TOL: f64 = 1e-12;  // Minimum improvement threshold
+        
         let mut delta = 0.0;  // Tracks best improvement found
         //let mut g_vec: SVector<f64, 3> = SVector::from_vec(vec![0.0, 1.0, 0.0]);
         //let mut mi_vec: SVector<f64, 3> = SVector::from_vec(vec![0.0, 0.0, 0.0]);
@@ -506,7 +481,7 @@ impl BlockData {
                     let mut exchanged = false;
                     for cur_block in 0..self.n_b {
                         for xcur in 0..self.block_size {
-                            self.try_exchange_block(&mut xnew, &mut new_block, &mut av_var, &mut log_det, &mut exchanged, cur_block, xcur)?;
+                            exchanged = exchanged || self.try_exchange_block(&mut xnew, &mut new_block, &mut av_var, &mut log_det, cur_block, xcur)?;
                         }
                     }
                     if !exchanged {
@@ -533,29 +508,19 @@ impl BlockData {
         Ok(BlockResult { best_log_det, best_block_array, best_d, best_diagonality, best_coincidence })
     }
 
-    fn try_exchange_block(&mut self, xnew: &mut usize, new_block: &mut usize, av_var: &mut f64, log_det: &mut f64, exchanged: &mut bool, cur_block: usize, xcur: usize) -> Result<(), Error> {
+    fn try_exchange_block(&mut self, xnew: &mut usize, new_block: &mut usize, av_var: &mut f64, log_det: &mut f64, cur_block: usize, xcur: usize) -> Result<bool, Error> {
         debug_println!("BEING LOOP xcur: {}, curBlock: {}, newBlock: {}", xcur, cur_block, new_block);
         let delta = self.find_delta_block(xcur, xnew, cur_block, new_block).map_err(|e| anyhow!("Failed to find delta block: {}", e))?;
         debug_println!("delta: {}", delta);
-        Ok(if delta < 10.0 && delta > DESIGN_TOL {
-    
-            debug_println!("t before exchange: {}", pretty_print!(&self.t));
-            debug_println!("t_inv before exchange: {}", pretty_print!(&self.t_inv));
+        if delta < 10.0 && delta > DESIGN_TOL {
             self.exchange_block(xcur, *xnew, cur_block, new_block).map_err(|e| anyhow!("Failed to exchange block: {}", e))?;
-            debug_println!("t_inv after exchange: {}", pretty_print!(&self.t_inv));
-            *exchanged = true;
             *log_det += (1.0 + delta).ln();      
             *av_var = self.make_ti_from_tb().map_err(|e| anyhow!("Failed to make ti from tb: {}", e))?;
-            debug_println!("t_inv after make_ti_from_tb: {}", pretty_print!(&self.t_inv));
-            debug_println!("t after make_ti_from_tb: {}", pretty_print!(&self.t));
-    
             self.transform();
-    
-    
-            debug_println!("block_data.t_x: {}", pretty_print!(&self.t_x));
-            debug_println!("block_data.t_block_means: {}", pretty_print!(&self.t_block_means));
-            debug_println!("block_data.block_means: {}", pretty_print!(&self.block_means));
-        })
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
     
     fn transform(&mut self) {
@@ -597,111 +562,6 @@ fn permute_b(a: &mut DVector<usize>, n: usize, random_type: RandomType) -> Resul
 }
 
 
-
-
-const TOLROT: f64 = 1.0e-12;
-
-
-
-
-/*
-fn rmi_from_cmi(column_major_index: usize , width: usize, height: usize) -> usize {
-    let row = column_major_index % height;
-    let column = column_major_index / height;
-    return row * width + column;
-}
-
-fn cmi_from_rmi(row_major_index: usize, width: usize, height: usize) -> usize {
-    return rmi_from_cmi(row_major_index, height, width);
-} */
-
-#[derive(Debug, Clone, Copy)]
-enum RandomType {
-    Uniform,
-    Fixed(f64)
-}
-
-impl RandomType {
-    fn random(&self) -> f64 {
-        match self {
-            RandomType::Uniform => rand::random::<f64>(),
-            RandomType::Fixed(value) => *value
-        }
-    }
-}
-
-#[derive(Default, Debug, Clone)]
-pub struct CoincidenceMatrix {
-    pub coincidence: DMatrix<usize>,
-}
-
-impl CoincidenceMatrix {
-
-
-    pub fn r(&self) -> f64 {
-        self.coincidence.diagonal().cast::<f64>().mean()
-    }
-
-    pub fn variance(&self) -> f64 {
-        let mut upper_try_f: nalgebra::Matrix<f64, nalgebra::Dyn, nalgebra::Dyn, nalgebra::VecStorage<f64, nalgebra::Dyn, nalgebra::Dyn>> = self.coincidence.upper_triangle().cast::<f64>();
-        upper_try_f.fill_lower_triangle_with_upper_triangle();
-        upper_try_f.fill_diagonal(self.lambda());
-        upper_try_f.variance()
-    }
-
-    pub fn lambda(&self) -> f64 {
-        let mut upper_try_f: nalgebra::Matrix<f64, nalgebra::Dyn, nalgebra::Dyn, nalgebra::VecStorage<f64, nalgebra::Dyn, nalgebra::Dyn>> = self.coincidence.upper_triangle().cast::<f64>();
-        upper_try_f.fill_diagonal(0.0);
-
-        let cells = upper_try_f.ncols() * (upper_try_f.ncols() - 1) / 2;
-        let lambda = upper_try_f.sum() as f64 / (cells as f64);
-        lambda
-    }
-
-    pub fn is_bibd(&self) -> bool {
-        let diagonal_f = self.coincidence.diagonal().cast::<f64>();
-        (diagonal_f.max() == diagonal_f.min()) && (self.variance() == 0.0)
-    }
-
-    pub fn from_block_array(block_array: &DMatrix<usize>) -> Self {
-        //println!("block_array: {}", pretty_print!(&block_array));   
-        //let n = block_array.max() + 1;
-        let true_n = block_array.max() + 1;
-        let n = block_array.nrows();
-        let block_size = block_array.ncols();
-        let mut coincidence: DMatrix<usize> = DMatrix::zeros(n, n);
-        for block_idx in 0..n {
-            let block_elements = block_array.row(block_idx);
-            for i in 0..block_size {
-                let elem_i = block_elements[i];
-                // Diagonal counts total appearances
-                coincidence[(elem_i, elem_i)] += 1;
-                
-                // Upper triangle counts pairwise coincidences
-                for j in (i+1)..block_size {
-                    
-                    let elem_j = block_elements[j];
-                    debug_println!("i: {}, j: {}, elem_i: {}, elem_j: {}", i, j, elem_i, elem_j);
-                    if elem_i < elem_j {
-                        coincidence[(elem_i, elem_j)] += 1;
-                    } else {
-                        coincidence[(elem_j, elem_i)] += 1;
-                    }
-                }
-            }
-        }
-        Self { coincidence: coincidence.view((0,0),(true_n,true_n)).into() }
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct BlockResult {
-    pub best_log_det: f64,
-    pub best_block_array: BlockArray,
-    pub best_d: f64,
-    pub best_diagonality: f64,
-    pub best_coincidence: CoincidenceMatrix
-}
 
 // optimize determinant over all blocks using d-criterion
 
@@ -1256,7 +1116,9 @@ mod tests {
     #[test]
     fn test_block_optimize() {
         let mut block_data = configure_block_data();
-        let block_result = block_data.block_optimize(5).unwrap();
+        let block_result_result = block_data.block_optimize(5);
+        assert!(block_result_result.is_ok());
+        let block_result = block_result_result.unwrap();
         //debug_println!("block_result: {}", pretty_print!(&block_result.best_block_array.cast::<u8>()));
 
         assert_eq!(block_result.best_log_det, 3.1378770132679095);
