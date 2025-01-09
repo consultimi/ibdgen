@@ -46,12 +46,12 @@ fn main() {
         }
     }
 
-    match ibdgen::find_best_ibd(args.v, args.n_b, args.block_size, args.iter, args.n_repeats, prohibited_pairs) {
+    match ibdgen::find_best_ibd(args.v, args.n_b, args.block_size,  args.n_repeats, args.iter, prohibited_pairs) {
         Ok((mut best_solution, best_iter, min_d)) => {
             println!("Best solution found at iteration: {}", best_iter);
             println!("-------------------------------------");
         
-            println!("Solution is {}BIBD  (v = {}, k = {}, r = {}, lambda = {}, off-diagonal variance = {})", 
+            println!("Solution is {} BIBD  (v = {}, k = {}, r = {}, lambda = {}, off-diagonal variance = {})", 
                 if best_solution.best_coincidence.is_bibd() { "a" } else { "not a" },
                 args.v, args.block_size, best_solution.best_coincidence.r(), best_solution.best_coincidence.lambda(), best_solution.best_coincidence.variance());
         

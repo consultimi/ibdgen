@@ -8,7 +8,7 @@ use ibd::*;
 use block_result::BlockResult;
 use anyhow::Error;
 
-pub fn find_best_ibd(v: u8, n_b: usize, block_size: usize, iter: usize, n_repeats: usize, prohibited_pairs: Vec<(usize, usize)>) -> Result<(BlockResult, usize, f64), Error> {
+pub fn find_best_ibd(v: u8, n_b: usize, block_size: usize, n_repeats: usize, iter: usize, prohibited_pairs: Vec<(usize, usize)>) -> Result<(BlockResult, usize, f64), Error> {
     let mut min_d = 0.0;
     let mut best_solution = BlockResult::default();
     let mut best_iter = 0;
