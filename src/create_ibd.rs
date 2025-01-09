@@ -5,7 +5,7 @@
  * AlgDesign now maintained by Jerome Braun https://github.com/jvbraun/AlgDesign
  */
 
-use nalgebra::{DMatrix, DVector, Matrix3};
+use nalgebra::{DMatrix, DVector, Matrix3, Matrix2};
 use pretty_print_nalgebra::*;
 use anyhow::*;
 use derive_builder::Builder;
@@ -311,6 +311,7 @@ impl BlockData {
     
     fn find_delta_block(&mut self, xcur: usize, xnew: &mut usize, cur_block: usize, new_block: &mut usize) -> Result<f64> {
         
+        let mut dot_products: Matrix2<f64> = Matrix2::zeros();
         let mut delta = 0.0;  // Tracks best improvement found
         //let mut g_vec: SVector<f64, 3> = SVector::from_vec(vec![0.0, 1.0, 0.0]);
         //let mut mi_vec: SVector<f64, 3> = SVector::from_vec(vec![0.0, 0.0, 0.0]);
@@ -351,7 +352,7 @@ impl BlockData {
                 
                 //println!("vectors: {}", &vectors);
                 // Multiply with its transpose to get a 2×2 matrix of dot products
-                let dot_products = self.diffs.tr_mul(&self.diffs);
+                self.diffs.tr_mul_to(&self.diffs, &mut dot_products);
                 //let dot_products = vectors.clone() * vectors.transpose();
 
                 //println!("dot_products: {}", dot_products);
