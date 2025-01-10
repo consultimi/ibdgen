@@ -20,7 +20,7 @@ struct Args {
     
     /// Number of optimization repeats
     #[arg(long, default_value_t = 5)]
-    n_repeats: usize,
+    nrepeats: usize,
     
     /// Prohibited pairs as comma-separated values (e.g., "1,2,3,4" means pairs (1,2) and (3,4))
     #[arg(long, short, value_delimiter = ',', num_args = 1..)]
@@ -46,7 +46,7 @@ fn main() {
         }
     }
 
-    match ibdgen::find_best_ibd(args.v, args.n_b, args.block_size,  args.n_repeats, args.iter, prohibited_pairs) {
+    match ibdgen::find_best_ibd(args.v, args.n_b, args.block_size,  args.nrepeats, args.iter, prohibited_pairs) {
         Ok((mut best_solution, best_iter, min_d)) => {
             println!("Best solution found at iteration: {}", best_iter);
             println!("-------------------------------------");

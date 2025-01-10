@@ -17,7 +17,7 @@ where:
 - block_size is the number of treatments per block
 - n_repeats is the number of repeats per iteration within a single run. Default is 5.
 - iter is the number of times the whole process is repeated. For smaller designs (e.g. 7,7,3), the default of 10 is plenty to find the best design. Otherwise - experiment.
-- prohibited_pairs is a vector of tuples representing the prohibited pairs. For example, if you want to prohibit the pair (1,2), you would pass vec![("1,2".to_string())].
+- prohibited_pairs is a vector of tuples of usize representing the prohibited pairs. For example, if you want to prohibit the pair (1,2), you would pass vec![(1,2)].
 
 This will generate an IBD with the specified parameters and return the best solution found.
 
@@ -26,7 +26,7 @@ The command line interface is a simple wrapper around the ibdgen function.
 
 Usage:
 ```
-ibdgen 9 12 3 --n_repeats 5 --iter 10 --prohibited_pairs "1,2,3,4"
+ibdgen 9 12 3 --nrepeats 5 --iter 10 -p "1,2,3,4"
 ```
 creates an IBD with v=9, n_b=12, k=3 design with prohibited pairs (1,2) and (3,4). --n_repeats and --iter are optional, and default to 5 and 10 respectively.
 
