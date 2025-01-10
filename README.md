@@ -26,7 +26,7 @@ The command line interface is a simple wrapper around the ibdgen function.
 
 Usage:
 ```
-ibdgen 9 12 3 --nrepeats 5 --iter 10 -p "1,2,3,4"
+ibdgen 9 12 3 -p "1,2,3,4" --nrepeats 5 --iter 10 
 ```
 creates an IBD with v=9, n_b=12, k=3 design with prohibited pairs (1,2) and (3,4). --n_repeats and --iter are optional, and default to 5 and 10 respectively.
 
