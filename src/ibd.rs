@@ -98,7 +98,7 @@
          let b_matrix = self.b.clone();
          for (i, block) in block_means.row_iter_mut().enumerate() {
              //dbg!(&block);
-             let block_row = b_matrix.row(i as usize);
+             let block_row = b_matrix.row(i);
              for &row_index in block_row.iter() {
                  let diff = self.x.row(row_index as usize) - &block;
                  get_range_b(&mut p_mx, &mut p_mn, &diff.transpose(), self.k as usize);
@@ -189,7 +189,7 @@
          Ok(a_var)
      }
  
-     fn initialize_block_array(&mut self, block_array: &mut Vec<usize>)  {
+     fn initialize_block_array(&mut self, block_array: &mut [usize])  {
  
          for i in 0..self.n {
              self.rows[i as usize] = i as usize;
@@ -214,14 +214,12 @@
          // divide block_data.b into block_data.n_b equal sized blocks of max_n rows
          // block_data.b is a n_b x max_n matrix of row indices from block_data.x
          // block_data.block_means is a n_b x k matrix of block means
-         let mut i = 0;
-         for mut block in self.block_means.row_iter_mut() {
-             let block_row = self.b.row(i as usize);
+         for (i, mut block) in self.block_means.row_iter_mut().enumerate() {
+             let block_row = self.b.row(i);
              let out: Vec<_> = block_row.iter().map(|&row_index| {
                  self.x.row(row_index as usize)
              }).collect();
              block.copy_from(&(DMatrix::from_rows(&out).row_sum() / self.block_size as f64));
-             i += 1;
          };
          debug_println!("block_means inside form_block_means: {}", pretty_print!(&self.block_means));
      }
@@ -533,7 +531,7 @@
  fn calc_index(i: usize, nc: usize) -> usize {
      i * (nc+1)
  }
- fn get_range_b(p_mx: &mut Vec<f64>, p_mn: &mut Vec<f64>, vec: &DVector<f64>, k: usize) {
+ fn get_range_b(p_mx: &mut [f64], p_mn: &mut [f64], vec: &DVector<f64>, k: usize) {
      for i in 0..k {
          p_mx[i] = p_mx[i].max(vec[i]);
          p_mn[i] = p_mn[i].min(vec[i]);
