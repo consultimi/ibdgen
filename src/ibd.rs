@@ -94,10 +94,9 @@
      
          // initialise T
          self.t.fill(0.0);
-         let mut i = 0;
          let mut block_means = self.block_means.clone();
          let b_matrix = self.b.clone();
-         for block in block_means.row_iter_mut() {
+         for (i, block) in block_means.row_iter_mut().enumerate() {
              //dbg!(&block);
              let block_row = b_matrix.row(i as usize);
              for &row_index in block_row.iter() {
@@ -105,7 +104,6 @@
                  get_range_b(&mut p_mx, &mut p_mn, &diff.transpose(), self.k as usize);
                  self.rotate_b(&diff.transpose(), 1.0);
              }
-             i += 1;
          };
          let log_det = self.t.determinant().ln();
          (log_det, false)
