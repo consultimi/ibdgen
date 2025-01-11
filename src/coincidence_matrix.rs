@@ -24,8 +24,8 @@ impl CoincidenceMatrix {
         upper_try_f.fill_diagonal(0.0);
 
         let cells = upper_try_f.ncols() * (upper_try_f.ncols() - 1) / 2;
-        let lambda = upper_try_f.sum() as f64 / (cells as f64);
-        lambda
+        
+        upper_try_f.sum() / (cells as f64)
     }
 
     pub fn is_bibd(&self) -> bool {

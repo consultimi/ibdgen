@@ -122,7 +122,7 @@
          //debug_println!("block_data.t: {}", pretty_print!(&block_data.t.transpose()));
          //let mut k_index = 0;
          for i in 0..self.k {
-             if skip == true {
+             if skip {
                  break;
              }
      
@@ -133,14 +133,14 @@
              // d points to the corresponding index in the t (upper triangular) matrix
              let mut k_index = calc_index(i as usize, self.k as usize);
              //debug_println!("i: {}, k_index: {}", i, k_index);
-             let d = self.t[(k_index) as usize];
+             let d = self.t[k_index];
              //debug_println!("d: {}", d);
              let dp = d + weight * t_vec[i as usize] * t_vec[i as usize];
              if dp.abs() < TOLROT {
                  continue;
              }
              //dbg!(&k_index);
-             self.t[(k_index) as usize] = dp;
+             self.t[k_index] = dp;
              //debug_println!("t after set: {}", pretty_print!(&block_data.t));
              let c = d / dp;
              let s = weight * t_vec[i as usize] / dp;
@@ -232,7 +232,7 @@
      fn initialize_b(&mut self) -> Result<()> {
          // 1. Initialize sequential numbers 0..n_t
          for i in 0..self.n_t {
-             self.rows[i as usize] = i;
+             self.rows[i] = i;
          }
  
          // 2. Randomly permute these numbers
@@ -240,7 +240,7 @@
  
          // 3. Initialize b matrix with -1 (empty slots)
          for i in 0..self.n_b * self.block_size {
-             self.b[((i / self.block_size) as usize, (i % self.block_size) as usize)] = -1;
+             self.b[((i / self.block_size), (i % self.block_size))] = -1;
          }
  
          let mut l = 0;  // Index into rows array
@@ -259,12 +259,12 @@
                  }
  
                  // 7. Get next candidate point
-                 let candidate = self.rows[l as usize];
+                 let candidate = self.rows[l];
                  let mut is_valid = true;
  
                  // 8. Check if candidate violates any prohibited pairs
                  for k in 0..j {
-                     let existing_point = self.b[(i as usize, k as usize)] as usize;
+                     let existing_point = self.b[(i, k)] as usize;
                      if self.prohibited_pairs.iter().any(|&(a, b)| 
                          (candidate == a && existing_point == b) || 
                          (candidate == b && existing_point == a)
@@ -276,7 +276,7 @@
  
                  // 9a. If valid, place point and move to next position
                  if is_valid {
-                     self.b[(i as usize, j as usize)] = candidate as i32;
+                     self.b[(i, j)] = candidate as i32;
                      l += 1;
                      j += 1;
                      retry_count = 0;
@@ -297,7 +297,7 @@
                          l = 0;
                          permute_b(&mut self.rows, self.n_t, self.random_type)?;
                          for k in 0..j {
-                             self.b[(i as usize, k as usize)] = -1;
+                             self.b[(i, k)] = -1;
                          }
                          j = 0;
                      }
@@ -314,23 +314,23 @@
          let mut delta = 0.0;  // Tracks best improvement found
          //let mut g_vec: SVector<f64, 3> = SVector::from_vec(vec![0.0, 1.0, 0.0]);
          //let mut mi_vec: SVector<f64, 3> = SVector::from_vec(vec![0.0, 0.0, 0.0]);
-         let cur_treatment_rowno = self.b[(cur_block as usize, xcur as usize)] as usize;
+         let cur_treatment_rowno = self.b[(cur_block, xcur)] as usize;
  
          let fi = self.t_x.row(cur_treatment_rowno);
-         let fmi = self.t_block_means.row(cur_block as usize);
+         let fmi = self.t_block_means.row(cur_block);
  
          // Loop through all blocks except current
          for i in 0..self.n_b {
              if i == cur_block {
                  continue;
              }
-             let fmj = self.t_block_means.row(i as usize);
+             let fmj = self.t_block_means.row(i);
              let fmj_fmi_diff = fmj - fmi;
              //let vectors = DMatrix::from_rows(&[fmj_fmi_diff, fmj_fmi_diff]).transpose();
              self.diffs.set_column(0, &fmj_fmi_diff.transpose());
                  // Try exchanging with each point in candidate block
              for j in 0..self.block_size {
-                 let candidate_treatment_rowno = self.b[(i as usize, j as usize)] as usize;
+                 let candidate_treatment_rowno = self.b[(i, j)] as usize;
  
                  // Skip if prohibited pairs exist
                  if !self.prohibited_pairs.is_empty() {
@@ -341,7 +341,7 @@
                      }
                  }
  
-                 let fj = self.t_x.row(candidate_treatment_rowno as usize);
+                 let fj = self.t_x.row(candidate_treatment_rowno);
                  let fj_fi_diff = fj - fi;
                  self.diffs.set_column(1, &fj_fi_diff.transpose());
                  //self.moments[1] = fmj_fmi_diff.component_mul(&fmj_fmi_diff).sum();
@@ -382,7 +382,7 @@
          // Check target block (only need to check up to j)
          for k in 0..self.block_size {
              if k != j {  // Skip the point being exchanged
-                 let point = self.b[(i as usize, k as usize)] as usize;
+                 let point = self.b[(i, k)] as usize;
                  if self.prohibited_pairs.iter().any(|&(a, b)| 
                      (cur_treatment_rowno == a && point == b) || 
                      (cur_treatment_rowno == b && point == a)
@@ -394,7 +394,7 @@
      
          for k in 0..self.block_size {
              if k != xcur {  // Skip the point being exchanged
-                 let point = self.b[(cur_block as usize, k as usize)] as usize;
+                 let point = self.b[(cur_block, k)] as usize;
                  if self.prohibited_pairs.iter().any(|&(a, b)| 
                      (candidate_treatment_rowno == a && point == b) || 
                      (candidate_treatment_rowno == b && point == a)
@@ -408,19 +408,19 @@
  
      
      fn exchange_block(&mut self, xcur: usize, xnew: usize, cur_block: usize, new_block: &mut usize) -> Result<()> {
-         let row_no_i = self.b[(cur_block as usize, xcur as usize)] as usize;
+         let row_no_i = self.b[(cur_block, xcur)] as usize;
          //let ni = self.block_size;
  
          let x_clone = self.x.clone();
          let xri = x_clone.row(row_no_i);
-         let xmi = self.block_means.row(cur_block as usize);
+         let xmi = self.block_means.row(cur_block);
          //debug_println!("xri: {}\nxmi: {}\nrowNoi: {}", pretty_print!(&xri), pretty_print!(&xmi), row_no_i);
  
-         let row_no_j = self.b[(*new_block as usize, xnew as usize)] as usize;
+         let row_no_j = self.b[({ *new_block }, xnew)] as usize;
          // Handle normal block exchange case
  
          let xrj = x_clone.row(row_no_j);
-         let xmj = self.block_means.row(*new_block as usize);
+         let xmj = self.block_means.row(*new_block);
          debug_println!("xmi: {}\nxmj: {}\nxri: {}\nxrj: {}\nrowNoj: {}", pretty_print!(&xmi), pretty_print!(&xmj), pretty_print!(&xri), pretty_print!(&xrj), row_no_j);
          //let nj = self.block_size;
          //let c = (ni + nj) as f64 / (ni * nj) as f64;
@@ -437,15 +437,15 @@
          for i in 0..self.k {
              //let idx = cmi_from_rmi((cur_block as usize * self.k as usize + i as usize) as usize, self.k as usize, self.n_b as usize);
              //self.block_means[idx as usize] += newsum;
-             self.block_means[(cur_block as usize, i as usize)] += (xrj[i as usize] - xri[i as usize]) / self.block_size as f64;
+             self.block_means[(cur_block, i as usize)] += (xrj[i as usize] - xri[i as usize]) / self.block_size as f64;
              //let idx = cmi_from_rmi((*new_block as usize * self.k as usize + i as usize) as usize, self.k as usize, self.n_b as usize);
-             self.block_means[(*new_block as usize, i as usize)] += (xri[i as usize] - xrj[i as usize]) / self.block_size as f64;
+             self.block_means[({ *new_block }, i as usize)] += (xri[i as usize] - xrj[i as usize]) / self.block_size as f64;
          }
  
          //println!("new_block: {}, xnew: {}, b before exchange: {}", *new_block, xnew, pretty_print!(&self.b));
  
-         self.b[(*new_block as usize, xnew as usize)] = row_no_i as i32;
-         self.b[(cur_block as usize, xcur as usize)] = row_no_j as i32;
+         self.b[({ *new_block }, xnew)] = row_no_i as i32;
+         self.b[(cur_block, xcur)] = row_no_j as i32;
  
          //println!("cur_block: {}, xcur: {}, b after exchange: {}", cur_block, xcur, pretty_print!(&self.b));
  
@@ -454,9 +454,9 @@
  
      fn block_optimize(&mut self, n_repeats: usize) -> Result<BlockResult> {
  
-         let mut block_array: Vec<usize> = vec![0; self.n_b as usize * self.block_size as usize];
+         let mut block_array: Vec<usize> = vec![0; self.n_b * self.block_size];
          let mut best_log_det = 0.0;
-         let mut best_block_array = DMatrix::zeros(self.n_b as usize, self.block_size as usize);
+         let mut best_block_array = DMatrix::zeros(self.n_b, self.block_size);
          let mut xnew = 0;
          let mut new_block = 0;
          let mut av_var = 0.0;
@@ -554,8 +554,8 @@
          //let rnd = 0.5;
          let j = (((1 + i) as f64) * rnd) as i32;
          let temp = a[j as usize];
-         a[j as usize] = a[i as usize];
-         a[i as usize] = temp;
+         a[j as usize] = a[i];
+         a[i] = temp;
      }
      
      Ok(())
@@ -567,14 +567,14 @@ impl BlockDataBuilder {
      fn configure_remaining(&mut self) -> &mut Self {
          let block_data = self;
          if let (Some(n_b), Some(k), Some(block_size), Some(n)) = (block_data.n_b, block_data.k, &block_data.block_size, block_data.n) {
-             block_data.block_means = Some(DMatrix::zeros(n_b as usize, k as usize));
-             block_data.t_block_means = Some(DMatrix::zeros(n_b as usize, k as usize));
+             block_data.block_means = Some(DMatrix::zeros(n_b, k as usize));
+             block_data.t_block_means = Some(DMatrix::zeros(n_b, k as usize));
              block_data.t = Some(DMatrix::zeros(k as usize, k as usize));
              block_data.t_inv = Some(DMatrix::zeros(k as usize, k as usize));
              let n_xb = block_size * n_b;
              block_data.n_xb = Some(n_xb);
-             block_data.rows = Some(DVector::zeros(std::cmp::max(n as usize, n_xb as usize)));
-             block_data.b = Some(DMatrix::zeros(n_b as usize, *block_size as usize));
+             block_data.rows = Some(DVector::zeros(std::cmp::max(n as usize, n_xb)));
+             block_data.b = Some(DMatrix::zeros(n_b, *block_size));
              block_data.n_t = Some(n as usize);
              block_data.moments = Some(Matrix3::new(
                  (2 * block_size) as f64 / (block_size * block_size) as f64, 1.0, 0.0,
@@ -594,8 +594,8 @@ impl BlockDataBuilder {
          // remove the first column by subsetting the remaining columns
          let x_sub = x.columns(1, (value - 1) as usize);
          self.x = Some(x_sub.into());
-         self.n = Some(value as u8);
-         self.k = Some((value - 1) as u8);
+         self.n = Some(value);
+         self.k = Some(value - 1);
          self.t_x =Some(DMatrix::zeros(value as usize, (value - 1) as usize));
  
          //println!("x: {}", pretty_print!(&x_sub));
