@@ -1,7 +1,13 @@
 [package]
 name = "ibdgen"
+description = "Generate incomplete block designs for experiments with prohibited pairs"
 version = "0.1.0"
 edition = "2021"
+authors = ["Miles Gard <miles@consultimi.com>"]
+license = "GPL-3.0-or-later"
+categories = ["science", "mathematics"]
+keywords = ["statistics", "doe", "experimental-design"]
+repository = "https://github.com/consultimi/ibdgen"
 
 [dependencies]
 anyhow = "1.0.93"

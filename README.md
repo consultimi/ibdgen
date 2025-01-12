@@ -1,6 +1,6 @@
 # IBD Generator
 
-A Rust library for generating Incomplete Block Designs (IBDs) with prohibitions between pairs of treatments. This is a loose port of the optBlock C code from the AlgDesign R package.
+A Rust library for generating Incomplete Block Designs (IBDs) with prohibitions between pairs of treatments. This is a loose port of the optBlock C code from the AlgDesign R package (https://github.com/jvbraun/AlgDesign)
 
 The algorithm creates an optimal design based on D-optimality. For smaller combinations of v, n_b, k, the algorithm should produce a BIBD (if one exists, and presuming no prohibitions of course).
 
