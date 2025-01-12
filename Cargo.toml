@@ -8,6 +8,7 @@ license = "GPL-3.0-or-later"
 categories = ["science", "mathematics"]
 keywords = ["statistics", "doe", "experimental-design"]
 repository = "https://github.com/consultimi/ibdgen"
+readme = "README.md"
 
 [dependencies]
 anyhow = "1.0.93"
