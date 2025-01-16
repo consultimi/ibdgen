@@ -6,10 +6,10 @@ The algorithm creates an optimal design based on D-optimality. For smaller combi
 
 ## Library Usage
 
-To use the library, you can call the `ibdgen` function with the desired parameters. Here's an example:
+To use the library, you can call the `find_best_ibd` function with the desired parameters. Here's an example:
 
 ```rust
-let result = ibdgen(v, n_b, block_size, iter, n_repeats, prohibited_pairs);
+let result = find_best_ibd(v, n_b, block_size, n_repeats, iter, prohibited_pairs);
 ```
 where:
 - v is the number of treatments total
