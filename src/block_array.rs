@@ -1,9 +1,15 @@
 use nalgebra::DMatrix;
 
+/// Represents a block array, which is a matrix where each row represents a block and each column represents a treatment.
+///
+/// # Fields
+///
+/// * `block_array` - The matrix representing the block array
 #[derive(Default, Debug, Clone)]
 pub struct BlockArray {
     pub block_array: DMatrix<usize>,
 }
+
 
 impl BlockArray {
     pub fn from_block_array(block_array: &DMatrix<usize>) -> Self {

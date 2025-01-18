@@ -1,13 +1,40 @@
 mod ibd;
-mod block_array;
 mod random_type;
-mod coincidence_matrix;
-mod block_result;
+
+
+pub mod coincidence_matrix;
+pub mod block_array;
+pub mod block_result;
 
 use ibd::*;
+
 use block_result::BlockResult;
+
 use anyhow::Error;
 
+
+/// Finds the best incomplete block design (IBD) by running multiple iterations of the IBD generation algorithm.
+///
+/// # Arguments
+///
+/// * `v` - Number of treatments
+/// * `n_b` - Number of blocks
+/// * `block_size` - Number of treatments per block
+/// * `n_repeats` - Number of optimization repeats within each iteration
+/// * `iter` - Number of iterations to run
+/// * `prohibited_pairs` - Vector of tuples containing pairs of treatments that cannot appear together in any block (0-based indices)
+/// * `on_update` - Callback function called after each iteration with the current iteration number and best D-optimality value
+///
+/// # Returns
+///
+/// Returns a tuple containing:
+/// * The best block design solution found (`BlockResult`)
+/// * The iteration number where the best solution was found
+/// * The D-optimality value of the best solution
+///
+/// # Errors
+///
+/// Returns an error if the IBD generation fails
 pub fn find_best_ibd<F>(v: u8, n_b: usize, block_size: usize, n_repeats: usize, iter: usize, prohibited_pairs: Vec<(usize, usize)>, mut on_update: F) -> Result<(BlockResult, usize, f64), Error>
     where
         F: FnMut(usize, f64),
