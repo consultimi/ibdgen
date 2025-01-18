@@ -46,7 +46,7 @@ fn main() {
         }
     }
 
-    match ibdgen::find_best_ibd(args.v, args.n_b, args.block_size,  args.nrepeats, args.iter, prohibited_pairs) {
+    match ibdgen::find_best_ibd::<fn(usize, f64)>(args.v, args.n_b, args.block_size, args.nrepeats, args.iter, prohibited_pairs, |_, _| {}) {
         Ok((mut best_solution, best_iter, min_d)) => {
             println!("Best solution found at iteration: {}", best_iter);
             println!("-------------------------------------");
